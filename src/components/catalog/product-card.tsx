@@ -38,8 +38,8 @@ export function ProductCard({ product }: { product: CardProduct }) {
         style={cover ? undefined : { background: product.placeholderPattern }}
       >
         <span
-          className="absolute left-3 top-3 z-10 whitespace-nowrap rounded-full px-2.5 py-1 text-[11.5px] font-bold"
-          style={{ background: tone.bg, color: tone.color, backdropFilter: "blur(2px)" }}
+          className="absolute left-3 top-3 z-10 whitespace-nowrap rounded-full px-2.5 py-1 text-[11.5px] font-bold shadow-[0_1px_4px_rgba(74,53,39,.18)]"
+          style={{ background: tone.bg, color: tone.color }}
         >
           {label}
         </span>
