@@ -1,0 +1,22 @@
+# Node / Next
+node_modules/
+.next/
+out/
+.turbo/
+*.tsbuildinfo
+.vercel/
+
+# Sanity (build del Studio + cache runtime de la CLI)
+dist/
+.sanity/
+
+# Env (NUNCA commitear secretos)
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+
+# Claude Code (settings locales de trabajo; lo compartible iría en .claude/settings.json)
+.claude/settings.local.json
