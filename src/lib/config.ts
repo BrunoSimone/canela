@@ -8,8 +8,14 @@ export const siteConfig = {
     "para la casa y el jardín, espejos y cuadros. Hechas a mano, de forma " +
     "profesional. Consultá por WhatsApp y coordiná el pago con Mercado Pago.",
   country: "AR",
+  city: "Mar del Plata",
+  region: "Buenos Aires",
 
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+  url:
+    process.env.NEXT_PUBLIC_SITE_URL ??
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : "http://localhost:3000"),
   whatsappNumber: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "",
 
   instagram: "@canela_disign_art",

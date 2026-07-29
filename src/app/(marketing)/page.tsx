@@ -1,5 +1,6 @@
 import { urlFor } from "@/sanity/client";
 import { Hero, type HeroSlideView } from "@/components/home/hero";
+import { CatalogJsonLd } from "@/components/seo/catalog-json-ld";
 import { CategorySection } from "@/components/catalog/category-section";
 import { Nosotros } from "@/components/home/nosotros";
 import { ComoComprar } from "@/components/home/como-comprar";
@@ -24,6 +25,7 @@ export default async function HomePage() {
 
   return (
     <>
+      <CatalogJsonLd products={products} />
       <Hero slides={heroViews} />
 
       <div id="catalogo" className="anchor-offset px-[22px] pb-2 pt-6 text-center">

@@ -34,7 +34,16 @@ export const metadata: Metadata = {
     title: `${siteConfig.name} — ${siteConfig.descriptor}`,
     description: siteConfig.description,
   },
-  robots: { index: true, follow: true },
+  twitter: {
+    card: "summary_large_image",
+    title: `${siteConfig.name} — ${siteConfig.descriptor}`,
+    description: siteConfig.description,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large" },
+  },
 };
 
 export default function RootLayout({
