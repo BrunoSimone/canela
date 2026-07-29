@@ -80,6 +80,19 @@ const producto: SchemaTypeDefinition = {
         'Detalle del estado, sobre todo para "Por encargo". Ej: "Por encargo · 2 sem"',
     },
     {
+      name: "medidas",
+      title: "Medidas",
+      type: "string",
+      description: 'Ej: "20 × 12 cm" o "Alto 18 cm · Ø 10 cm".',
+      validation: (rule) => rule.required(),
+    },
+    {
+      name: "material",
+      title: "Material (opcional)",
+      type: "string",
+      description: 'Ej: "Vidrio reciclado", "Cerámica esmaltada".',
+    },
+    {
       name: "images",
       title: "Fotos",
       type: "array",

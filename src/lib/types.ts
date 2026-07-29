@@ -13,6 +13,8 @@ export interface Product {
   sub: string;
   tone: ProductTone;
   statusNote?: string | null;
+  medidas?: string | null;
+  material?: string | null;
   images: SanityImageSource[];
   imgLabel?: string;
 }

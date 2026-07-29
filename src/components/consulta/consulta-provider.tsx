@@ -40,7 +40,7 @@ function buildMessage(items: ConsultaItem[]): string {
   const lines = items
     .map((i) => `• ${i.name} x${i.qty} (${formatPrice(i.price)})`)
     .join("\n");
-  return `¡Hola Canela! Me interesan estas piezas:\n${lines}\n¿Me confirmás disponibilidad y total? 🙂`;
+  return `¡Hola! Me interesan estas piezas:\n${lines}\n¿Me confirmás disponibilidad y total? 🙂`;
 }
 
 export function ConsultaProvider({ children }: { children: React.ReactNode }) {

@@ -10,6 +10,8 @@ const PRODUCTS_QUERY = `*[_type == "producto"] | order(orderRank asc) {
   sub,
   tone,
   statusNote,
+  medidas,
+  material,
   images
 }`;
 

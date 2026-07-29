@@ -22,4 +22,4 @@ export function whatsappLink(message: string): string {
 }
 
 export const WA_GENERAL_MESSAGE =
-  "¡Hola Canela! Quería consultar por sus piezas artesanales 🙂";
+  "¡Hola! Quería consultar por sus piezas artesanales 🙂";

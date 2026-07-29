@@ -14,9 +14,12 @@ export interface CardProduct {
   name: string;
   description?: string | null;
   price: number;
+  categoryLabel: string;
   sub: string;
   tone: ProductTone;
   statusNote?: string | null;
+  medidas?: string | null;
+  material?: string | null;
   imageUrls: string[];
   imgLabel?: string;
   placeholderPattern: string;
@@ -71,7 +74,16 @@ export function ProductCard({ product }: { product: CardProduct }) {
               open={lightboxOpen}
               onOpenChange={setLightboxOpen}
               images={product.imageUrls}
+              id={product.id}
               title={product.name}
+              description={product.description}
+              price={product.price}
+              tone={product.tone}
+              statusNote={product.statusNote}
+              categoryLabel={product.categoryLabel}
+              sub={product.sub}
+              medidas={product.medidas}
+              material={product.material}
             />
           </>
         ) : (
