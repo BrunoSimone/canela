@@ -34,6 +34,14 @@ const producto: SchemaTypeDefinition = {
       validation: (rule) => rule.required(),
     },
     {
+      name: "description",
+      title: "Descripción",
+      type: "text",
+      rows: 3,
+      description:
+        "Texto corto que aparece en la tarjeta del producto (opcional).",
+    },
+    {
       name: "category",
       title: "Categoría",
       type: "string",

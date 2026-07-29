@@ -12,8 +12,8 @@ export const siteConfig = {
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
   whatsappNumber: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "",
 
-  instagram: "@canela_diseno_artesanal",
-  instagramUrl: "https://www.instagram.com/canela_diseno_artesanal/",
+  instagram: "@canela_disign_art",
+  instagramUrl: "https://www.instagram.com/canela_disign_art/",
 } as const;
 
 export function whatsappLink(message: string): string {

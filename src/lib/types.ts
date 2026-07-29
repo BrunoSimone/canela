@@ -7,6 +7,7 @@ export type ProductTone = "unica" | "stock" | "encargo";
 export interface Product {
   _id: string;
   name: string;
+  description?: string | null;
   price: number;
   category: Category;
   sub: string;

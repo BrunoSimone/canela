@@ -12,6 +12,7 @@ import type { ProductTone } from "@/lib/types";
 export interface CardProduct {
   id: string;
   name: string;
+  description?: string | null;
   price: number;
   sub: string;
   tone: ProductTone;
@@ -84,7 +85,12 @@ export function ProductCard({ product }: { product: CardProduct }) {
         <div className="text-base font-bold leading-tight text-[var(--canela-brown)]">
           {product.name}
         </div>
-        <div className="-mt-px text-[19px] font-extrabold text-[var(--canela-ochre-dark)]">
+        {product.description && (
+          <p className="line-clamp-2 text-[13px] leading-snug text-[#6E4E38]">
+            {product.description}
+          </p>
+        )}
+        <div className="text-[19px] font-extrabold text-[var(--canela-ochre-dark)]">
           {formatPrice(product.price)}
         </div>
         <button

@@ -4,6 +4,7 @@ import type { Category, HeroSlide, Product } from "@/lib/types";
 const PRODUCTS_QUERY = `*[_type == "producto"] | order(orderRank asc) {
   _id,
   name,
+  description,
   price,
   category,
   sub,

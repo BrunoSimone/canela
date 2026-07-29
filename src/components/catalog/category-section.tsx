@@ -22,6 +22,7 @@ export function CategorySection({
   const cards: CardProduct[] = products.map((p) => ({
     id: p._id,
     name: p.name,
+    description: p.description,
     price: p.price,
     sub: p.sub,
     tone: p.tone,
