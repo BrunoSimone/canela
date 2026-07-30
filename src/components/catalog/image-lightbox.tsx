@@ -96,7 +96,7 @@ export function ImageLightbox({
                   alt={`${title} — foto ${i + 1}`}
                   fill
                   sizes="(max-width: 860px) 100vw, 540px"
-                  className="object-contain"
+                  className="object-cover"
                   priority={i === 0}
                 />
               </div>

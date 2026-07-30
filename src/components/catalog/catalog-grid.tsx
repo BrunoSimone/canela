@@ -41,11 +41,15 @@ export function CatalogGrid({ subs, products }: CatalogGridProps) {
       <div className="mb-6 flex gap-2.5 overflow-x-auto pb-1.5">
         {subs.map((label) => {
           const isActive = label === active;
+          const count =
+            label === "Todos"
+              ? products.length
+              : products.filter((p) => p.sub === label).length;
           return (
             <button
               key={label}
               onClick={() => selectFilter(label)}
-              className="flex-none whitespace-nowrap rounded-full px-[18px] py-2.5 text-sm transition-colors"
+              className="flex flex-none items-center gap-2 whitespace-nowrap rounded-full px-[18px] py-2.5 text-sm transition-colors"
               style={
                 isActive
                   ? {
@@ -63,6 +67,16 @@ export function CatalogGrid({ subs, products }: CatalogGridProps) {
               }
             >
               {label}
+              <span
+                className="inline-flex size-[22px] items-center justify-center rounded-full text-[11px] font-bold leading-none tabular-nums"
+                style={
+                  isActive
+                    ? { background: "rgba(255,255,255,.24)", color: "var(--canela-cream-card)" }
+                    : { background: "rgba(184,132,42,.15)", color: "#8a621d" }
+                }
+              >
+                {count}
+              </span>
             </button>
           );
         })}
