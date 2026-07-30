@@ -1,4 +1,4 @@
-import { urlFor } from "@/sanity/client";
+import { hasAsset, urlFor } from "@/sanity/client";
 import { Hero, type HeroSlideView } from "@/components/home/hero";
 import { CatalogJsonLd } from "@/components/seo/catalog-json-ld";
 import { CategorySection } from "@/components/catalog/category-section";
@@ -18,7 +18,9 @@ export default async function HomePage() {
     name: s.name,
     caption: s.caption,
     href: `#${s.category}`,
-    imageUrl: s.image ? urlFor(s.image).width(760).height(760).fit("crop").url() : null,
+    imageUrl: hasAsset(s.image)
+      ? urlFor(s.image).width(760).height(760).fit("crop").url()
+      : null,
     label: s.imgLabel,
     tint: s.tint,
   }));

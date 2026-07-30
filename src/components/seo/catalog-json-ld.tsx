@@ -1,4 +1,4 @@
-import { urlFor } from "@/sanity/client";
+import { hasAsset, urlFor } from "@/sanity/client";
 import { siteConfig } from "@/lib/config";
 import type { Product } from "@/lib/types";
 
@@ -10,7 +10,7 @@ const AVAILABILITY: Record<string, string> = {
 
 export function CatalogJsonLd({ products }: { products: Product[] }) {
   const items = products
-    .filter((p) => p.images?.length)
+    .filter((p) => p.images?.some(hasAsset))
     .map((p, i) => ({
       "@type": "ListItem",
       position: i + 1,
@@ -18,7 +18,10 @@ export function CatalogJsonLd({ products }: { products: Product[] }) {
         "@type": "Product",
         name: p.name,
         ...(p.description ? { description: p.description } : {}),
-        image: p.images.slice(0, 3).map((img) => urlFor(img).width(1200).url()),
+        image: p.images
+          .filter(hasAsset)
+          .slice(0, 3)
+          .map((img) => urlFor(img).width(1200).url()),
         ...(p.material ? { material: p.material } : {}),
         brand: { "@type": "Brand", name: siteConfig.name },
         offers: {
