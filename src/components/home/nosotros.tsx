@@ -36,7 +36,10 @@ export function Nosotros() {
             acercarme a la comunidad con los brazos abiertos, por medio de lo que
             sé hacer y me encanta. Me siento muy afortunada de poder acompañarte
             en tu día a día llenando los espacios de tu hogar con objetos con
-            buena energía. ¡Gracias por tu confianza!
+            buena energía.
+            <br />
+            <br />
+            ¡Gracias por tu confianza!
           </p>
         </div>
       </div>
