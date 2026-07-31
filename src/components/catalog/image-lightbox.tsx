@@ -75,7 +75,7 @@ export function ImageLightbox({
         showCloseButton={false}
         overlayClassName="bg-[rgba(58,41,29,.58)] supports-backdrop-filter:backdrop-blur-[7px]"
         className={cn(
-          "flex w-[96vw] max-w-[1020px] flex-col gap-0 overflow-hidden rounded-[26px] border border-[rgba(184,132,42,.28)] bg-[#FBF7EE] p-0 ring-0 shadow-[0_34px_80px_rgba(43,30,21,.42)]",
+          "flex w-[96vw] max-w-[1020px] flex-col gap-0 overflow-hidden rounded-[26px] bg-[#FBF7EE] p-0 ring-0 shadow-[0_34px_80px_rgba(43,30,21,.42)]",
           "min-[860px]:grid min-[860px]:h-[86vh] min-[860px]:grid-cols-[1.04fr_0.96fr] min-[860px]:grid-rows-[minmax(0,1fr)] sm:max-w-[1020px]",
           "max-[859px]:top-0 max-[859px]:h-[100dvh] max-[859px]:max-h-[100dvh] max-[859px]:w-full max-[859px]:max-w-full max-[859px]:translate-y-0 max-[859px]:rounded-none",
         )}
@@ -147,7 +147,7 @@ export function ImageLightbox({
         </div>
 
         {/* Info */}
-        <div className="flex min-h-0 min-w-0 flex-col">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-8 pb-6 pt-[30px] max-[859px]:px-5 max-[859px]:pb-[18px] max-[859px]:pt-[22px]">
             <div className="pr-11 text-[11.5px] font-bold uppercase tracking-[.2em] text-[#8A9256]">
               {categoryLabel} · {sub}

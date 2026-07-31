@@ -109,14 +109,17 @@ export function Hero({ slides }: { slides: HeroSlideView[] }) {
             className="m-0 font-heading text-[clamp(42px,6vw,66px)] font-normal leading-[1.02] text-[var(--canela-brown)] text-balance"
             {...itemProps}
           >
-            Piezas hechas a mano, con alma
+            Canela Store
           </motion.h1>
           <motion.p
-            className="m-0 max-w-[440px] text-base leading-relaxed text-[#5a4130]"
+            className="m-0 max-w-[460px] text-base leading-relaxed text-[#5a4130]"
             {...itemProps}
           >
-            Vidrio reciclado, cerámica y espejos elaborados de forma artesanal y
-            profesional. Cada pieza es única, hecha con tiempo y con oficio.
+            En Canela utilizamos vidrios y espejos reciclados para cerrar el ciclo
+            del material proporcionándoles un nuevo uso. Además, por medio de la
+            cerámica le damos vida al barro, acercándonos así a la naturaleza.
+            Estas materias primas nos permiten diseñar con un valor que solo
+            tienen las cosas hechas con el corazón.
           </motion.p>
           <motion.a
             href="#catalogo"
