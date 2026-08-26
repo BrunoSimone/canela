@@ -1,5 +1,6 @@
 import Image from "next/image";
 
+import { siteConfig } from "@/lib/config";
 import { cn } from "@/lib/utils";
 
 interface CanelaBadgeProps {
@@ -26,7 +27,7 @@ export function CanelaBadge({
     >
       <Image
         src="/canela-logo.png"
-        alt="Canela — Diseño artesanal"
+        alt={`${siteConfig.name}, diseño artesanal`}
         width={size}
         height={size}
         priority={priority}

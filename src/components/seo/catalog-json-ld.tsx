@@ -23,14 +23,18 @@ export function CatalogJsonLd({ products }: { products: Product[] }) {
           .slice(0, 3)
           .map((img) => urlFor(img).width(1200).url()),
         ...(p.material ? { material: p.material } : {}),
-        brand: { "@type": "Brand", name: siteConfig.name },
+        brand: {
+          "@type": "Brand",
+          name: siteConfig.name,
+          alternateName: siteConfig.alternateName,
+        },
         offers: {
           "@type": "Offer",
           priceCurrency: "ARS",
           price: p.price,
           availability: AVAILABILITY[p.tone] ?? "https://schema.org/InStock",
           url: `${siteConfig.url}/#${p.category}`,
-          seller: { "@type": "Organization", name: siteConfig.legalName },
+          seller: { "@id": `${siteConfig.url}/#organization` },
         },
       },
     }));
@@ -40,7 +44,7 @@ export function CatalogJsonLd({ products }: { products: Product[] }) {
   const data = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: `Catálogo — ${siteConfig.name}`,
+    name: `Catálogo de ${siteConfig.name}`,
     itemListElement: items,
   };
 

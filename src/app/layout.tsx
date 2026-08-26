@@ -21,7 +21,7 @@ const mulish = Mulish({
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
-    default: `${siteConfig.name} — Artesanías en vidrio, cerámica y espejos`,
+    default: `${siteConfig.name} | Artesanías en vidrio, cerámica y espejos`,
     template: `%s | ${siteConfig.name}`,
   },
   description: siteConfig.description,
@@ -31,12 +31,12 @@ export const metadata: Metadata = {
     locale: "es_AR",
     url: siteConfig.url,
     siteName: siteConfig.name,
-    title: `${siteConfig.name} — ${siteConfig.descriptor}`,
+    title: `${siteConfig.name} | ${siteConfig.descriptor}`,
     description: siteConfig.description,
   },
   twitter: {
     card: "summary_large_image",
-    title: `${siteConfig.name} — ${siteConfig.descriptor}`,
+    title: `${siteConfig.name} | ${siteConfig.descriptor}`,
     description: siteConfig.description,
   },
   robots: {

@@ -9,7 +9,9 @@ export function Footer() {
         <div className="flex flex-col gap-3.5">
           <div className="flex items-center gap-3">
             <CanelaBadge simple size={52} />
-            <span className="font-heading text-[30px] text-[#F6EFE1]">Canela</span>
+            <span className="font-heading text-[30px] text-[#F6EFE1]">
+              {siteConfig.name}
+            </span>
           </div>
           <p className="max-w-[280px] text-sm leading-relaxed text-[#cbb894]">
             {siteConfig.tagline}. Vidrio, cerámica y espejos hechos a mano.
@@ -46,7 +48,7 @@ export function Footer() {
         </div>
       </div>
       <div className="border-t border-[rgba(234,223,202,.15)] px-[22px] py-5 text-center text-[13px] text-[#a88f6a]">
-        © 2026 Canela · Diseño artesanal
+        © 2026 {siteConfig.name} · Diseño artesanal
       </div>
     </footer>
   );

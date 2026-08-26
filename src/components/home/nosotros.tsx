@@ -1,6 +1,7 @@
 import Image from "next/image";
 
 import aboutUsImage from "@/assets/about-us.jpeg";
+import { siteConfig } from "@/lib/config";
 
 export function Nosotros() {
   return (
@@ -32,7 +33,7 @@ export function Nosotros() {
             >
               @Marieladeloso
             </a>{" "}
-            artista y tallerista de Mar del Plata. Canela es una nueva forma de
+            artista y tallerista de Mar del Plata. Canela Store es una nueva forma de
             acercarme a la comunidad con los brazos abiertos, por medio de lo que
             sé hacer y me encanta. Me siento muy afortunada de poder acompañarte
             en tu día a día llenando los espacios de tu hogar con objetos con
@@ -40,6 +41,18 @@ export function Nosotros() {
             <br />
             <br />
             ¡Gracias por tu confianza!
+          </p>
+          <p className="mt-5 border-l-2 border-[var(--canela-ochre)] pl-4 text-sm leading-relaxed text-[#5a4130]">
+            Cada pieza de Canela Store se produce en el{" "}
+            <a
+              href={siteConfig.workshop.mapUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-[var(--canela-ochre-dark)] underline decoration-[rgba(184,132,42,.45)] underline-offset-2 transition-colors hover:text-[var(--canela-brown)]"
+            >
+              {siteConfig.workshop.name}
+            </a>
+            , en {siteConfig.workshop.streetAddress}, Mar del Plata.
           </p>
         </div>
       </div>
