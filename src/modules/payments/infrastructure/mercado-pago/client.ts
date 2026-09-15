@@ -129,18 +129,28 @@ function classifyHttpFailure(status: number): MercadoPagoFailureKind {
 async function readProviderErrorCode(response: Response): Promise<string | null> {
   try {
     const body: unknown = await response.json();
-    if (
-      typeof body === "object" &&
-      body !== null &&
-      "code" in body &&
-      typeof body.code === "string"
-    ) {
+    if (!isRecord(body)) {
+      return null;
+    }
+    if (typeof body.code === "string") {
       return body.code;
+    }
+    if (Array.isArray(body.errors)) {
+      const firstError = body.errors.find(
+        (error): error is Record<string, unknown> => isRecord(error),
+      );
+      if (firstError && typeof firstError.code === "string") {
+        return firstError.code;
+      }
     }
   } catch {
     return null;
   }
   return null;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
 }
 
 function mapProviderOrder(value: unknown): PaymentOrder {

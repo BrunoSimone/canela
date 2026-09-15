@@ -111,6 +111,7 @@ pnpm start          # serve the build
 pnpm lint
 pnpm test           # unit tests; DB integration tests skip without TEST_DATABASE_URL
 pnpm test:db        # PostgreSQL concurrency/integrity tests
+pnpm test:mp        # Mercado Pago contract tests; creates expiring test orders
 pnpm db:migrate     # apply migrations to DATABASE_URL_UNPOOLED (or DATABASE_URL)
 ```
 

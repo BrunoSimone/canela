@@ -17,7 +17,6 @@ const input: CreatePaymentOrderInput = {
       quantity: 1,
     },
   ],
-  notificationUrl: "https://preview.canela.test/api/webhooks/mercado-pago",
   returnUrl: "https://preview.canela.test/checkout/resultado",
 };
 
@@ -87,13 +86,17 @@ describe("MercadoPagoClient", () => {
 
   it.each([
     [400, "invalid_request", "definitive"],
+    [409, "idempotency_key_already_used", "ambiguous"],
     [423, "resource_locked", "retryable"],
     [500, "internal_error", "ambiguous"],
   ] as const)(
     "classifies HTTP %s as %s",
     async (status, code, expectedKind) => {
       const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
-        Response.json({ code, message: "provider detail" }, { status }),
+        Response.json(
+          { errors: [{ code, message: "provider detail" }] },
+          { status },
+        ),
       );
       const client = new MercadoPagoClient(
         { accessToken: "secret-token", baseUrl: "https://api.test" },

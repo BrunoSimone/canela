@@ -2,7 +2,49 @@
 
 ## Estado y alcance
 
-Investigación realizada el 2026-09-14 sobre documentación oficial vigente de Mercado Pago Argentina. No se ejecutaron todavía pruebas contra una aplicación de prueba; todo comportamiento marcado como **por validar** debe convertirse en una prueba de contrato antes de producción.
+Investigación iniciada el 2026-09-14 sobre documentación oficial vigente de
+Mercado Pago Argentina. El 2026-09-15 comenzó la validación contra una aplicación
+de prueba propia; todo comportamiento que siga marcado como **por validar** debe
+convertirse en una prueba de contrato antes de producción.
+
+## Hallazgos de contrato del 2026-09-15
+
+- La credencial de prueba autentica correctamente contra Mercado Pago.
+- `items[].unit_measure` y `items[].total_amount` producen HTTP `400` con código
+  `unsupported_properties` en Checkout Pro Orders.
+- Cada ítem admite `external_code`, `title`, `unit_price` y `quantity`; el total
+  del ítem se deriva de precio unitario por cantidad.
+- `config.notification_url` también produce `unsupported_properties`. Las
+  notificaciones de Orders se configuran a nivel de aplicación en el panel.
+- `PT10M`, `automatic_async`, dos ítems —incluido envío— y la exclusión de
+  `ticket` fueron aceptados con HTTP `201` y reflejados en la respuesta.
+- Repetir exactamente el mismo request con la misma `X-Idempotency-Key` devuelve
+  `201` y el mismo `id`. Cambiar el payload conservando la clave devuelve `409`
+  con `idempotency_key_already_used`.
+- Un total distinto de `sum(unit_price * quantity)` devuelve `400` con
+  `order_items_total_amount_mismatch`.
+- Una tarjeta simulada como rechazada muestra rechazo en Checkout Pro y en los
+  query params de retorno, pero el GET de la order devuelve
+  `action_required/waiting_retry` mientras ofrece pagar con otro medio. La
+  reserva debe conservarse hasta un estado terminal o el vencimiento verificado.
+- La compra invitada con tarjeta funciona sin iniciar sesión. En la pantalla de
+  medios solo aparecieron tarjeta y acceso opcional a Mercado Pago; no aparecieron
+  Rapipago ni Pago Fácil.
+- El pago simulado `APRO` terminó en `processed/accredited`. El escenario `CONT`
+  mostró “Estamos procesando tu pago” y el GET devolvió `processing/in_process`.
+- Con dos ítems, Checkout Pro presenta un renglón agregado “Productos” y el total;
+  no muestra el envío como desglose separado. Canela debe enseñar el desglose
+  completo antes de redirigir, aunque conserve ambos ítems en la order.
+- La cuenta de prueba ofreció hasta 24 cuotas. La cantidad máxima sigue siendo una
+  decisión comercial pendiente antes de producción.
+- Pasado el límite local, una order `action_required/waiting_retry` no cambió por
+  sí sola a `expired`. `POST /v1/orders/{id}/cancel` respondió `200/canceled` y el
+  GET posterior confirmó el estado. La recuperación debe cancelar explícitamente
+  las orders `created` o `action_required` antes de liberar stock.
+
+Este hallazgo reemplaza el payload propuesto originalmente. Se conservó una
+respuesta redactada: no contiene Access Token, URL de checkout ni identificadores
+completos.
 
 ## Conclusión ejecutiva
 
@@ -32,13 +74,10 @@ Este cambio simplifica la recuperación de timeouts porque la creación exige `X
 
 La referencia de Checkout Pro vía Orders no documenta un campo equivalente a `shipments.cost`, que pertenece al flujo legado de Preferences. Por lo tanto, la estrategia propuesta es representar el envío como un ítem propio, por ejemplo `Envío Correo Argentino`, para que el desglose visible y `total_amount` coincidan.
 
-Esto es una **inferencia de diseño**, no un contrato confirmado. Se debe probar en el ambiente de Mercado Pago que:
-
-1. el ítem de envío es aceptado;
-2. aparece con una descripción comprensible en Checkout Pro;
-3. no altera reportes, reembolsos ni controles de riesgo de forma inesperada.
-
-Si la prueba contradice la inferencia, se conserva el total correcto y el desglose se muestra únicamente en Canela antes de redirigir.
+La API aceptó el ítem de envío y lo devolvió en la order, pero Checkout Pro agrupó
+los dos ítems bajo “Productos” y mostró únicamente el total. Canela conservará el
+ítem para trazabilidad y suma exacta, y mostrará el desglose de productos y envío
+antes de redirigir.
 
 ### Resultado del pago: conversión frente a simplicidad
 
@@ -122,21 +161,16 @@ Fuentes: [cancelar order](https://www.mercadopago.com.ar/developers/es/reference
       "external_code": "sanity-product-id",
       "title": "Cuadro Palmera",
       "unit_price": "30000.00",
-      "quantity": 1,
-      "unit_measure": "unit",
-      "total_amount": "30000.00"
+      "quantity": 1
     },
     {
       "external_code": "shipping-correo-argentino",
       "title": "Envío Correo Argentino",
       "unit_price": "4000.00",
-      "quantity": 1,
-      "unit_measure": "unit",
-      "total_amount": "4000.00"
+      "quantity": 1
     }
   ],
   "config": {
-    "notification_url": "https://preview.example.com/api/webhooks/mercado-pago",
     "online": {
       "success_url": "https://preview.example.com/checkout/resultado",
       "failure_url": "https://preview.example.com/checkout/resultado",
@@ -156,22 +190,24 @@ Este ejemplo no se copia a producción hasta comprobar nombres exactos, tipos ad
 
 | Caso | Evidencia esperada |
 | --- | --- |
-| Crear con la misma idempotency key dos veces | Un único `id` de Mercado Pago |
-| Crear con `PT10M` | `201` y misma vigencia en la respuesta |
-| Suma de ítems incorrecta | `order_items_total_amount_mismatch` |
-| Envío como ítem | Checkout legible y total correcto |
-| Tipo `ticket` excluido | No aparece Rapipago/Pago Fácil |
-| Comprador sin cuenta | Puede avanzar sin `account_only` |
-| Aprobado | Webhook válido; GET devuelve `processed/accredited` |
-| Rechazado | GET devuelve `failed` y se libera una vez |
-| Processing | Se preserva stock y reconciliación converge |
+| Crear con la misma idempotency key dos veces | Confirmado: dos `201`, mismo `id` |
+| Reusar la clave con otro payload | Confirmado: `409 idempotency_key_already_used` |
+| Crear con `PT10M` | Confirmado: `201` y `PT10M` en la respuesta |
+| Suma de ítems incorrecta | Confirmado: `order_items_total_amount_mismatch` |
+| Envío como ítem | Aceptado; Checkout lo agrupa como “Productos”, por lo que Canela muestra el desglose antes de redirigir |
+| Tipo `ticket` excluido | Confirmado visualmente: no aparecieron Rapipago ni Pago Fácil |
+| Comprador sin cuenta | Confirmado: compra con tarjeta disponible sin login |
+| Aprobado | Confirmado por UI y GET `processed/accredited`; Webhook pendiente |
+| Rechazado reintentable | Confirmado: retorno `rejected`, pero GET devuelve `action_required/waiting_retry`; conserva stock |
+| Rechazado terminal | Pendiente: GET terminal permite liberar una vez |
+| Processing | Confirmado por UI y GET `processing/in_process`; debe preservar stock |
 | Firma alterada | `401`, sin modificar la order interna |
 | Webhook duplicado/fuera de orden | Una sola transición terminal |
 | Retorno falsificado | Nunca marca pago ni dispara fulfillment |
-| Order vencida | Cancelación/estado comprobado antes de liberar |
+| Order vencida sin pago | Confirmado: cancelar `created/action_required`, comprobar `canceled` y recién liberar |
 
 ## Verificaciones todavía abiertas
 
-1. Confirmar en pruebas que `PT10M` es válido en Checkout Pro Orders.
-2. Confirmar si el envío como ítem es la presentación correcta.
-3. Obtener la aplicación, credenciales y secreto de webhook del ambiente de prueba.
+1. Definir la cantidad máxima de cuotas.
+2. Configurar una URL HTTPS real y obtener el secreto del webhook de prueba.
+3. Capturar un Webhook firmado y confirmar la consulta autoritativa posterior.

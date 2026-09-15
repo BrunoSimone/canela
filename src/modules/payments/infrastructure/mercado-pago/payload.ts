@@ -14,11 +14,8 @@ export type MercadoPagoOrderPayload = {
     title: string;
     unit_price: string;
     quantity: number;
-    unit_measure: "unit";
-    total_amount: string;
   }>;
   config: {
-    notification_url: string;
     online: {
       success_url: string;
       failure_url: string;
@@ -39,8 +36,6 @@ export function buildMercadoPagoOrderPayload(
     title: item.title,
     unit_price: formatArsCents(item.unitPriceCents),
     quantity: item.quantity,
-    unit_measure: "unit" as const,
-    total_amount: formatArsCents(item.unitPriceCents * item.quantity),
   }));
 
   return {
@@ -53,7 +48,6 @@ export function buildMercadoPagoOrderPayload(
     payer: { email: input.payerEmail },
     items,
     config: {
-      notification_url: input.notificationUrl,
       online: {
         success_url: input.returnUrl,
         failure_url: input.returnUrl,
@@ -97,7 +91,6 @@ function validateInput(input: CreatePaymentOrderInput): void {
   }
 
   formatArsCents(input.totalCents);
-  validateUrl(input.notificationUrl, "notification");
   validateUrl(input.returnUrl, "return");
 }
 

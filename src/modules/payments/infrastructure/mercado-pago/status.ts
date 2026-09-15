@@ -7,6 +7,10 @@ export function mapMercadoPagoOrderState(
   switch (status) {
     case "created":
       return "created";
+    case "action_required":
+      return statusDetail === "waiting_retry"
+        ? "action_required"
+        : "review_required";
     case "processing":
       return "processing";
     case "processed":

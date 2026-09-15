@@ -15,6 +15,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:db": "RUN_DB_INTEGRATION=1 vitest run src/db/create-reserved-order.integration.test.ts",
+    "test:mp": "RUN_MP_CONTRACT=1 vitest run src/modules/payments/infrastructure/mercado-pago/client.contract.test.ts",
     "db:migrate": "tsx src/db/migrate.ts",
     "studio": "sanity dev",
     "studio:deploy": "sanity deploy"

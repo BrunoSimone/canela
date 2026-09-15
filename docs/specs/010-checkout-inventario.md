@@ -76,7 +76,10 @@ Permitir el pago inmediato de productos con stock disponible, garantizando que c
 - **RN-007:** Ante pago aprobado válido sin una reserva consumible, la orden pasa a revisión crítica y no se crea fulfillment automático; la operación debe resolver entrega o reembolso.
 - **RN-008:** Para el comprador, la disponibilidad es binaria: el producto está disponible para comprar o no lo está. `reserved`/`payment_pending` son estados técnicos internos.
 - **RN-009:** El bloqueo dura 10 minutos, configurable sin migración. La order MP usa `PT10M` si la prueba de contrato lo confirma.
-- **RN-010:** Un job no libera solo por reloj: primero consulta el estado autoritativo de la order MP. Si está aprobado, confirma; si sigue procesando, conserva; si terminó sin pago, libera.
+- **RN-010:** Un job no libera solo por reloj: primero consulta el estado
+  autoritativo de la order MP. Si está aprobado, confirma; si sigue procesando,
+  conserva; si está `created` o `action_required`, solicita su cancelación y solo
+  libera después de verificar `canceled`; si ya terminó sin pago, libera.
 
 ## Escenarios y criterios de aceptación
 

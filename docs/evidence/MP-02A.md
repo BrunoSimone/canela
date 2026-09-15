@@ -12,7 +12,7 @@
 
 | Requisito | Implementación | Prueba | Resultado |
 | --- | --- | --- | --- |
-| Payload Orders aprobado | Builder puro con `online`, `manual`, `automatic_async`, `PT10M`, URLs y exclusión de `ticket` | Comparación estructural completa del body | Aprobada |
+| Payload Orders candidato | Builder puro con `online`, `manual`, `automatic_async`, `PT10M`, URLs y exclusión de `ticket` | Comparación estructural completa del body | Aprobada localmente; corregida después por la evidencia MP-02B |
 | Importes ARS exactos | Conversión entre centavos enteros y decimal textual sin operar dinero con flotantes | Cero, un centavo, montos normales y entradas inválidas | Aprobada |
 | Idempotencia del proveedor | `X-Idempotency-Key` proviene del intento y la base impide repetirla por proveedor | Header inspeccionado y restricción única ejecutada en PostgreSQL | Aprobada |
 | Consulta autoritativa | Adaptador de `GET /v1/orders/{id}` con credencial solo server-side | Respuesta normalizada sin exponer el token | Aprobada |
@@ -38,6 +38,9 @@ producción aprobados.
 
 - No demuestra todavía el contrato real de Orders API. MP-02B debe ejecutar la
   matriz con una aplicación de prueba y registrar respuestas redactadas.
+- MP-02B comprobó posteriormente que `items[].unit_measure`,
+  `items[].total_amount` y `config.notification_url` no son aceptados. La spec,
+  las pruebas y el adaptador ya reflejan el contrato real.
 - `PT10M`, el ítem de envío y la exclusión efectiva de medios offline siguen
   siendo hipótesis hasta MP-02B.
 - No conecta todavía reserva, creación remota y persistencia en un caso de uso;

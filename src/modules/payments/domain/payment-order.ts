@@ -1,5 +1,6 @@
 export type PaymentOrderState =
   | "created"
+  | "action_required"
   | "processing"
   | "approved"
   | "rejected"
@@ -21,7 +22,6 @@ export type CreatePaymentOrderInput = {
   currency: "ARS";
   totalCents: number;
   items: PaymentOrderItem[];
-  notificationUrl: string;
   returnUrl: string;
 };
 

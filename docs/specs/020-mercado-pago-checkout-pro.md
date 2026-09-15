@@ -27,11 +27,15 @@ La documentación oficial orienta el diseño; las pruebas de contrato con la apl
 - Personalización queda fuera de alcance.
 - La cotización de Correo ocurre antes de crear el pago productivo; el fulfillment ocurre después de confirmar el pago.
 
-## Hipótesis de contrato por validar
+## Presentación del costo de envío
 
-- Enviar el costo de Correo como un ítem separado de la order si la prueba de contrato confirma que se presenta correctamente.
+El costo de Correo se envía como un ítem separado para mantener el detalle de la
+order y la suma verificable. Checkout Pro acepta ambos ítems, pero visualmente los
+agrupa como “Productos” y muestra solo el total.
 
-La forma exacta de presentar el envío y la aceptación de `PT10M` son verificaciones técnicas; no reabren la arquitectura elegida.
+Por eso Canela debe mostrar productos, envío y total en una confirmación clara
+inmediatamente antes de redirigir y nuevamente en el detalle del pedido. `PT10M`
+y la exclusión visual de medios offline también quedaron confirmados.
 
 ## Objetivo
 
@@ -101,11 +105,18 @@ Comprador confirma domicilio y carrito
 - `expiration_time: PT10M`, sujeto a prueba de contrato.
 - `payer.email`: email del comprador.
 - `items`: snapshots de productos y, si se valida, el costo de envío como ítem separado.
+- Cada ítem usa `external_code`, `title`, `unit_price` y `quantity`. Checkout Pro
+  Orders rechazó `unit_measure` y `total_amount` dentro del ítem; el total se
+  calcula como `unit_price * quantity`.
 - `total_amount`: string decimal ARS igual a la suma exacta de los ítems.
-- `config.notification_url`: endpoint HTTPS de Canela.
+- El webhook no se envía en la order: `config.notification_url` fue rechazado por
+  Orders API. Se configura el evento Order y su URL HTTPS en la aplicación de
+  Mercado Pago.
 - `config.online`: URLs de retorno y `auto_return: all`.
 - `config.payment_method.not_allowed_types`: excluir al menos `ticket`, sujeto a evidencia del ambiente.
 - No enviar `config.online.allowed_user_type: account_only`.
+- `config.payment_method.max_installments` se incorporará cuando el negocio defina
+  el máximo; sin configurarlo, la cuenta de prueba ofreció hasta 24 cuotas.
 
 La respuesta `201` debe persistir `id` y `checkout_url`. Nunca se mezclan recursos de prueba y producción.
 
@@ -120,11 +131,18 @@ La respuesta `201` debe persistir `id` y `checkout_url`. Nunca se mezclan recurs
 - misma aplicación/cuenta esperada;
 - ambiente esperado.
 
-`processing` conserva el bloqueo y activa reconciliación. `failed` o `canceled` permiten liberar de manera idempotente después de comprobar que no existe un resultado aprobado.
+`processing` conserva el bloqueo y activa reconciliación. También se conserva
+cuando el GET devuelve `action_required/waiting_retry`, porque Checkout Pro aún
+permite elegir otro medio dentro de la misma order. Solo `failed`, `canceled` o
+`expired` permiten liberar de manera idempotente después de comprobar que no
+existe un resultado aprobado.
 
 ## Idempotencia y resultados ambiguos
 
-La misma clave se usa para reintentar `POST /v1/orders` si hay timeout. No se genera una segunda clave para “probar de nuevo” dentro del mismo intento.
+La misma clave y el mismo payload se usan para reintentar `POST /v1/orders` si
+hay timeout. No se genera una segunda clave ni se reconstruye el intento con datos
+mutables: Mercado Pago devuelve la misma order para una repetición idéntica y
+rechaza con `409` una clave reutilizada con otro payload.
 
 - Respuesta `201`: persistir el recurso.
 - Error definitivo de payload/autorización: registrar y liberar el bloqueo.
@@ -167,8 +185,11 @@ El reloj local no libera stock por sí solo.
 3. Si existe `provider_order_id` o un intento ambiguo, consulta/reintenta Mercado Pago.
 4. `processed/accredited`: consume el bloqueo y confirma venta.
 5. `processing`: conserva el bloqueo y reintenta.
-6. `failed` o `canceled`: libera una vez.
-7. Proveedor inaccesible o resultado incoherente: conserva y pasa a `review_required` tras el umbral.
+6. `created` o `action_required` después del límite: cancela la order con una
+   clave idempotente estable, vuelve a consultar y libera solo si confirma
+   `canceled`.
+7. `failed`, `canceled` o `expired`: libera una vez.
+8. Proveedor inaccesible o resultado incoherente: conserva y pasa a `review_required` tras el umbral.
 
 Esto permite un estado público binario sin vender dos veces la última pieza.
 
@@ -250,6 +271,12 @@ MP-01 ya creó columnas con nombres de Preferences. No se reescribe la migració
 - **CA-MP-009:** Un Webhook válido solo confirma tras comprobar por API estado, monto, ARS, referencia, cuenta y ambiente.
 - **CA-MP-010:** Duplicados y eventos fuera de orden producen una sola venta y un solo consumo de stock.
 - **CA-MP-011:** Una order `processing` conserva la unidad y reconciliación converge sin segundo cobro.
+- **CA-MP-016:** Un retorno `rejected` cuyo GET autoritativo informa
+  `action_required/waiting_retry` conserva el bloqueo y permite reintentar sin
+  crear otro pedido.
+- **CA-MP-017:** Una order vencida que continúa `created/action_required` se
+  cancela de forma idempotente y el stock solo se libera después de verificar
+  `canceled`.
 - **CA-MP-012:** Si MP no responde al vencer, el sistema no libera por duda.
 - **CA-MP-013:** Una vista cacheada de un producto agotado no puede iniciar checkout.
 - **CA-MP-014:** Ningún evento de pago crea todavía un envío.
@@ -277,15 +304,15 @@ MP-01 ya creó columnas con nombres de Preferences. No se reescribe la migració
 
 ## Dependencias
 
-Antes de MP-02B:
+Antes de MP-04:
 
-- aplicación de Mercado Pago bajo la cuenta comercial correcta;
-- credenciales del ambiente de prueba y secreto de Webhooks;
-- URL HTTPS de preview;
-- decisión sobre cantidad máxima de cuotas.
+- secreto de Webhooks del ambiente de prueba;
+- URL HTTPS de preview con el endpoint receptor desplegado.
 
 Antes de producción:
 
+- aplicación definitiva bajo la cuenta comercial que recibirá los pagos;
+- decisión sobre cantidad máxima de cuotas;
 - cotización válida de Correo incluida en el total;
 - políticas visibles de devolución/reembolso;
 - responsable operativo e email de alertas;

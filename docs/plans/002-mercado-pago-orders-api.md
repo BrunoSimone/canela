@@ -39,7 +39,7 @@ de integración contra PostgreSQL 17, lint, tipos y build verdes. La validación
 una branch de Neon forma parte de la preparación del entorno externo; no se usó
 una base productiva.
 
-### MP-02B — Pruebas de contrato oficiales
+### MP-02B — Pruebas de contrato oficiales — completada el 2026-09-15
 
 - Crear/configurar la aplicación de prueba de Canela.
 - Ejecutar la matriz de `docs/research/001-mercado-pago-orders-api.md`.
@@ -48,6 +48,11 @@ una base productiva.
 - Corregir la spec si el ambiente contradice la documentación.
 
 **Puerta:** ningún supuesto crítico sin evidencia real.
+
+La API y Checkout Pro ya confirman creación, consulta, `PT10M`, dos ítems,
+exclusión de `ticket`, suma, idempotencia, compra invitada, aprobado, rechazo
+reintentable, processing y cancelación. Falta observar Webhooks sobre una URL
+HTTPS real; esa verificación queda en MP-04, junto al endpoint receptor.
 
 ### MP-03 — Checkout y retorno detrás de feature flag
 

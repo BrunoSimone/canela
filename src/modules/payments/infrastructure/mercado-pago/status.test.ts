@@ -4,7 +4,8 @@ import { mapMercadoPagoOrderState } from "./status";
 describe("mapMercadoPagoOrderState", () => {
   it.each([
     ["created", null, "created"],
-    ["processing", null, "processing"],
+    ["action_required", "waiting_retry", "action_required"],
+    ["processing", "in_process", "processing"],
     ["processed", "accredited", "approved"],
     ["failed", "rejected_by_bank", "rejected"],
     ["canceled", null, "cancelled"],

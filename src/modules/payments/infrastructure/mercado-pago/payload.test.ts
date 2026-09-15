@@ -22,7 +22,6 @@ const input: CreatePaymentOrderInput = {
       quantity: 1,
     },
   ],
-  notificationUrl: "https://preview.canela.test/api/webhooks/mercado-pago",
   returnUrl: "https://preview.canela.test/checkout/resultado",
 };
 
@@ -42,20 +41,15 @@ describe("buildMercadoPagoOrderPayload", () => {
           title: "Cuadro Palmera",
           unit_price: "30000.00",
           quantity: 1,
-          unit_measure: "unit",
-          total_amount: "30000.00",
         },
         {
           external_code: "shipping-correo-argentino",
           title: "Envío Correo Argentino",
           unit_price: "4000.00",
           quantity: 1,
-          unit_measure: "unit",
-          total_amount: "4000.00",
         },
       ],
       config: {
-        notification_url: "https://preview.canela.test/api/webhooks/mercado-pago",
         online: {
           success_url: "https://preview.canela.test/checkout/resultado",
           failure_url: "https://preview.canela.test/checkout/resultado",
