@@ -109,6 +109,9 @@ pnpm studio         # Sanity Studio → http://localhost:3333
 pnpm build          # production build (SSG)
 pnpm start          # serve the build
 pnpm lint
+pnpm test           # unit tests; DB integration tests skip without TEST_DATABASE_URL
+pnpm test:db        # PostgreSQL concurrency/integrity tests
+pnpm db:migrate     # apply versioned migrations to DATABASE_URL
 ```
 
 ### Environment
@@ -121,6 +124,11 @@ NEXT_PUBLIC_WHATSAPP_NUMBER=549XXXXXXXXXX   # international format, no "+"
 ```
 
 Sanity `projectId` / `dataset` are **public** (public-read dataset) and live as constants in `src/sanity/env.ts` — not env vars — because the Studio bundle only inlines `SANITY_STUDIO_*` variables.
+
+Orders and inventory use a private PostgreSQL database. The selected managed
+provider is Neon through Vercel; use its pooled connection string as
+`DATABASE_URL`. Integration tests require a separate disposable database through
+`TEST_DATABASE_URL` and must never target production.
 
 ### Content
 

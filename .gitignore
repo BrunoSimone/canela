@@ -20,3 +20,8 @@ dist/
 
 # Claude Code (settings locales de trabajo; lo compartible iría en .claude/settings.json)
 .claude/settings.local.json
+
+# Guías locales de trabajo y documentación de referencia descartada
+/GUIA_APRENDIZAJE_DURANTE_SPEC_DRIVEN_DEVELOPMENT.md
+/GUIA_SPEC_DRIVEN_DEVELOPMENT_PARA_IA.md
+/apiPaqAr-v2.pdf
