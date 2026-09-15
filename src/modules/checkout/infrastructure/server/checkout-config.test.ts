@@ -14,7 +14,7 @@ describe("readCheckoutConfig", () => {
         CHECKOUT_SIGNING_SECRET: "a".repeat(64),
         CHECKOUT_TEST_SHIPPING_CENTS: "400000",
         NEXT_PUBLIC_SITE_URL: "http://localhost:3000",
-        MP_ACCESS_TOKEN: "TEST-token",
+        MP_TEST_ACCESS_TOKEN: "APP_USR-test-token",
         DATABASE_URL: "postgresql://database",
       }),
     ).toEqual({
@@ -22,7 +22,7 @@ describe("readCheckoutConfig", () => {
       signingSecret: "a".repeat(64),
       shippingCents: 400_000,
       siteUrl: "http://localhost:3000",
-      mercadoPagoAccessToken: "TEST-token",
+      mercadoPagoAccessToken: "APP_USR-test-token",
     });
   });
 
@@ -34,7 +34,7 @@ describe("readCheckoutConfig", () => {
       CHECKOUT_SIGNING_SECRET: "short",
       CHECKOUT_TEST_SHIPPING_CENTS: "400000",
       NEXT_PUBLIC_SITE_URL: "http://localhost:3000",
-      MP_ACCESS_TOKEN: "TEST-token",
+      MP_TEST_ACCESS_TOKEN: "APP_USR-test-token",
       DATABASE_URL: "postgresql://database",
     },
     {
@@ -42,7 +42,7 @@ describe("readCheckoutConfig", () => {
       CHECKOUT_SIGNING_SECRET: "a".repeat(64),
       CHECKOUT_TEST_SHIPPING_CENTS: "400000",
       NEXT_PUBLIC_SITE_URL: "http://localhost:3000",
-      MP_ACCESS_TOKEN: "APP_USR-production-token",
+      MP_ACCESS_TOKEN: "APP_USR-legacy-ambiguous-token",
       DATABASE_URL: "postgresql://database",
     },
   ])("rejects an unsafe or incomplete enabled mode", (environment) => {

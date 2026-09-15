@@ -6,18 +6,18 @@ import { buildMercadoPagoOrderPayload } from "./payload";
 
 const runContract = process.env.RUN_MP_CONTRACT === "1";
 
-if (runContract && !process.env.MP_ACCESS_TOKEN) {
+if (runContract && !process.env.MP_TEST_ACCESS_TOKEN) {
   try {
     process.loadEnvFile(".env.local");
   } catch {
-    throw new Error("MP_ACCESS_TOKEN is required when RUN_MP_CONTRACT=1");
+    throw new Error("MP_TEST_ACCESS_TOKEN is required when RUN_MP_CONTRACT=1");
   }
 }
 
-const accessToken = process.env.MP_ACCESS_TOKEN;
+const accessToken = process.env.MP_TEST_ACCESS_TOKEN;
 
 if (runContract && !accessToken) {
-  throw new Error("MP_ACCESS_TOKEN is required when RUN_MP_CONTRACT=1");
+  throw new Error("MP_TEST_ACCESS_TOKEN is required when RUN_MP_CONTRACT=1");
 }
 
 const describeContract = runContract ? describe : describe.skip;

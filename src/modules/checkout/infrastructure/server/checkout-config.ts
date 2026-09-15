@@ -3,7 +3,7 @@ type CheckoutEnvironment = {
   CHECKOUT_SIGNING_SECRET?: string;
   CHECKOUT_TEST_SHIPPING_CENTS?: string;
   NEXT_PUBLIC_SITE_URL?: string;
-  MP_ACCESS_TOKEN?: string;
+  MP_TEST_ACCESS_TOKEN?: string;
   DATABASE_URL?: string;
   [key: string]: string | undefined;
 };
@@ -32,7 +32,7 @@ export function readCheckoutConfig(
   const signingSecret = environment.CHECKOUT_SIGNING_SECRET;
   const shippingValue = environment.CHECKOUT_TEST_SHIPPING_CENTS;
   const siteUrl = environment.NEXT_PUBLIC_SITE_URL;
-  const mercadoPagoAccessToken = environment.MP_ACCESS_TOKEN;
+  const mercadoPagoAccessToken = environment.MP_TEST_ACCESS_TOKEN;
 
   if (
     !signingSecret ||
@@ -44,10 +44,6 @@ export function readCheckoutConfig(
   ) {
     throw new Error("Controlled checkout configuration is incomplete");
   }
-  if (!mercadoPagoAccessToken.startsWith("TEST-")) {
-    throw new Error("Controlled checkout requires Mercado Pago test credentials");
-  }
-
   const shippingCents = Number(shippingValue);
   if (!Number.isSafeInteger(shippingCents) || shippingCents < 0) {
     throw new Error("Controlled shipping amount is invalid");

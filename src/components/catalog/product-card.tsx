@@ -106,7 +106,14 @@ export function ProductCard({ product }: { product: CardProduct }) {
           {formatPrice(product.price)}
         </div>
         <button
-          onClick={() => add({ id: product.id, name: product.name, price: product.price })}
+          onClick={() =>
+            add({
+              id: product.id,
+              name: product.name,
+              price: product.price,
+              checkoutEligible: product.tone !== "encargo",
+            })
+          }
           className="mt-auto flex items-center justify-center gap-2 rounded-xl border border-[var(--canela-ochre)] px-3 py-2.5 text-[13.5px] font-bold transition-colors"
           style={
             inConsulta

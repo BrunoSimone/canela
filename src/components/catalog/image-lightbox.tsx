@@ -233,7 +233,14 @@ export function ImageLightbox({
             ) : (
               <button
                 type="button"
-                onClick={() => add({ id, name: title, price })}
+                onClick={() =>
+                  add({
+                    id,
+                    name: title,
+                    price,
+                    checkoutEligible: tone !== "encargo",
+                  })
+                }
                 className="flex w-full items-center justify-center gap-2.5 rounded-[14px] border border-[var(--canela-ochre)] bg-[var(--canela-ochre)] px-4 py-[15px] text-[15px] font-extrabold text-[var(--canela-cream-card)] shadow-[0_8px_20px_rgba(184,132,42,.32)] transition-colors hover:bg-[var(--canela-ochre-dark)]"
               >
                 <Plus className="size-4" strokeWidth={2.4} />

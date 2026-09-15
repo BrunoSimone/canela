@@ -165,6 +165,14 @@ La página obtiene el estado con `GET /api/orders/{public_token}/status` y puede
 - pago no completado, con reintento permitido;
 - necesitamos revisar el pago, sin ofrecer un segundo cobro.
 
+El carrito de venta directa se conserva en el navegador ante una recarga. Solo se
+vacía cuando el estado interno consultado es `paid`; regresar desde Mercado Pago,
+cerrar la pestaña o recibir un estado todavía incierto no elimina sus piezas.
+
+Las piezas publicadas como `encargo` no habilitan el pago inmediato. Permanecen
+disponibles en el flujo de consulta por WhatsApp, y un carrito mixto debe separar
+claramente ambas acciones sin intentar cobrar el encargo.
+
 ## Webhook
 
 ### `POST /api/webhooks/mercado-pago`
@@ -266,6 +274,10 @@ MP-01 ya creó columnas con nombres de Preferences. No se reescribe la migració
 
 ## Seguridad y privacidad
 
+- El desarrollo usa `MP_TEST_ACCESS_TOKEN`, obtenido de la sección **Pruebas**
+  de la aplicación. El prefijo `APP_USR` no distingue credenciales de prueba y
+  producción en Checkout Pro/Orders, por lo que la separación se hace por nombre
+  y entorno, no por inspección del secreto.
 - Access Token, secreto de Webhook y `DATABASE_URL` solo en variables server-side por ambiente.
 - Logs sin token, firma, URL completa de checkout ni email sin redacción.
 - Validación de esquema, límite de body y rate limit en checkout/estado público.
@@ -301,6 +313,14 @@ MP-01 ya creó columnas con nombres de Preferences. No se reescribe la migració
 - **CA-MP-013:** Una vista cacheada de un producto agotado no puede iniciar checkout.
 - **CA-MP-014:** Ningún evento de pago crea todavía un envío.
 - **CA-MP-015:** El checkout productivo permanece apagado hasta incluir una cotización válida de Correo.
+- **CA-MP-018:** Recargar la página conserva el carrito local y un retorno que no
+  esté confirmado como `paid` no lo vacía.
+- **CA-MP-019:** Un carrito con piezas de encargo no puede iniciar pago inmediato
+  por esas piezas y mantiene disponible la consulta por WhatsApp.
+- **CA-MP-020:** La confirmación previa muestra productos, envío controlado y total,
+  pero el request de checkout envía solo ids, cantidades, email y cotización firmada.
+- **CA-MP-021:** Un resultado `verifying` o `review_required` advierte que no se
+  inicie un segundo pago; los query params del navegador no alteran esa vista.
 
 ## Estrategia de pruebas
 

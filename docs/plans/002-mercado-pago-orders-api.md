@@ -3,8 +3,8 @@
 ## Estado
 
 Aprobado el 2026-09-14. ADR-003 y `capture_mode = automatic_async` quedaron
-aceptados. MP-01 y MP-02 están cerrados; el próximo incremento ejecutable es
-MP-03A.
+aceptados. MP-01, MP-02 y MP-03 están cerrados; el próximo incremento ejecutable
+es MP-04.
 
 ## Resultado esperado
 
@@ -92,12 +92,27 @@ viaja firmada y el navegador nunca envía precios ni totales.
 ### MP-03B2 — Confirmación, redirección y retorno
 
 - Incorporar Redux Toolkit y RTK Query para carrito, mutación y polling.
+- Persistir localmente el carrito sin comprometer el render inicial de Next.js.
+- Mantener los encargos en WhatsApp y limitar el pago inmediato a piezas
+  publicadas para venta directa.
 - Mostrar el desglose de productos, envío y total antes de Mercado Pago.
 - Crear order MP y redirigir a `checkout_url`.
 - Implementar la pantalla de resultado que consulta el pedido Canela.
 - No confirmar pago desde query params del navegador.
+- Vaciar el carrito únicamente después de observar `paid` desde el endpoint
+  interno.
+- Separar la credencial del ambiente como `MP_TEST_ACCESS_TOKEN`; Checkout
+  Pro/Orders usa `APP_USR` tanto en prueba como en producción y el prefijo no es
+  una defensa válida.
 
-**Puerta:** redirección, abandono y retorno falsificado pasan pruebas de recorrido.
+**Puerta:** reducer persistible, requests sin importes, redirección, abandono,
+estados inciertos y retorno falsificado pasan pruebas del nivel apropiado; lint,
+tipos y build permanecen verdes.
+
+La puerta quedó cerrada el 2026-09-15: el carrito persistente usa Redux Toolkit,
+la mutación y el polling usan RTK Query, la confirmación no envía importes y el
+retorno ignora datos no autoritativos del navegador. La evidencia se encuentra
+en `docs/evidence/MP-03B2.md`.
 Los E2E de aprobado, rechazado y `processing` cierran en MP-04, cuando exista
 confirmación autoritativa.
 

@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
+    "@reduxjs/toolkit": "^2.12.0",
     "@sanity/image-url": "^2.1.1",
     "@sanity/locale-es-es": "^1.2.35",
     "@sanity/orderable-document-list": "^2.0.4",
@@ -34,6 +35,7 @@
     "postgres": "^3.4.9",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "react-redux": "^9.3.0",
     "sanity": "^6.1.0",
     "shadcn": "^4.11.0",
     "styled-components": "^6.4.2",

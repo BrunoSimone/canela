@@ -52,6 +52,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
+      data-scroll-behavior="smooth"
       className={`${mulish.variable} ${grandHotel.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">

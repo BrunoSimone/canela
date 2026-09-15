@@ -1,6 +1,7 @@
 "use client";
 
-import { ShoppingBag, Minus, Plus, X } from "lucide-react";
+import Link from "next/link";
+import { CreditCard, ShoppingBag, Minus, Plus, X } from "lucide-react";
 
 import { useConsulta } from "@/components/consulta/consulta-provider";
 import { formatPrice } from "@/lib/product-status";
@@ -13,7 +14,7 @@ function WhatsAppIcon({ className }: { className?: string }) {
   );
 }
 
-export function FloatingActions() {
+export function FloatingActions({ checkoutEnabled }: { checkoutEnabled: boolean }) {
   const {
     items,
     count,
@@ -22,11 +23,14 @@ export function FloatingActions() {
     dec,
     remove,
     togglePanel,
+    closePanel,
     consultaWaLink,
     generalWaLink,
   } = useConsulta();
 
   const hasItems = items.length > 0;
+  const canStartCheckout =
+    hasItems && items.every((item) => item.checkoutEligible);
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[120] h-0">
@@ -103,6 +107,22 @@ export function FloatingActions() {
             </div>
 
             <div className="border-t border-[rgba(184,132,42,.18)] p-3">
+              {checkoutEnabled && canStartCheckout && (
+                <Link
+                  href="/checkout"
+                  onClick={closePanel}
+                  className="mb-2.5 flex items-center justify-center gap-2 rounded-xl bg-[var(--canela-ochre)] px-4 py-3 text-sm font-extrabold text-[var(--canela-cream-card)] transition-colors hover:bg-[var(--canela-ochre-dark)]"
+                >
+                  <CreditCard className="size-4" />
+                  Comprar y pagar online
+                </Link>
+              )}
+              {checkoutEnabled && hasItems && !canStartCheckout && (
+                <p className="mb-2.5 border-l-2 border-[var(--canela-ochre)] pl-3 text-xs leading-relaxed text-[#6E4E38]">
+                  Los encargos se coordinan por WhatsApp. Quitalos de esta consulta
+                  para pagar online las piezas disponibles.
+                </p>
+              )}
               <a
                 href={consultaWaLink}
                 target="_blank"

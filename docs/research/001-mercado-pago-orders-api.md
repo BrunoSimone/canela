@@ -133,7 +133,15 @@ La documentación usa tanto el nombre visible “Order (Mercado Pago)” como el
 
 La guía específica indica crear una order de prueba, redirigir mediante `checkout_url`, iniciar sesión con una cuenta compradora de prueba y usar tarjetas de prueba para simular aprobado, rechazado y pendiente: [compra de prueba con tarjetas](https://www.mercadopago.com.ar/developers/es/docs/checkout-pro-orders/integration-test/test-purchase-with-card).
 
-La documentación de credenciales cambió durante 2025 y las páginas de referencia todavía presentan mensajes inconsistentes. La aplicación real será la autoridad de la configuración: se usarán las credenciales que el panel marque para pruebas y nunca se mezclarán cuentas/credenciales productivas sin una revisión previa.
+La documentación de credenciales cambió durante 2025. La documentación oficial
+consultada el 2026-09-15 confirma que, para Checkout Pro/Orders, el Access Token
+de prueba puede comenzar con `APP_USR`, igual que el productivo. La aplicación
+real será la autoridad de la configuración: se usará la credencial visible en
+**Pruebas > Credenciales de prueba** y se separará como `MP_TEST_ACCESS_TOKEN`;
+no se intentará inferir el ambiente a partir del prefijo.
+
+Fuente: [credenciales de Checkout API Orders](https://www.mercadopago.com.ar/developers/es/docs/checkout-api-orders/resources/credentials)
+y [cuentas de prueba de Checkout Pro](https://www.mercadopago.com.ar/developers/es/docs/checkout-pro-preferences/test-accounts).
 
 ### Cancelaciones y reembolsos
 
