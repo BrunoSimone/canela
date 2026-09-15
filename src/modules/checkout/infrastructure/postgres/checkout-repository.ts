@@ -1,15 +1,19 @@
 import type { Sql } from "postgres";
 
 import {
+  ClosedCheckoutAttemptError,
   createReservedOrder,
+  InventoryUnavailableError,
   type CreateReservedOrderInput,
 } from "../../../../db/create-reserved-order";
 import type { PaymentOrder } from "../../../payments/domain/payment-order";
-import type {
-  CheckoutItem,
-  CheckoutRepository,
-  ReservedCheckout,
-  ReserveCheckoutInput,
+import {
+  CheckoutAttemptClosedError,
+  CheckoutInventoryUnavailableError,
+  type CheckoutItem,
+  type CheckoutRepository,
+  type ReservedCheckout,
+  type ReserveCheckoutInput,
 } from "../../domain/checkout";
 
 type CheckoutRow = {
@@ -36,10 +40,21 @@ export class PostgresCheckoutRepository implements CheckoutRepository {
   constructor(private readonly sql: Sql) {}
 
   async reserve(input: ReserveCheckoutInput): Promise<ReservedCheckout> {
-    const reserved = await createReservedOrder(
-      this.sql,
-      toCreateReservedOrderInput(input),
-    );
+    let reserved;
+    try {
+      reserved = await createReservedOrder(
+        this.sql,
+        toCreateReservedOrderInput(input),
+      );
+    } catch (error) {
+      if (error instanceof InventoryUnavailableError) {
+        throw new CheckoutInventoryUnavailableError(error.productIds);
+      }
+      if (error instanceof ClosedCheckoutAttemptError) {
+        throw new CheckoutAttemptClosedError();
+      }
+      throw error;
+    }
     const checkout = await this.read(reserved.orderId);
 
     return { ...checkout, reused: reserved.reused };

@@ -200,6 +200,9 @@ Esto permite un estado público binario sin vender dos veces la última pieza.
 
 ### `POST /api/checkout`
 
+Requiere el header `Idempotency-Key`, generado una vez por intento del navegador
+y reutilizado en reintentos técnicos. El body no acepta nombre, precio ni total.
+
 Entrada:
 
 ```json
@@ -222,9 +225,12 @@ Respuesta `201`:
 
 Errores:
 
+- `404 CHECKOUT_DISABLED` mientras el feature flag esté apagado.
 - `409 OUT_OF_STOCK`.
-- `409 CHECKOUT_ALREADY_ACTIVE`.
+- `409 CHECKOUT_ATTEMPT_CLOSED` cuando se reutiliza una clave cuyo intento ya
+  terminó; un reintento de red del mismo intento activo reutiliza su order.
 - `409 SHIPPING_QUOTE_EXPIRED`.
+- `422 INVALID_CHECKOUT` para esquema, email, cantidades o idempotencia inválidos.
 - `422 PRODUCT_NOT_SELLABLE`.
 - `422 SHIPPING_QUOTE_INVALID`.
 - `502 PAYMENT_PROVIDER_UNAVAILABLE` ante error definitivo; libera una vez.
@@ -232,7 +238,18 @@ Errores:
 
 ### `GET /api/orders/{public_token}/status`
 
-Devuelve solo estado presentable, expiración y próximo paso. No expone ids internos, PII de otros compradores ni secretos.
+Devuelve solo estado presentable, expiración y si un nuevo intento está permitido:
+
+```json
+{
+  "status": "verifying | paid | not_completed | review_required",
+  "expiresAt": "ISO-8601",
+  "canRetry": false
+}
+```
+
+No expone ids internos, PII de otros compradores ni secretos. Los query params
+de retorno de Mercado Pago no participan de esta respuesta ni cambian el pedido.
 
 ## Modelo mínimo de datos
 

@@ -38,3 +38,17 @@ export interface CheckoutRepository {
   markProviderCreationUncertain(orderId: string): Promise<void>;
   releaseForDefinitiveProviderFailure(orderId: string): Promise<void>;
 }
+
+export class CheckoutInventoryUnavailableError extends Error {
+  constructor(readonly productIds: string[]) {
+    super(`Checkout inventory unavailable for: ${productIds.join(", ")}`);
+    this.name = "CheckoutInventoryUnavailableError";
+  }
+}
+
+export class CheckoutAttemptClosedError extends Error {
+  constructor() {
+    super("Checkout attempt is no longer active");
+    this.name = "CheckoutAttemptClosedError";
+  }
+}

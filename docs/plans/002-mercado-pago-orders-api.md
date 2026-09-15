@@ -73,18 +73,33 @@ conserva stock ante resultados ambiguos y libera de forma idempotente solo ante
 un rechazo definitivo. Las transiciones se probaron contra PostgreSQL 17 local;
 las migraciones aditivas se verificaron en Neon `development`.
 
-### MP-03B — HTTP, confirmación y retorno detrás de feature flag
+### MP-03B1 — Contrato HTTP detrás de feature flag — completada el 2026-09-15
 
 - Extender `POST /api/checkout` con cotización firmada.
 - Para pruebas usar un proveedor de cotización controlado, claramente no productivo.
+- Releer nombre y precio publicados desde Sanity sin aceptar importes del navegador.
+- Exponer el estado presentable por token público no enumerable.
+- Mantener el endpoint apagado por defecto.
+
+**Puerta:** validación HTTP, token manipulado, catálogo no vendible, falta de
+stock, reintento y retorno falsificado pasan pruebas sin que el navegador pueda
+confirmar un pago.
+
+Los endpoints de inicio y estado público quedaron implementados con el checkout
+apagado por defecto. El modo controlado exige credenciales `TEST-`, la tarifa
+viaja firmada y el navegador nunca envía precios ni totales.
+
+### MP-03B2 — Confirmación, redirección y retorno
+
+- Incorporar Redux Toolkit y RTK Query para carrito, mutación y polling.
+- Mostrar el desglose de productos, envío y total antes de Mercado Pago.
 - Crear order MP y redirigir a `checkout_url`.
 - Implementar la pantalla de resultado que consulta el pedido Canela.
 - No confirmar pago desde query params del navegador.
 
-**Puerta:** validación HTTP, cotización manipulada, falta de stock, reintento,
-redirección, abandono y retorno falsificado pasan pruebas sin que el navegador
-pueda confirmar un pago. Los E2E de aprobado, rechazado y `processing` cierran
-en MP-04, cuando exista confirmación autoritativa.
+**Puerta:** redirección, abandono y retorno falsificado pasan pruebas de recorrido.
+Los E2E de aprobado, rechazado y `processing` cierran en MP-04, cuando exista
+confirmación autoritativa.
 
 ### MP-04 — Webhook y confirmación
 

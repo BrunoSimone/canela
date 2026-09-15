@@ -6,6 +6,7 @@ import { createDatabaseClient } from "../../../../db/client";
 import { runMigrations } from "../../../../db/migrate";
 import type { PaymentOrder } from "../../../payments/domain/payment-order";
 import { PostgresCheckoutRepository } from "./checkout-repository";
+import { PostgresPublicOrderStatusRepository } from "./public-order-status-repository";
 
 const connectionString = process.env.TEST_DATABASE_URL;
 
@@ -205,5 +206,17 @@ describeWithDatabase("PostgresCheckoutRepository", () => {
         WHERE order_id = ${input.orderId}
       `,
     ).rejects.toMatchObject({ code: "23514" });
+  });
+
+  it("finds an order only through the hash of its public token", async () => {
+    const input = reserveInput();
+    await repository.reserve(input);
+    const statuses = new PostgresPublicOrderStatusRepository(sql);
+
+    await expect(statuses.findByTokenHash(input.publicTokenHash)).resolves.toEqual({
+      status: "created",
+      expiresAt: expect.any(Date),
+    });
+    await expect(statuses.findByTokenHash("b".repeat(64))).resolves.toBeNull();
   });
 });
