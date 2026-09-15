@@ -43,7 +43,8 @@ producción aprobados.
   las pruebas y el adaptador ya reflejan el contrato real.
 - `PT10M`, el ítem de envío y la exclusión efectiva de medios offline siguen
   siendo hipótesis hasta MP-02B.
-- No conecta todavía reserva, creación remota y persistencia en un caso de uso;
-  eso corresponde a MP-03 después de validar el contrato.
-- No se ejecutó la migración sobre Neon. Debe probarse primero en una branch o
-  base descartable, nunca directamente en producción.
+- MP-03A conectó posteriormente reserva, creación remota y persistencia en un
+  caso de uso con tratamiento explícito de fallos definitivos y ambiguos.
+- Las migraciones fueron verificadas posteriormente en la branch `development`
+  de Neon; nunca se ejecutaron pruebas destructivas contra ella ni contra
+  producción.

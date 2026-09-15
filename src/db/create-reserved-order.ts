@@ -41,6 +41,13 @@ export class InventoryUnavailableError extends Error {
   }
 }
 
+export class ClosedCheckoutAttemptError extends Error {
+  constructor() {
+    super("Checkout attempt is no longer active");
+    this.name = "ClosedCheckoutAttemptError";
+  }
+}
+
 type ValidatedOrder = {
   subtotalCents: number;
   totalCents: number;
@@ -144,8 +151,12 @@ export async function createReservedOrder(
     const [existing] = await transaction<{
       id: string;
       expires_at: Date;
+      reservations_are_active: boolean;
     }[]>`
-      SELECT orders.id, min(stock_reservation.expires_at) AS expires_at
+      SELECT
+        orders.id,
+        min(stock_reservation.expires_at) AS expires_at,
+        bool_and(stock_reservation.status = 'active') AS reservations_are_active
       FROM orders
       JOIN stock_reservation ON stock_reservation.order_id = orders.id
       WHERE orders.checkout_idempotency_key = ${input.idempotencyKey}
@@ -153,6 +164,9 @@ export async function createReservedOrder(
     `;
 
     if (existing) {
+      if (!existing.reservations_are_active) {
+        throw new ClosedCheckoutAttemptError();
+      }
       return {
         orderId: existing.id,
         expiresAt: existing.expires_at,
@@ -211,6 +225,18 @@ export async function createReservedOrder(
         ${input.shippingCents},
         ${validated.totalCents},
         ${input.buyerEmail ?? null}
+      )
+    `;
+
+    await transaction`
+      INSERT INTO payment_attempt (
+        id,
+        order_id,
+        provider_idempotency_key
+      ) VALUES (
+        ${randomUUID()},
+        ${input.orderId},
+        ${input.idempotencyKey}
       )
     `;
 

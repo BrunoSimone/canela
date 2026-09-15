@@ -8,6 +8,18 @@ export type PaymentOrderState =
   | "expired"
   | "review_required";
 
+export type PaymentOrderFailureKind =
+  | "definitive"
+  | "retryable"
+  | "ambiguous";
+
+export class PaymentOrderGatewayError extends Error {
+  constructor(readonly kind: PaymentOrderFailureKind, options?: ErrorOptions) {
+    super("Payment order gateway request failed", options);
+    this.name = "PaymentOrderGatewayError";
+  }
+}
+
 export type PaymentOrderItem = {
   externalCode: string;
   title: string;

@@ -1,7 +1,9 @@
-export type MercadoPagoFailureKind =
-  | "definitive"
-  | "retryable"
-  | "ambiguous";
+import {
+  PaymentOrderGatewayError,
+  type PaymentOrderFailureKind,
+} from "../../domain/payment-order";
+
+export type MercadoPagoFailureKind = PaymentOrderFailureKind;
 
 export type MercadoPagoOperation = "create" | "get";
 
@@ -13,14 +15,14 @@ type MercadoPagoRequestErrorOptions = {
   cause?: unknown;
 };
 
-export class MercadoPagoRequestError extends Error {
+export class MercadoPagoRequestError extends PaymentOrderGatewayError {
   readonly operation: MercadoPagoOperation;
   readonly kind: MercadoPagoFailureKind;
   readonly status: number | null;
   readonly code: string | null;
 
   constructor(options: MercadoPagoRequestErrorOptions) {
-    super(`Mercado Pago ${options.operation} request failed`, {
+    super(options.kind, {
       cause: options.cause,
     });
     this.name = "MercadoPagoRequestError";

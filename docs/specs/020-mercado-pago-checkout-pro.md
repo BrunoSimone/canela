@@ -2,7 +2,10 @@
 
 ## Estado
 
-Aprobada para implementación el 2026-09-14. MP-01 ya está implementado y verificado localmente contra PostgreSQL 17; falta aplicar su migración a Neon. Las verificaciones de contrato conservan sus propias puertas antes de producción.
+Aprobada para implementación el 2026-09-14. MP-01 está implementado y sus
+migraciones fueron verificadas tanto contra PostgreSQL 17 local como en la branch
+`development` de Neon. Las verificaciones de contrato conservan sus propias
+puertas antes de producción.
 
 ## Fuentes normativas
 

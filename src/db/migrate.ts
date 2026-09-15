@@ -34,17 +34,19 @@ async function loadMigrations(): Promise<Migration[]> {
 }
 
 export async function runMigrations(sql: Sql): Promise<void> {
-  await sql`
-    CREATE TABLE IF NOT EXISTS schema_migration (
-      name text PRIMARY KEY,
-      checksum char(64) NOT NULL,
-      applied_at timestamptz NOT NULL DEFAULT now()
-    )
-  `;
+  const migrations = await loadMigrations();
 
-  for (const migration of await loadMigrations()) {
-    await sql.begin(async (transaction) => {
-      await transaction`SELECT pg_advisory_xact_lock(49190201)`;
+  await sql.begin(async (transaction) => {
+    await transaction`SELECT pg_advisory_xact_lock(49190201)`;
+    await transaction`
+      CREATE TABLE IF NOT EXISTS schema_migration (
+        name text PRIMARY KEY,
+        checksum char(64) NOT NULL,
+        applied_at timestamptz NOT NULL DEFAULT now()
+      )
+    `;
+
+    for (const migration of migrations) {
 
       const [applied] = await transaction<{
         checksum: string;
@@ -61,7 +63,7 @@ export async function runMigrations(sql: Sql): Promise<void> {
             `Migration ${migration.name} changed after it was applied`,
           );
         }
-        return;
+        continue;
       }
 
       await transaction.unsafe(migration.sql);
@@ -69,8 +71,8 @@ export async function runMigrations(sql: Sql): Promise<void> {
         INSERT INTO schema_migration (name, checksum)
         VALUES (${migration.name}, ${migration.checksum})
       `;
-    });
-  }
+    }
+  });
 }
 
 async function main(): Promise<void> {

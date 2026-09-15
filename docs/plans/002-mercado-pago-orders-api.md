@@ -2,7 +2,9 @@
 
 ## Estado
 
-Aprobado el 2026-09-14. ADR-003 y `capture_mode = automatic_async` quedaron aceptados; el próximo incremento ejecutable es MP-02A.
+Aprobado el 2026-09-14. ADR-003 y `capture_mode = automatic_async` quedaron
+aceptados. MP-01 y MP-02 están cerrados; el próximo incremento ejecutable es
+MP-03A.
 
 ## Resultado esperado
 
@@ -35,9 +37,9 @@ La cantidad máxima de cuotas es una configuración comercial pendiente, pero no
 **Puerta:** lint, tipos, migración reversible/compatible y pruebas locales verdes.
 
 La puerta local quedó cerrada con 19 pruebas unitarias del adaptador, 4 pruebas
-de integración contra PostgreSQL 17, lint, tipos y build verdes. La validación en
-una branch de Neon forma parte de la preparación del entorno externo; no se usó
-una base productiva.
+de integración contra PostgreSQL 17, lint, tipos y build verdes. Las migraciones
+0001 y 0002 también quedaron aplicadas y verificadas en la branch `development`
+de Neon; no se usó la branch productiva.
 
 ### MP-02B — Pruebas de contrato oficiales — completada el 2026-09-15
 
@@ -54,7 +56,24 @@ exclusión de `ticket`, suma, idempotencia, compra invitada, aprobado, rechazo
 reintentable, processing y cancelación. Falta observar Webhooks sobre una URL
 HTTPS real; esa verificación queda en MP-04, junto al endpoint receptor.
 
-### MP-03 — Checkout y retorno detrás de feature flag
+### MP-03A — Orquestación del inicio de checkout — completada el 2026-09-15
+
+- Conectar reserva, intento de pago, Orders API y persistencia del resultado.
+- Reusar snapshots e idempotency key persistidos ante un reintento.
+- Liberar una reserva únicamente ante un fallo definitivo de creación.
+- Conservarla y marcar revisión ante timeout, `5xx`, `409` o resultado
+  incoherente del proveedor.
+
+**Puerta:** pruebas unitarias del caso de uso y pruebas de integración de las
+transiciones de Neon demuestran éxito, reintento, fallo definitivo y resultado
+ambiguo sin sobreventa.
+
+La orquestación usa el snapshot persistido para crear o reintentar la order,
+conserva stock ante resultados ambiguos y libera de forma idempotente solo ante
+un rechazo definitivo. Las transiciones se probaron contra PostgreSQL 17 local;
+las migraciones aditivas se verificaron en Neon `development`.
+
+### MP-03B — HTTP, confirmación y retorno detrás de feature flag
 
 - Extender `POST /api/checkout` con cotización firmada.
 - Para pruebas usar un proveedor de cotización controlado, claramente no productivo.
@@ -62,7 +81,10 @@ HTTPS real; esa verificación queda en MP-04, junto al endpoint receptor.
 - Implementar la pantalla de resultado que consulta el pedido Canela.
 - No confirmar pago desde query params del navegador.
 
-**Puerta:** aprobado, rechazado, processing, abandono y retorno falsificado pasan E2E.
+**Puerta:** validación HTTP, cotización manipulada, falta de stock, reintento,
+redirección, abandono y retorno falsificado pasan pruebas sin que el navegador
+pueda confirmar un pago. Los E2E de aprobado, rechazado y `processing` cierran
+en MP-04, cuando exista confirmación autoritativa.
 
 ### MP-04 — Webhook y confirmación
 
