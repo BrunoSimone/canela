@@ -20,15 +20,24 @@ La cantidad máxima de cuotas es una configuración comercial pendiente, pero no
 
 **Salida:** spec 020 aprobada para implementación.
 
-### MP-02A — Adaptar persistencia y cliente
+### MP-02A — Adaptar persistencia y cliente — completada localmente el 2026-09-15
 
+- Alinear la spec 010 con las decisiones ya aprobadas y registrar los límites de
+  arquitectura en ADR-004/005.
 - Agregar una migración aditiva para `provider_order_id`, `checkout_url`, `provider_status` y `provider_status_detail`.
 - No editar la migración 0001 ya verificada.
 - Implementar el adaptador de `POST /v1/orders` y `GET /v1/orders/{id}`.
 - Reusar una idempotency key estable al reintentar el mismo intento.
 - Agregar pruebas unitarias del payload, decimales ARS y mapeo de estados.
+- Separar el código de dominio de los contratos y transporte específicos de
+  Mercado Pago.
 
 **Puerta:** lint, tipos, migración reversible/compatible y pruebas locales verdes.
+
+La puerta local quedó cerrada con 19 pruebas unitarias del adaptador, 4 pruebas
+de integración contra PostgreSQL 17, lint, tipos y build verdes. La validación en
+una branch de Neon forma parte de la preparación del entorno externo; no se usó
+una base productiva.
 
 ### MP-02B — Pruebas de contrato oficiales
 

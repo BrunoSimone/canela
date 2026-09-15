@@ -147,4 +147,83 @@ describeWithDatabase("createReservedOrder against PostgreSQL", () => {
     `;
     expect(inventory.reserved).toBe(1);
   });
+
+  it("stores one Mercado Pago Orders identity per provider", async () => {
+    const firstOrder = inputFor([]);
+    const secondOrder = inputFor([]);
+
+    for (const input of [firstOrder, secondOrder]) {
+      await sql`
+        INSERT INTO orders (
+          id,
+          public_token_hash,
+          checkout_idempotency_key,
+          currency,
+          subtotal_cents,
+          total_cents
+        )
+        VALUES (
+          ${input.orderId},
+          ${input.publicTokenHash},
+          ${input.idempotencyKey},
+          'ARS',
+          0,
+          0
+        )
+      `;
+    }
+
+    const providerIdempotencyKey = randomUUID();
+    await sql`
+      INSERT INTO payment_attempt (
+        id,
+        order_id,
+        provider_idempotency_key,
+        provider_order_id,
+        checkout_url,
+        provider_status,
+        provider_status_detail
+      )
+      VALUES (
+        ${randomUUID()},
+        ${firstOrder.orderId},
+        ${providerIdempotencyKey},
+        'ORDTST01ABC',
+        'https://www.mercadopago.com.ar/checkout/redirect',
+        'created',
+        'pending'
+      )
+    `;
+
+    const [attempt] = await sql<{
+      status: string;
+      provider_order_id: string;
+      provider_status_detail: string;
+    }[]>`
+      SELECT status, provider_order_id, provider_status_detail
+      FROM payment_attempt
+      WHERE order_id = ${firstOrder.orderId}
+    `;
+
+    expect(attempt).toEqual({
+      status: "payment_pending",
+      provider_order_id: "ORDTST01ABC",
+      provider_status_detail: "pending",
+    });
+
+    await expect(
+      sql`
+        INSERT INTO payment_attempt (
+          id,
+          order_id,
+          provider_idempotency_key
+        )
+        VALUES (
+          ${randomUUID()},
+          ${secondOrder.orderId},
+          ${providerIdempotencyKey}
+        )
+      `,
+    ).rejects.toMatchObject({ code: "23505" });
+  });
 });

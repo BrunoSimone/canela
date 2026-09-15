@@ -74,7 +74,7 @@ export async function runMigrations(sql: Sql): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  if (!process.env.DATABASE_URL) {
+  if (!process.env.DATABASE_URL_UNPOOLED && !process.env.DATABASE_URL) {
     try {
       process.loadEnvFile(".env.local");
     } catch {
@@ -82,9 +82,12 @@ async function main(): Promise<void> {
     }
   }
 
-  const connectionString = process.env.DATABASE_URL;
+  const connectionString =
+    process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL;
   if (!connectionString) {
-    throw new Error("DATABASE_URL is required to run migrations");
+    throw new Error(
+      "DATABASE_URL_UNPOOLED or DATABASE_URL is required to run migrations",
+    );
   }
 
   const sql = createDatabaseClient(connectionString);

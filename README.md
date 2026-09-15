@@ -111,7 +111,7 @@ pnpm start          # serve the build
 pnpm lint
 pnpm test           # unit tests; DB integration tests skip without TEST_DATABASE_URL
 pnpm test:db        # PostgreSQL concurrency/integrity tests
-pnpm db:migrate     # apply versioned migrations to DATABASE_URL
+pnpm db:migrate     # apply migrations to DATABASE_URL_UNPOOLED (or DATABASE_URL)
 ```
 
 ### Environment
@@ -127,7 +127,8 @@ Sanity `projectId` / `dataset` are **public** (public-read dataset) and live as 
 
 Orders and inventory use a private PostgreSQL database. The selected managed
 provider is Neon through Vercel; use its pooled connection string as
-`DATABASE_URL`. Integration tests require a separate disposable database through
+`DATABASE_URL` and its direct connection string as `DATABASE_URL_UNPOOLED` for
+migrations. Integration tests require a separate disposable database through
 `TEST_DATABASE_URL` and must never target production.
 
 ### Content

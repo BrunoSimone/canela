@@ -2,7 +2,8 @@
 
 ## Estado
 
-Borrador para aprobación. El bloqueo temporal y el orden Mercado Pago → Correo están confirmados; quedan decisiones de infraestructura y operación.
+Aprobada para implementación. El bloqueo temporal de 10 minutos, Neon,
+Orders API con `automatic_async` y el carrito multiproducto están confirmados.
 
 ## Contexto y problema
 
@@ -17,8 +18,6 @@ Permitir el pago inmediato de productos con stock disponible, garantizando que c
 - Pagos pendientes, offline o de acreditación diferida.
 - Productos por encargo y personalizados.
 - Cotización y fulfillment de Correo Argentino.
-- Elección definitiva del proveedor de base de datos.
-- Implementación en esta etapa de documentación.
 
 ## Actores
 
@@ -124,7 +123,8 @@ Como mínimo:
 
 ## Restricciones y supuestos
 
-- Decisión pendiente en spec 020: priorizar conversión con `automatic_async` o simplicidad con `automatic`.
+- Decisión: usar `capture_mode = automatic_async` y conservar el bloqueo mientras
+  Mercado Pago informe `processing`.
 - Supuesto pendiente: Mercado Pago permite excluir todos los medios no inmediatos requeridos por esta política para la cuenta argentina del dueño.
 - Decisión: Neon PostgreSQL es la base transaccional, según ADR-001.
 - Supuesto pendiente: los productos por encargo siguen como consulta manual en el primer incremento.
@@ -133,8 +133,8 @@ Como mínimo:
 
 - Interfaz inicial de reposición: Sanity, panel mínimo separado o tarea operativa protegida.
 - Política de reembolso y responsable de resolución manual.
-- Si el carrito permite combinar varias piezas en el primer incremento.
-- Costo aceptable y proveedor de base de datos.
+- Los perfiles de embalaje y la cotización real bloquean producción, pero no las
+  pruebas de Mercado Pago.
 
 ## Dependencias
 
