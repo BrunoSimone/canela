@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { CreditCard, ShoppingBag, Minus, Plus, X } from "lucide-react";
+import { CreditCard, Minus, Plus, ShoppingBag, X } from "lucide-react";
 
-import { useConsulta } from "@/components/consulta/consulta-provider";
 import { formatPrice } from "@/lib/product-status";
+import { useCart } from "@/modules/cart/presentation/hooks/use-cart";
 
 function WhatsAppIcon({ className }: { className?: string }) {
   return (
@@ -14,7 +14,7 @@ function WhatsAppIcon({ className }: { className?: string }) {
   );
 }
 
-export function FloatingActions({ checkoutEnabled }: { checkoutEnabled: boolean }) {
+export function FloatingCart({ checkoutEnabled }: { checkoutEnabled: boolean }) {
   const {
     items,
     count,
@@ -24,9 +24,9 @@ export function FloatingActions({ checkoutEnabled }: { checkoutEnabled: boolean 
     remove,
     togglePanel,
     closePanel,
-    consultaWaLink,
-    generalWaLink,
-  } = useConsulta();
+    cartWhatsAppLink,
+    generalWhatsAppLink,
+  } = useCart();
 
   const hasItems = items.length > 0;
   const canStartCheckout =
@@ -39,7 +39,7 @@ export function FloatingActions({ checkoutEnabled }: { checkoutEnabled: boolean 
           <div className="flex max-h-[62vh] w-[322px] max-w-[80vw] flex-col overflow-hidden rounded-2xl border border-[rgba(184,132,42,.3)] bg-[var(--canela-cream-card)] shadow-[0_22px_54px_rgba(74,53,39,.3)]">
             <div className="flex items-center justify-between border-b border-[rgba(184,132,42,.18)] bg-[#F3E8D2] px-4 py-3.5">
               <span className="font-heading text-2xl leading-none text-[var(--canela-brown)]">
-                Mi consulta
+                Mi carrito
               </span>
               <button
                 onClick={togglePanel}
@@ -52,32 +52,32 @@ export function FloatingActions({ checkoutEnabled }: { checkoutEnabled: boolean 
 
             <div className="flex flex-col gap-0.5 overflow-y-auto p-2.5">
               {hasItems ? (
-                items.map((i) => (
+                items.map((item) => (
                   <div
-                    key={i.id}
+                    key={item.id}
                     className="flex items-center gap-2.5 border-b border-[rgba(184,132,42,.1)] px-2 py-2.5 last:border-0"
                   >
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-sm font-bold text-[var(--canela-brown)]">
-                        {i.name}
+                        {item.name}
                       </div>
                       <div className="text-[13px] font-bold text-[var(--canela-ochre-dark)]">
-                        {formatPrice(i.price)}
+                        {formatPrice(item.price)}
                       </div>
                     </div>
                     <div className="flex flex-none items-center gap-1.5">
                       <button
-                        onClick={() => dec(i.id)}
+                        onClick={() => dec(item.id)}
                         aria-label="Quitar uno"
-                        className="flex size-6 items-center justify-center rounded-lg border border-[rgba(184,132,42,.5)] text-[var(--canela-muted-fg,#6E4E38)] text-[#6E4E38]"
+                        className="flex size-6 items-center justify-center rounded-lg border border-[rgba(184,132,42,.5)] text-[#6E4E38]"
                       >
                         <Minus className="size-3.5" />
                       </button>
                       <span className="min-w-4 text-center text-sm font-bold text-[var(--canela-brown)]">
-                        {i.qty}
+                        {item.qty}
                       </span>
                       <button
-                        onClick={() => inc(i.id)}
+                        onClick={() => inc(item.id)}
                         aria-label="Agregar uno"
                         className="flex size-6 items-center justify-center rounded-lg border border-[rgba(184,132,42,.5)] text-[#6E4E38]"
                       >
@@ -85,8 +85,8 @@ export function FloatingActions({ checkoutEnabled }: { checkoutEnabled: boolean 
                       </button>
                     </div>
                     <button
-                      onClick={() => remove(i.id)}
-                      aria-label="Quitar de la consulta"
+                      onClick={() => remove(item.id)}
+                      aria-label="Quitar del carrito"
                       className="flex size-6 flex-none items-center justify-center rounded-lg text-[#b06a52]"
                     >
                       <X className="size-3.5" />
@@ -99,7 +99,7 @@ export function FloatingActions({ checkoutEnabled }: { checkoutEnabled: boolean 
                   <br />
                   Tocá{" "}
                   <b className="text-[var(--canela-ochre-dark)]">
-                    “Agregar a mi consulta”
+                    “Agregar al carrito”
                   </b>{" "}
                   en las que te gusten.
                 </div>
@@ -119,12 +119,12 @@ export function FloatingActions({ checkoutEnabled }: { checkoutEnabled: boolean 
               )}
               {checkoutEnabled && hasItems && !canStartCheckout && (
                 <p className="mb-2.5 border-l-2 border-[var(--canela-ochre)] pl-3 text-xs leading-relaxed text-[#6E4E38]">
-                  Los encargos se coordinan por WhatsApp. Quitalos de esta consulta
+                  Los encargos se coordinan por WhatsApp. Quitalos del carrito
                   para pagar online las piezas disponibles.
                 </p>
               )}
               <a
-                href={consultaWaLink}
+                href={cartWhatsAppLink}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-disabled={!hasItems}
@@ -135,7 +135,7 @@ export function FloatingActions({ checkoutEnabled }: { checkoutEnabled: boolean 
                 }}
               >
                 <WhatsAppIcon className="size-4" />
-                Enviar consulta por WhatsApp
+                Consultar por WhatsApp
               </a>
             </div>
           </div>
@@ -144,7 +144,7 @@ export function FloatingActions({ checkoutEnabled }: { checkoutEnabled: boolean 
         <div className="flex flex-col items-end gap-3">
           <button
             onClick={togglePanel}
-            aria-label="Mi consulta"
+            aria-label="Mi carrito"
             className="relative flex size-14 items-center justify-center rounded-full bg-[var(--canela-brown)] text-[var(--canela-cream)] shadow-[0_10px_26px_rgba(74,53,39,.35)]"
           >
             <ShoppingBag className="size-6" strokeWidth={1.7} />
@@ -155,7 +155,7 @@ export function FloatingActions({ checkoutEnabled }: { checkoutEnabled: boolean 
             )}
           </button>
           <a
-            href={generalWaLink}
+            href={generalWhatsAppLink}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Contacto por WhatsApp"

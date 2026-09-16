@@ -1,10 +1,17 @@
-# Canela — Artisan Catalog
+# Canela — Artisan Ecommerce
 
-A catalog website for **Canela**, a studio that makes handcrafted glass, ceramics, and mirrors & framed art. The site showcases the pieces and drives conversions to **WhatsApp**, where the sale is closed and payment is coordinated manually (a Mercado Pago link/QR is sent in-chat — there is no integrated checkout).
+An ecommerce for **Canela**, a studio that makes handcrafted glass, ceramics,
+mirrors and framed art. Customers browse the Sanity-managed catalog, build a
+cart and pay through Mercado Pago Checkout Pro. Neon PostgreSQL is authoritative
+for orders, inventory and temporary stock reservations.
 
-The scope is deliberate: for one-of-a-kind and made-to-order artisan pieces, a conversational, human-in-the-loop flow fits the product far better than a self-serve cart with instant payment (which would risk overselling unique items). The site is optimized to get an interested visitor into a WhatsApp conversation with as little friction as possible.
+Direct-sale products use the online checkout. Made-to-order pieces remain a
+WhatsApp inquiry because their details must be coordinated before payment.
+Production checkout stays disabled until the Correo Argentino quote is part of
+the authoritative total.
 
-> **Flow:** browse → filter → inspect in a fullscreen lightbox → add pieces to an *inquiry list* → send the whole list to WhatsApp as a pre-filled message.
+> **Flow:** browse → inspect → add to cart → review products and shipping → pay
+> in Mercado Pago → confirm the result from Canela's server-side payment state.
 
 ---
 
@@ -18,6 +25,9 @@ The scope is deliberate: for one-of-a-kind and made-to-order artisan pieces, a c
 | Styling | **Tailwind CSS v4** (`@theme` tokens, no config file) |
 | Components | **shadcn** (`base-nova` style) on **Base UI** primitives |
 | CMS | **Sanity** (`next-sanity`), content lake + self-hosted Studio |
+| Transactional data | **Neon PostgreSQL** — orders, inventory and reservations |
+| Payments | **Mercado Pago Checkout Pro** through Orders API |
+| Client state | **Redux Toolkit + RTK Query** |
 | Animation | **motion** (Framer Motion successor) |
 | Carousel | **embla-carousel-react** |
 | Icons | **lucide-react** |
@@ -29,7 +39,10 @@ The stack intentionally mirrors a sibling project (`Guild`) so both share the sa
 
 ## Architecture
 
-Single-page marketing site rendered as **static content** (SSG) with server-side data fetching from Sanity. All product/hero content is fetched in React Server Components; only the interactive islands (filters, lightbox, inquiry cart, hero carousel) are client components.
+The public catalog is rendered from Sanity in React Server Components. Client
+islands handle filters, lightbox, cart and checkout requests. Next.js route
+handlers form the server-side boundary for Mercado Pago and Neon; provider
+credentials and payment validation never reach the browser.
 
 ```
 src/
@@ -45,11 +58,14 @@ src/
 │  ├─ brand/canela-badge   # logo (next/image), full + circular-crop variants
 │  ├─ home/                # hero, navbar, footer, nosotros, como-comprar
 │  ├─ catalog/             # category-section, catalog-grid (filters), product-card, image-lightbox
-│  ├─ consulta/            # inquiry-cart provider + floating actions (cart panel + WhatsApp)
+│  ├─ cart/                # floating cart and optional WhatsApp assistance
 │  ├─ seo/json-ld          # Store structured data
 │  └─ ui/                  # button, dialog, carousel (Base UI + embla)
 ├─ content/catalog.ts      # canonical section metadata (copy, filter chips, nav links)
-├─ lib/                    # api (GROQ queries), config, types, product-status, utils
+├─ modules/                # cart, catalog, checkout, payments and shipping boundaries
+├─ db/                     # PostgreSQL client, migrations and transactional operations
+├─ store/                  # Redux store and browser persistence
+├─ lib/                    # GROQ queries, config, types, product-status and utilities
 └─ sanity/                 # client, env (projectId/dataset), schema
 ```
 
@@ -70,7 +86,13 @@ Content is fetched in `src/lib/api.ts` via GROQ with a 60s revalidation window. 
 
 - **Filterable catalog** — three sections (Glass, Ceramics, Mirrors & Framed Art), each with subcategory filter chips. Filtering is client-side and in-memory (no refetch), chosen over separate pages for a smoother browse UX.
 - **Fullscreen image lightbox** — clicking a piece opens it centered with an embla carousel when it has multiple photos. Notable fix: embla mis-measures when mounted inside a dialog (it initializes at zero size), so the component calls `api.reInit()` once the dialog is open.
-- **Inquiry cart → WhatsApp** — instead of a checkout, visitors accumulate pieces in a lightweight "inquiry list" (React context), then send the full list as a single pre-filled WhatsApp message via a `wa.me` deep link (`whatsappLink()` in `lib/config.ts`). A direct per-product WhatsApp button covers single-item inquiries.
+- **Persistent cart** — Redux Toolkit keeps the selection across navigation and
+  reloads. RTK Query starts checkout without trusting client-side prices.
+- **Checkout Pro** — the backend rereads Sanity, reserves stock atomically in
+  PostgreSQL and creates a ten-minute Mercado Pago order. Signed Webhooks and an
+  authoritative provider query confirm payment independently from the browser.
+- **WhatsApp assistance** — remains available for made-to-order products and
+  questions, but is not a required step for direct-sale checkout.
 - **Data-driven hero** — the featured-piece carousel is content-managed (Sanity), with auto-advance, manual dots, and a decorative rotating ring.
 - **Accessibility & motion** — respects `prefers-reduced-motion` (entrance/float/spin animations are gated); dialog and carousel are built on accessible Base UI primitives.
 - **SEO** — per-route metadata, Open Graph, canonical URL, `robots.ts`, `sitemap.ts`, and `Store` JSON-LD structured data.
@@ -122,6 +144,9 @@ Copy `.env.example` → `.env.local`:
 ```bash
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 NEXT_PUBLIC_WHATSAPP_NUMBER=549XXXXXXXXXX   # international format, no "+"
+CHECKOUT_MODE=disabled
+CHECKOUT_SIGNING_SECRET=
+CHECKOUT_TEST_SHIPPING_CENTS=
 ```
 
 Sanity `projectId` / `dataset` are **public** (public-read dataset) and live as constants in `src/sanity/env.ts` — not env vars — because the Studio bundle only inlines `SANITY_STUDIO_*` variables.
@@ -131,6 +156,15 @@ provider is Neon through Vercel; use its pooled connection string as
 `DATABASE_URL` and its direct connection string as `DATABASE_URL_UNPOOLED` for
 migrations. Integration tests require a separate disposable database through
 `TEST_DATABASE_URL` and must never target production.
+
+Mercado Pago test traffic uses `MP_TEST_ACCESS_TOKEN`. Signed Order Webhooks
+add `MP_TEST_WEBHOOK_SECRET`, `MP_TEST_SELLER_USER_ID` and
+`MP_TEST_APPLICATION_ID`; all four are server-only and must never use the
+`NEXT_PUBLIC_` prefix. The real Webhook contract still requires an HTTPS preview
+configured in Mercado Pago before production.
+
+`CHECKOUT_MODE=test` enables only the controlled development flow. Production
+mode does not exist until the Correo Argentino integration supplies a real quote.
 
 ### Content
 

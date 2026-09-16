@@ -5,10 +5,11 @@ import Image from "next/image";
 import { ChevronLeft, ChevronRight, Minus, Plus, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { useConsulta } from "@/components/consulta/consulta-provider";
 import { formatPrice, statusLabel, toneStyle } from "@/lib/product-status";
 import type { ProductTone } from "@/lib/types";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { useCart } from "@/modules/cart/presentation/hooks/use-cart";
+import { describeProductPurchaseAction } from "@/modules/catalog/presentation/product-purchase-action";
 
 interface ImageLightboxProps {
   open: boolean;
@@ -44,11 +45,12 @@ export function ImageLightbox({
   medidas,
   material,
 }: ImageLightboxProps) {
-  const { add, inc, dec, qtyOf } = useConsulta();
+  const { add, inc, dec, qtyOf } = useCart();
   const [shot, setShot] = useState(0);
   const count = images.length;
   const qty = qtyOf(id);
-  const inConsulta = qty > 0;
+  const isSelected = qty > 0;
+  const purchaseAction = describeProductPurchaseAction({ quantity: qty, tone });
   const toneCol = toneStyle(tone);
   const label = statusLabel(tone, statusNote);
   const hasSpecs = Boolean((medidas && medidas.trim()) || (material && material.trim()));
@@ -205,9 +207,11 @@ export function ImageLightbox({
 
           {/* Footer: agregar / stepper */}
           <div className="shrink-0 border-t border-[rgba(184,132,42,.2)] bg-[#FBF7EE] px-8 pb-[22px] pt-4 max-[859px]:px-5 max-[859px]:pb-[18px]">
-            {inConsulta ? (
+            {isSelected ? (
               <div className="flex items-center justify-between rounded-[14px] border border-[rgba(184,132,42,.5)] bg-[rgba(184,132,42,.06)] py-2 pl-4 pr-2">
-                <span className="text-sm font-bold text-[#6E4E38]">En tu consulta</span>
+                <span className="text-sm font-bold text-[#6E4E38]">
+                  {purchaseAction.containerLabel}
+                </span>
                 <div className="flex items-center gap-2.5">
                   <button
                     type="button"
@@ -244,7 +248,7 @@ export function ImageLightbox({
                 className="flex w-full items-center justify-center gap-2.5 rounded-[14px] border border-[var(--canela-ochre)] bg-[var(--canela-ochre)] px-4 py-[15px] text-[15px] font-extrabold text-[var(--canela-cream-card)] shadow-[0_8px_20px_rgba(184,132,42,.32)] transition-colors hover:bg-[var(--canela-ochre-dark)]"
               >
                 <Plus className="size-4" strokeWidth={2.4} />
-                Agregar a mi consulta
+                {purchaseAction.idleLabel}
               </button>
             )}
           </div>

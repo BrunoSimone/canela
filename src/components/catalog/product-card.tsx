@@ -4,10 +4,11 @@ import { useState } from "react";
 import Image from "next/image";
 import { Images, Plus } from "lucide-react";
 
-import { useConsulta } from "@/components/consulta/consulta-provider";
 import { ImageLightbox } from "@/components/catalog/image-lightbox";
 import { formatPrice, statusLabel, toneStyle } from "@/lib/product-status";
 import type { ProductTone } from "@/lib/types";
+import { describeProductPurchaseAction } from "@/modules/catalog/presentation/product-purchase-action";
+import { useCart } from "@/modules/cart/presentation/hooks/use-cart";
 
 export interface CardProduct {
   id: string;
@@ -25,13 +26,21 @@ export interface CardProduct {
   placeholderPattern: string;
 }
 
-export function ProductCard({ product }: { product: CardProduct }) {
-  const { add, qtyOf } = useConsulta();
+export function ProductCard({
+  product,
+}: {
+  product: CardProduct;
+}) {
+  const { add, qtyOf } = useCart();
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const qty = qtyOf(product.id);
   const tone = toneStyle(product.tone);
   const label = statusLabel(product.tone, product.statusNote);
-  const inConsulta = qty > 0;
+  const isSelected = qty > 0;
+  const purchaseAction = describeProductPurchaseAction({
+    quantity: qty,
+    tone: product.tone,
+  });
 
   const cover = product.imageUrls[0] ?? null;
 
@@ -116,13 +125,13 @@ export function ProductCard({ product }: { product: CardProduct }) {
           }
           className="mt-auto flex items-center justify-center gap-2 rounded-xl border border-[var(--canela-ochre)] px-3 py-2.5 text-[13.5px] font-bold transition-colors"
           style={
-            inConsulta
+            isSelected
               ? { background: "var(--canela-ochre)", color: "var(--canela-cream-card)" }
               : { background: "transparent", color: "var(--canela-ochre-dark)" }
           }
         >
           <Plus className="size-[15px]" strokeWidth={2.4} />
-          {inConsulta ? `En tu consulta · ${qty}` : "Agregar a mi consulta"}
+          {isSelected ? purchaseAction.selectedLabel : purchaseAction.idleLabel}
         </button>
       </div>
     </div>

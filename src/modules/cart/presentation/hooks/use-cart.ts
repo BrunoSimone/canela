@@ -18,9 +18,7 @@ import {
 } from "@/modules/cart/presentation/state/cart-slice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 
-export type ConsultaItem = CartItem;
-
-export function useConsulta() {
+export function useCart() {
   const dispatch = useAppDispatch();
   const items = useAppSelector(selectCartItems);
   const count = useAppSelector(selectCartCount);
@@ -37,8 +35,8 @@ export function useConsulta() {
     qtyOf: (id: string) => items.find((item) => item.id === id)?.qty ?? 0,
     togglePanel: () => dispatch(toggleCartPanel()),
     closePanel: () => dispatch(closeCartPanel()),
-    consultaWaLink: useMemo(() => whatsappLink(buildMessage(items)), [items]),
-    generalWaLink: useMemo(() => whatsappLink(WA_GENERAL_MESSAGE), []),
+    cartWhatsAppLink: useMemo(() => whatsappLink(buildMessage(items)), [items]),
+    generalWhatsAppLink: useMemo(() => whatsappLink(WA_GENERAL_MESSAGE), []),
   };
 }
 
@@ -47,5 +45,5 @@ function buildMessage(items: CartItem[]): string {
   const lines = items
     .map((item) => `• ${item.name} x${item.qty} (${formatPrice(item.price)})`)
     .join("\n");
-  return `¡Hola! Me interesan estas piezas:\n${lines}\n¿Me confirmás disponibilidad y total? 🙂`;
+  return `¡Hola! Quería consultar por estas piezas:\n${lines}\n¿Me ayudás con mi pedido? 🙂`;
 }

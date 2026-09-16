@@ -44,8 +44,10 @@ export type PaymentOrder = {
   providerStatus: string;
   providerStatusDetail: string | null;
   totalCents: number;
-  currency: "ARS";
+  currency: string;
   checkoutUrl: string | null;
+  sellerUserId: string | null;
+  applicationId: string | null;
 };
 
 export interface PaymentOrderGateway {

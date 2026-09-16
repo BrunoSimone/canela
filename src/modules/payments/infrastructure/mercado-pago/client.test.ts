@@ -29,6 +29,8 @@ function providerOrderResponse() {
     total_amount: "15000.00",
     currency: "ARS",
     checkout_url: "https://www.mercadopago.com.ar/checkout/redirect",
+    user_id: 123456789,
+    integration_data: { application_id: "987654321" },
   };
 }
 
@@ -74,6 +76,10 @@ describe("MercadoPagoClient", () => {
     const result = await client.getOrder("ORDTST01ABC");
 
     expect(result.state).toBe("approved");
+    expect(result).toMatchObject({
+      sellerUserId: "123456789",
+      applicationId: "987654321",
+    });
     expect(result).not.toHaveProperty("accessToken");
     expect(fetchMock).toHaveBeenCalledWith(
       "https://api.test/v1/orders/ORDTST01ABC",

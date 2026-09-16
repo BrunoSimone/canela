@@ -13,7 +13,10 @@ interface CatalogGridProps {
   products: CardProduct[];
 }
 
-export function CatalogGrid({ subs, products }: CatalogGridProps) {
+export function CatalogGrid({
+  subs,
+  products,
+}: CatalogGridProps) {
   const [active, setActive] = useState(subs[0] ?? "Todos");
   const [page, setPage] = useState(0);
   const topRef = useRef<HTMLDivElement>(null);

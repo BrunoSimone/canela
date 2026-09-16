@@ -123,9 +123,25 @@ Los query params de retorno son entrada no confiable. Canela puede usarlos para 
 - El webhook contiene `type = order` y `data.id = ORD...`.
 - Se valida `x-signature` usando también `x-request-id`, `data.id` y el secreto de la aplicación.
 - Después se consulta `GET /v1/orders/{id}` con el Access Token.
-- Mercado Pago espera `200` o `201` dentro de 22 segundos; si no, reintenta inicialmente cada 15 minutos.
+- El header tiene formato `ts=<timestamp>,v1=<hmac>` y la firma se calcula con
+  HMAC-SHA256 sobre
+  `id:<data.id>;request-id:<x-request-id>;ts:<timestamp>;`.
+- Mercado Pago espera `200` o `201` dentro de 22 segundos; si no, reintenta
+  inicialmente cada 15 minutos.
+- Canela no responderá éxito antes de tener un resultado durable. En el primer
+  corte consultará y persistirá de forma síncrona; una cola solo reemplazaría ese
+  diseño si puede confirmar persistencia durable antes del `200`.
+- El `event_id` se inserta en la misma transacción que modifica pedido, reserva e
+  inventario. Insertarlo antes permitiría perder el evento si luego falla la
+  transición y el reintento se toma erróneamente como duplicado.
+- La prueba de contrato del 2026-09-15 confirmó que el GET de Orders devuelve
+  `user_id` e `integration_data.application_id`, pero no `live_mode`. Por eso el
+  ambiente se separa mediante `MP_TEST_ACCESS_TOKEN` y se verifica junto con la
+  identidad esperada; `live_mode` solo se contrasta en el body como señal de
+  consistencia y nunca confirma el cobro.
 
-Fuente: [notificaciones de Checkout Pro vía Orders](https://www.mercadopago.com.ar/developers/es/docs/checkout-pro-orders/payment-notifications).
+Fuente: [notificaciones de Orders](https://www.mercadopago.com.ar/developers/es/docs/checkout-api-orders/notifications)
+y [validador oficial para Node.js](https://github.com/mercadopago/sdk-nodejs/blob/master/src/utils/webhook/index.ts).
 
 La documentación usa tanto el nombre visible “Order (Mercado Pago)” como el tópico técnico `orders_v2`. La configuración real del panel y el payload recibido se capturarán como evidencia para evitar codificar el nombre equivocado.
 

@@ -109,6 +109,10 @@ describeContract("Mercado Pago Orders API contract", () => {
       checkoutUrl: expect.any(String),
     });
     expect(fetched.providerOrderId).toBe(created.providerOrderId);
+    expect(fetched).toMatchObject({
+      sellerUserId: expect.stringMatching(/^\d+$/),
+      applicationId: expect.stringMatching(/^\d+$/),
+    });
     expect(providerOrder).toMatchObject({
       expiration_time: "PT10M",
       capture_mode: "automatic_async",

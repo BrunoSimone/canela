@@ -46,6 +46,8 @@ function providerOrder(orderId: string): PaymentOrder {
     totalCents: 3_400_000,
     currency: "ARS",
     checkoutUrl: "https://www.mercadopago.com.ar/checkout/redirect",
+    sellerUserId: null,
+    applicationId: null,
   };
 }
 

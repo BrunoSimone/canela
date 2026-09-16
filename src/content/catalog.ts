@@ -33,9 +33,9 @@ export const CATEGORIES: CategoryMeta[] = [
 ];
 
 export const NAV_LINKS = [
-  { label: "Vidrio", href: "#vidrio" },
-  { label: "Cerámica", href: "#ceramica" },
-  { label: "Espejos y Cuadros", href: "#espejos" },
-  { label: "Nosotros", href: "#nosotros" },
-  { label: "Cómo comprar", href: "#como-comprar" },
+  { label: "Vidrio", href: "/#vidrio" },
+  { label: "Cerámica", href: "/#ceramica" },
+  { label: "Espejos y Cuadros", href: "/#espejos" },
+  { label: "Nosotros", href: "/#nosotros" },
+  { label: "Cómo comprar", href: "/#como-comprar" },
 ] as const;

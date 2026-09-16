@@ -3,8 +3,9 @@
 ## Estado
 
 Aprobado el 2026-09-14. ADR-003 y `capture_mode = automatic_async` quedaron
-aceptados. MP-01, MP-02 y MP-03 están cerrados; el próximo incremento ejecutable
-es MP-04.
+aceptados. MP-01, MP-02, MP-03, MP-03B3 y MP-04A están cerrados. Una prueba
+manual del catálogo detectó que MP-03B2 no hacía visible la compra desde la
+landing; MP-03B3 corrigió esa integración antes de continuar con MP-04B.
 
 ## Resultado esperado
 
@@ -116,15 +117,66 @@ en `docs/evidence/MP-03B2.md`.
 Los E2E de aprobado, rechazado y `processing` cierran en MP-04, cuando exista
 confirmación autoritativa.
 
-### MP-04 — Webhook y confirmación
+### MP-03B3 — Conexión visible del catálogo al checkout controlado — completada el 2026-09-15
 
-- Configurar evento Order (Mercado Pago) y secreto de prueba.
+- Convertir el selector existente en un carrito único, sin mantener una variante
+  visual paralela de consulta.
+- Comunicar `Agregar al carrito` en productos de venta directa, con independencia
+  del feature flag de pago.
+- Mantener una acción de consulta solamente para productos `encargo`.
+- Usar el feature flag únicamente para habilitar la navegación desde el carrito
+  a la confirmación de pago.
+- Cruzar cada vista nueva del catálogo con la disponibilidad autoritativa de
+  Neon, manteniendo visibles los encargos y ocultando venta directa sin stock.
+- Preparar inventario de prueba con ids reales de Sanity únicamente en Neon
+  `development`, sin inferir cantidades productivas.
+- Verificar el recorrido local hasta la confirmación sin configurar ni ejecutar
+  Webhooks.
+
+**Cubre:** RF-CHK-001, CA-001, CA-MP-015, CA-MP-019 y CA-MP-025.
+
+**Puerta:** pruebas unitarias del lenguaje de compra/consulta, recorrido visual
+`landing → carrito → confirmación`, lint, tipos y build verdes. El envío sigue
+marcado como controlado y el checkout productivo permanece apagado.
+
+**Commit previsto:** `fix: connect catalog to controlled checkout`
+
+La landing usa un único carrito, presenta la compra online como recorrido
+principal y conserva WhatsApp como ayuda y canal de encargos. Cada render nuevo
+cruza el contenido de Sanity con `available > 0` en Neon; el checkout vuelve a
+validar atómicamente para proteger pestañas desactualizadas. El recorrido local
+llegó hasta la confirmación sin crear una order MP ni requerir Webhooks.
+
+### MP-04A — Confirmación autoritativa local
+
+Completada localmente el 2026-09-15.
+
 - Validar la firma con `x-signature`, `x-request-id` y `data.id`.
-- Deduplicar el evento y consultar la order MP.
-- Consumir/liberar/conservar stock según estado verificado.
-- Responder dentro de la ventana del proveedor después de persistir el trabajo.
+- Rechazar eventos malformados o de otro ambiente antes de producir efectos.
+- Consultar la order MP y verificar id, referencia, monto, moneda, vendedor y
+  aplicación.
+- Deduplicar y consumir/liberar/conservar stock en una única transacción.
+- Probar concurrencia, rollback y monotonía contra PostgreSQL real.
+
+**Puerta:** firma inválida no consulta MP; aprobado consume una sola vez;
+pendiente conserva; terminal negativo libera; discrepancias conservan y pasan a
+revisión; un fallo no pierde el evento.
+
+**Commit previsto:** `feat: confirm Mercado Pago payments from signed webhooks`
+
+### MP-04B — Contrato HTTPS del Webhook
+
+- Desplegar el endpoint en una URL HTTPS de preview.
+- Configurar evento Order (Mercado Pago) y secreto de prueba.
+- Simular una notificación desde el panel y capturar request/response redactados.
+- Ejecutar aprobado, `processing`, rechazo reintentable, duplicado y firma
+  alterada contra el endpoint real.
+- Confirmar respuesta `200` dentro de los 22 segundos o documentar el cambio a
+  una cola durable si la latencia real no deja margen seguro.
 
 **Puerta:** duplicados, desorden, demora y firma inválida no producen efectos dobles.
+
+**Commit previsto:** `test: verify Mercado Pago webhook contract`
 
 ### MP-05 — Expiración y recuperación
 

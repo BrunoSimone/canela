@@ -6,13 +6,23 @@ import { Nosotros } from "@/components/home/nosotros";
 import { ComoComprar } from "@/components/home/como-comprar";
 import { CATEGORIES } from "@/content/catalog";
 import { getHeroSlides, getProducts, groupByCategory } from "@/lib/api";
+import { filterCatalogByAvailability } from "@/modules/inventory/domain/catalog-visibility";
+import { PostgresProductAvailabilityRepository } from "@/modules/inventory/infrastructure/postgres/product-availability-repository";
+
+export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [products, heroSlides] = await Promise.all([
+  const availability = new PostgresProductAvailabilityRepository();
+  const [products, heroSlides, availableProductIds] = await Promise.all([
     getProducts(),
     getHeroSlides(),
+    availability.listAvailableProductIds(),
   ]);
-  const byCategory = groupByCategory(products);
+  const visibleProducts = filterCatalogByAvailability(
+    products,
+    availableProductIds,
+  );
+  const byCategory = groupByCategory(visibleProducts);
 
   const heroViews: HeroSlideView[] = heroSlides.map((s) => ({
     name: s.name,
@@ -27,7 +37,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <CatalogJsonLd products={products} />
+      <CatalogJsonLd products={visibleProducts} />
       <Hero slides={heroViews} />
 
       <div id="catalogo" className="anchor-offset px-[22px] pb-2 pt-6 text-center">
@@ -37,7 +47,11 @@ export default async function HomePage() {
       </div>
 
       {CATEGORIES.map((meta) => (
-        <CategorySection key={meta.key} meta={meta} products={byCategory[meta.key]} />
+        <CategorySection
+          key={meta.key}
+          meta={meta}
+          products={byCategory[meta.key]}
+        />
       ))}
 
       <Nosotros />

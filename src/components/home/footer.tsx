@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { NAV_LINKS } from "@/content/catalog";
 import { CanelaBadge } from "@/components/brand/canela-badge";
 import { siteConfig } from "@/lib/config";
@@ -37,13 +39,13 @@ export function Footer() {
             Explorar
           </span>
           {NAV_LINKS.map((link) => (
-            <a
+            <Link
               key={link.href}
               href={link.href}
               className="text-[15px] text-[#EADFCA] hover:text-white"
             >
               {link.label}
-            </a>
+            </Link>
           ))}
         </div>
       </div>

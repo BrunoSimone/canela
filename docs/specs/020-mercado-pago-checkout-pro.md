@@ -2,10 +2,10 @@
 
 ## Estado
 
-Aprobada para implementación el 2026-09-14. MP-01 está implementado y sus
-migraciones fueron verificadas tanto contra PostgreSQL 17 local como en la branch
-`development` de Neon. Las verificaciones de contrato conservan sus propias
-puertas antes de producción.
+Aprobada para implementación el 2026-09-14. MP-01 a MP-04A y la corrección
+MP-03B3 están implementados; las migraciones y transiciones críticas se
+verificaron en la branch `development` de Neon. El contrato HTTPS real del
+Webhook permanece en MP-04B y las puertas de producción continúan cerradas.
 
 ## Fuentes normativas
 
@@ -132,7 +132,9 @@ La respuesta `201` debe persistir `id` y `checkout_url`. Nunca se mezclan recurs
 - mismo `external_reference`;
 - mismo `total_amount` y moneda ARS;
 - misma aplicación/cuenta esperada;
-- ambiente esperado.
+- credencial explícita del ambiente esperado. El GET de Orders no devuelve
+  `live_mode`; ese campo del Webhook se valida como consistencia, no como prueba
+  autoritativa del pago.
 
 `processing` conserva el bloqueo y activa reconciliación. También se conserva
 cuando el GET devuelve `action_required/waiting_retry`, porque Checkout Pro aún
@@ -179,11 +181,24 @@ claramente ambas acciones sin intentar cobrar el encargo.
 
 - Acepta `type = order`.
 - Valida `x-signature` con `x-request-id`, `data.id` y el secreto de la aplicación.
-- Persiste/deduplica el evento.
+- Rechaza con `401` una firma ausente, malformada o inválida sin consultar a
+  Mercado Pago ni tocar la base.
+- Exige que `data.id` del query coincida con el id de la order informado en el
+  body y que `live_mode` coincida con el ambiente configurado.
 - Consulta la order MP; el body del Webhook no confirma un cobro.
-- Aplica una transición monotónica e idempotente.
+- Persiste el identificador de notificación y aplica la transición de pedido,
+  intento, reserva e inventario dentro de una misma transacción. Un fallo revierte
+  también la deduplicación para que el reintento pueda procesarse.
+- Aplica una transición monotónica e idempotente: un estado tardío no revierte
+  una venta ya confirmada ni consume o libera stock dos veces.
 - Responde `200` o `201` después de dejar el evento aplicado o durable.
-- Si falla antes, responde error para permitir el reintento de Mercado Pago.
+- La primera implementación procesa la consulta y la transacción de forma
+  síncrona dentro de la ventana de 22 segundos del proveedor. Si falla antes de
+  persistir, responde error para permitir el reintento de Mercado Pago.
+
+La configuración de prueba usa variables server-side separadas para Access
+Token, secreto de Webhook, vendedor y aplicación. No se aceptan ids de identidad
+obtenidos desde el navegador.
 
 La configuración real del panel y el nombre técnico `orders_v2` se capturan en la prueba de contrato.
 
@@ -302,6 +317,14 @@ MP-01 ya creó columnas con nombres de Preferences. No se reescribe la migració
 - **CA-MP-008:** Una firma inválida no consulta ni modifica el pedido.
 - **CA-MP-009:** Un Webhook válido solo confirma tras comprobar por API estado, monto, ARS, referencia, cuenta y ambiente.
 - **CA-MP-010:** Duplicados y eventos fuera de orden producen una sola venta y un solo consumo de stock.
+- **CA-MP-022:** Si la aplicación falla mientras aplica un evento, su id no queda
+  deduplicado y el reintento puede completar la transición.
+- **CA-MP-023:** Una consulta autoritativa asociada a otro vendedor, aplicación,
+  referencia, monto o moneda conserva el stock y deja el pedido en
+  `review_required`; un Webhook cuyo `live_mode` no coincide se rechaza sin
+  efectos.
+- **CA-MP-024:** Un fallo transitorio al consultar Mercado Pago devuelve error sin
+  confirmar la recepción para que el proveedor pueda reintentar.
 - **CA-MP-011:** Una order `processing` conserva la unidad y reconciliación converge sin segundo cobro.
 - **CA-MP-016:** Un retorno `rejected` cuyo GET autoritativo informa
   `action_required/waiting_retry` conserva el bloqueo y permite reintentar sin
@@ -321,6 +344,11 @@ MP-01 ya creó columnas con nombres de Preferences. No se reescribe la migració
   pero el request de checkout envía solo ids, cantidades, email y cotización firmada.
 - **CA-MP-021:** Un resultado `verifying` o `review_required` advierte que no se
   inicie un segundo pago; los query params del navegador no alteran esa vista.
+- **CA-MP-025:** La landing identifica siempre las piezas de venta directa con la
+  acción `Agregar al carrito` y el panel de selección como `Mi carrito`. Las
+  piezas `encargo` conservan una acción de consulta. El feature flag controla la
+  posibilidad de iniciar el pago online, no el lenguaje ni la arquitectura del
+  catálogo.
 
 ## Estrategia de pruebas
 
@@ -346,8 +374,9 @@ MP-01 ya creó columnas con nombres de Preferences. No se reescribe la migració
 
 Antes de MP-04:
 
-- secreto de Webhooks del ambiente de prueba;
-- URL HTTPS de preview con el endpoint receptor desplegado.
+- El núcleo local y transaccional puede implementarse con configuración ficticia.
+- Para cerrar el contrato real de MP-04 se requieren el secreto de Webhooks del
+  ambiente de prueba y una URL HTTPS de preview con el endpoint desplegado.
 
 Antes de producción:
 

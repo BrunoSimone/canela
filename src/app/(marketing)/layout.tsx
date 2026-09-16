@@ -1,4 +1,4 @@
-import { FloatingActions } from "@/components/consulta/floating-actions";
+import { FloatingCart } from "@/components/cart/floating-cart";
 import { Navbar } from "@/components/home/navbar";
 import { Footer } from "@/components/home/footer";
 import { isControlledCheckoutReady } from "@/modules/checkout/infrastructure/server/checkout-availability";
@@ -14,7 +14,7 @@ export default function MarketingLayout({
       <Navbar />
       <main className="flex-1">{children}</main>
       <Footer />
-      <FloatingActions checkoutEnabled={isControlledCheckoutReady()} />
+      <FloatingCart checkoutEnabled={isControlledCheckoutReady()} />
     </StoreProvider>
   );
 }
