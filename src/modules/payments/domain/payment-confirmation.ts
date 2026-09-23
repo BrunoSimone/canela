@@ -8,7 +8,7 @@ export type PaymentConfirmationTarget = {
 };
 
 export type ApplyPaymentConfirmationInput = {
-  deliveryId: string;
+  webhookDeliveryId: string | null;
   orderId: string;
   providerOrderId: string;
   providerStatus: string;
@@ -23,6 +23,9 @@ export type ApplyPaymentConfirmationResult = {
 export interface PaymentConfirmationRepository {
   findByProviderOrderId(
     providerOrderId: string,
+  ): Promise<PaymentConfirmationTarget | null>;
+  findByPublicTokenHash(
+    publicTokenHash: string,
   ): Promise<PaymentConfirmationTarget | null>;
   apply(
     input: ApplyPaymentConfirmationInput,

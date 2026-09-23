@@ -14,6 +14,8 @@ convertirse en una prueba de contrato antes de producción.
   `unsupported_properties` en Checkout Pro Orders.
 - Cada ítem admite `external_code`, `title`, `unit_price` y `quantity`; el total
   del ítem se deriva de precio unitario por cantidad.
+- La API rechazó un UUID real de Sanity de 36 caracteres en `external_code` con
+  HTTP `400`, código `property_value` y límite informado de 30 caracteres.
 - `config.notification_url` también produce `unsupported_properties`. Las
   notificaciones de Orders se configuran a nivel de aplicación en el panel.
 - `PT10M`, `automatic_async`, dos ítems —incluido envío— y la exclusión de

@@ -27,6 +27,7 @@ export type PublicOrderStatusResponse = {
 export const checkoutApi = createApi({
   reducerPath: "checkoutApi",
   baseQuery: fetchBaseQuery({ baseUrl: "/api" }),
+  tagTypes: ["PublicOrder"],
   endpoints: (builder) => ({
     startCheckout: builder.mutation<
       StartedCheckoutResponse | UncertainCheckoutResponse,
@@ -39,6 +40,15 @@ export const checkoutApi = createApi({
         url: `/orders/${encodeURIComponent(publicToken)}/status`,
         method: "GET",
       }),
+      providesTags: (_result, _error, publicToken) => [
+        { type: "PublicOrder", id: publicToken },
+      ],
+    }),
+    reconcilePublicOrder: builder.mutation<PublicOrderStatusResponse, string>({
+      query: buildReconcilePublicOrderRequest,
+      invalidatesTags: (_result, _error, publicToken) => [
+        { type: "PublicOrder", id: publicToken },
+      ],
     }),
   }),
 });
@@ -56,7 +66,15 @@ export function buildStartCheckoutRequest(input: StartCheckoutInput) {
   };
 }
 
+export function buildReconcilePublicOrderRequest(publicToken: string) {
+  return {
+    url: `/orders/${encodeURIComponent(publicToken)}/reconcile`,
+    method: "POST" as const,
+  };
+}
+
 export const {
   useStartCheckoutMutation,
   useGetPublicOrderStatusQuery,
+  useReconcilePublicOrderMutation,
 } = checkoutApi;

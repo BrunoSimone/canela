@@ -2,8 +2,9 @@
 
 ## Estado
 
-Aprobada para implementación. El bloqueo temporal de 10 minutos, Neon,
-Orders API con `automatic_async` y el carrito multiproducto están confirmados.
+Aprobada para implementación. La ventana de pago de 10 minutos, Neon, Orders
+API con `automatic_async` y el carrito multiproducto están confirmados. El reloj
+no libera stock sin un estado terminal verificado en Mercado Pago.
 
 ## Contexto y problema
 
@@ -32,7 +33,10 @@ Permitir el pago inmediato de productos con stock disponible, garantizando que c
 - `reserved`: unidades retenidas por checkouts activos.
 - `available`: `stock_on_hand - reserved`.
 - **Pago directo:** el comprador paga durante Checkout Pro; no se ofrece un medio offline. Mercado Pago puede conservar brevemente un estado técnico `processing` si se aprueba `automatic_async`.
-- **Bloqueo de checkout:** retención interna, corta y expirable creada antes de enviar al comprador a Mercado Pago. No se comunica al comprador como un tercer estado comercial.
+- **Bloqueo de checkout:** retención interna creada antes de enviar al comprador
+  a Mercado Pago. Tiene una ventana de pago asociada, pero permanece activa
+  hasta verificar un estado terminal; no se comunica al comprador como un
+  tercer estado comercial.
 
 ## Requisitos funcionales
 
@@ -52,6 +56,13 @@ Permitir el pago inmediato de productos con stock disponible, garantizando que c
 - **RF-PAY-005:** El webhook debe validar su firma y luego consultar el pago a Mercado Pago antes de aceptar su estado, monto, moneda y referencia.
 - **RF-PAY-006:** Webhooks duplicados o fuera de orden no deben repetir transiciones, consumir stock dos veces ni crear dos envíos.
 - **RF-PAY-007:** Un proceso de reconciliación debe recuperar órdenes cuyo resultado no haya llegado correctamente por webhook.
+- **RF-PAY-008:** Cuando el comprador regresa desde Mercado Pago, la pantalla de
+  resultado debe poder solicitar una reconciliación inmediata. El servidor debe
+  resolver la order MP desde el pedido persistido e ignorar cualquier estado o
+  identificador de pago enviado por el navegador.
+- **RF-PAY-009:** Alcanzar `expires_at` no debe liberar stock. Webhook o retorno
+  deben consultar la order MP y la reserva solo puede consumirse o liberarse al
+  verificar un estado terminal autoritativo.
 - **RF-ORD-001:** Antes de redirigir a Mercado Pago debe existir una orden con snapshot inmutable de ítems, precios y total.
 - **RF-ORD-002:** El comprador debe recibir un resultado observable: aprobado, rechazado, sin stock o error recuperable.
 
@@ -75,11 +86,13 @@ Permitir el pago inmediato de productos con stock disponible, garantizando que c
 - **RN-006:** Los productos por encargo y personalizados no participan de este checkout hasta tener una spec propia.
 - **RN-007:** Ante pago aprobado válido sin una reserva consumible, la orden pasa a revisión crítica y no se crea fulfillment automático; la operación debe resolver entrega o reembolso.
 - **RN-008:** Para el comprador, la disponibilidad es binaria: el producto está disponible para comprar o no lo está. `reserved`/`payment_pending` son estados técnicos internos.
-- **RN-009:** El bloqueo dura 10 minutos, configurable sin migración. La order MP usa `PT10M` si la prueba de contrato lo confirma.
-- **RN-010:** Un job no libera solo por reloj: primero consulta el estado
-  autoritativo de la order MP. Si está aprobado, confirma; si sigue procesando,
-  conserva; si está `created` o `action_required`, solicita su cancelación y solo
-  libera después de verificar `canceled`; si ya terminó sin pago, libera.
+- **RN-009:** La ventana para pagar dura 10 minutos, configurable sin migración,
+  y la order MP usa `PT10M`. Esa duración no es una autorización para liberar la
+  reserva local.
+- **RN-010:** Webhook y retorno son disparadores de la misma consulta
+  autoritativa. Si MP acredita, se consume; si informa `processing`, se conserva;
+  si confirma `failed`, `canceled` o `expired`, se libera. Un error o estado
+  ambiguo conserva el bloqueo.
 
 ## Escenarios y criterios de aceptación
 
@@ -96,9 +109,22 @@ Permitir el pago inmediato de productos con stock disponible, garantizando que c
 - **CA-011 — Falla al crear order MP:** Dada una reserva creada, cuando Mercado Pago rechaza definitivamente la creación, entonces la operación queda registrada, la reserva se libera y el comprador puede reintentar.
 - **CA-012 — Invalidación fallida:** Dado que falla la invalidación de caché después de agotarse un producto, cuando otro comprador usa la vista antigua, entonces CA-002 sigue evitando la sobreventa.
 - **CA-013 — Reposición:** Dado un producto agotado, cuando el dueño repone una cantidad positiva mediante la operación protegida, entonces queda auditado y vuelve a aparecer tras la revalidación.
-- **CA-014 — Expiración segura:** Dado un bloqueo cuyo reloj venció, cuando el proceso de expiración lo inspecciona, entonces consulta primero Mercado Pago y solo lo libera si no existe un pago aprobado asociado.
+- **CA-014 — Expiración segura:** Dado un bloqueo cuya ventana de pago terminó,
+  cuando llega una notificación o el comprador retorna, entonces Canela consulta
+  primero Mercado Pago y solo libera al verificar un estado terminal sin pago.
 - **CA-015 — Webhook tardío:** Dado un pago aprobado dentro de la vigencia cuya notificación llega tarde, cuando reconciliación consulta el pago antes de liberar, entonces la venta se confirma y la unidad no vuelve a ofrecerse.
 - **CA-016 — Estado público binario:** Dado un producto bloqueado por otro checkout, cuando un comprador consulta una vista actualizada, entonces el producto no aparece o no permite comprar; nunca se muestra como “reservado”.
+- **CA-017 — Reconciliación al retornar:** Dado un pedido pendiente con una
+  order MP acreditada, cuando la pantalla de resultado solicita reconciliación,
+  entonces el servidor consulta Mercado Pago y confirma la venta exactamente una
+  vez sin usar los query params del retorno como evidencia.
+- **CA-018 — Retorno falsificado:** Dado un pedido sin pago acreditado, cuando un
+  tercero fabrica parámetros de éxito y solicita reconciliación, entonces el
+  pedido no queda pagado y el stock no se consume.
+- **CA-019 — Recuperación sin navegador:** Dado un pago acreditado cuyo primer
+  webhook no pudo procesarse y cuyo comprador cerró la página, cuando Mercado
+  Pago reintenta la notificación, entonces el pedido converge al mismo estado sin
+  depender del navegador.
 
 ## Datos e integraciones
 

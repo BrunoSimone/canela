@@ -164,7 +164,7 @@ revisión; un fallo no pierde el evento.
 
 **Commit previsto:** `feat: confirm Mercado Pago payments from signed webhooks`
 
-### MP-04B — Contrato HTTPS del Webhook
+### MP-04B — Contrato HTTPS del Webhook — en ejecución desde 2026-09-16
 
 - Desplegar el endpoint en una URL HTTPS de preview.
 - Configurar evento Order (Mercado Pago) y secreto de prueba.
@@ -178,14 +178,48 @@ revisión; un fallo no pierde el evento.
 
 **Commit previsto:** `test: verify Mercado Pago webhook contract`
 
+### MP-04C — Reconciliación segura desde el retorno — completada el 2026-09-23
+
+- Agregar `POST /api/orders/{public_token}/reconcile` sin body de pago.
+- Resolver `provider_order_id` desde Neon y consultar Orders API desde el
+  servidor.
+- Reutilizar las validaciones de identidad, referencia, importe y moneda y la
+  transición transaccional del Webhook.
+- No insertar una entrega Webhook ficticia durante reconciliación.
+- Hacer que la pantalla de resultado dispare una reconciliación al entrar y
+  continúe leyendo el estado público acotado solo mientras esté visible.
+- Limitar el polling del estado interno; abandonar la pantalla lo detiene y no
+  se instala polling global en el resto de Canela.
+- Probar retorno falsificado, pago acreditado, estado pendiente, fallo transitorio
+  y concurrencia con Webhook sin efectos dobles.
+
+**Cubre:** RF-PAY-004/005/006/007/008, CA-MP-007/009/010/024/026/027/028.
+
+**Puerta:** una order acreditada converge a `paid` al volver el comprador; ningún
+parámetro del navegador elige la order ni confirma el pago; repeticiones y carrera
+con Webhook conservan un único consumo de stock.
+
+Las pruebas unitarias, PostgreSQL 17 aislado, lint, tipos y build están verdes.
+La compra sandbox manual confirmó el retorno `pending` → `paid`, el consumo
+único de la reserva y la desaparición del producto agotado de la landing.
+La evidencia está registrada en `docs/evidence/MP-04C.md`.
+
+**Commit previsto:** `feat: reconcile Mercado Pago payments on checkout return`
+
 ### MP-05 — Expiración y recuperación
 
-- Worker para reservas vencidas.
-- Consulta/reintento antes de liberar.
-- Tratar `processing` y caída del proveedor sin reofrecer la unidad.
-- Alertar `review_required` y documentar runbook.
+- Alinear `expires_at` y la vigencia de la order en `PT10M` sin convertir el
+  reloj en una transición de inventario.
+- Liberar únicamente tras verificar `failed`, `canceled` o `expired` en Mercado
+  Pago; consumir ante `processed/accredited` y conservar ante `processing` o
+  duda.
+- Depender de los reintentos del Webhook cuando el comprador no regresa y
+  mantener la pieza bloqueada hasta recibir un resultado autoritativo.
+- Alertar `review_required` y documentar el runbook sin cron ni acción manual de
+  reconciliación para el dueño.
 
-**Puerta:** prueba de Webhook tardío y caída de MP cerca de `PT10M`.
+**Puerta:** prueba de Webhook tardío, expiración verificada y caída de MP cerca
+de `PT10M`, demostrando que el reloj aislado no libera stock.
 
 ### INT-00/01 — Conectar Correo antes de producción
 

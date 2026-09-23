@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { buildStartCheckoutRequest } from "./checkout-api";
+import {
+  buildReconcilePublicOrderRequest,
+  buildStartCheckoutRequest,
+} from "./checkout-api";
 
 describe("buildStartCheckoutRequest", () => {
   it("sends only product identities, quantities and the signed quote", () => {
@@ -22,5 +25,12 @@ describe("buildStartCheckoutRequest", () => {
       },
     });
     expect(JSON.stringify(request.body)).not.toMatch(/price|total|name/i);
+  });
+
+  it("reconciles only by opaque public token without browser payment data", () => {
+    expect(buildReconcilePublicOrderRequest("public/token")).toEqual({
+      url: "/orders/public%2Ftoken/reconcile",
+      method: "POST",
+    });
   });
 });

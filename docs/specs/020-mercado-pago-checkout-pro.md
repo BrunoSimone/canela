@@ -48,7 +48,8 @@ Permitir que un comprador pague una o varias piezas disponibles sin sobreventa, 
 
 - Validar catálogo, precio, cotización y stock en backend.
 - Congelar snapshots de productos, envío y total.
-- Bloquear stock atómicamente por diez minutos.
+- Bloquear stock atómicamente y asociarlo a una ventana de pago de diez minutos,
+  sin liberarlo solamente por el paso del tiempo.
 - Crear una order con `POST /v1/orders` e idempotencia de proveedor.
 - Redirigir mediante `checkout_url`.
 - Mostrar el estado interno al regresar a Canela.
@@ -88,6 +89,7 @@ Comprador confirma domicilio y carrito
   -> navegador redirige a Checkout Pro
   -> Mercado Pago procesa el pago
   -> Webhook firmado notifica data.id = provider_order_id
+  -> Webhook o retorno disparan la misma consulta autoritativa
   -> backend consulta GET /v1/orders/{provider_order_id}
   -> valida vendedor, ambiente, ARS, monto y external_reference
   -> transacción idempotente confirma venta o conserva/libera bloqueo
@@ -105,12 +107,15 @@ Comprador confirma domicilio y carrito
 - `processing_mode: manual`.
 - `capture_mode: automatic_async`.
 - `external_reference`: id inmutable y no PII del pedido Canela, máximo 64 caracteres.
-- `expiration_time: PT10M`, sujeto a prueba de contrato.
+- `expiration_time: PT10M`, confirmado mediante prueba de contrato.
 - `payer.email`: email del comprador.
 - `items`: snapshots de productos y, si se valida, el costo de envío como ítem separado.
 - Cada ítem usa `external_code`, `title`, `unit_price` y `quantity`. Checkout Pro
   Orders rechazó `unit_measure` y `total_amount` dentro del ítem; el total se
   calcula como `unit_price * quantity`.
+- `external_code` admite como máximo 30 caracteres. Los ids internos largos de
+  Sanity se adaptan de manera determinista a `canela_` más 23 caracteres de
+  SHA-256; el id original permanece en los snapshots de Neon.
 - `total_amount`: string decimal ARS igual a la suma exacta de los ítems.
 - El webhook no se envía en la order: `config.notification_url` fue rechazado por
   Orders API. Se configura el evento Order y su URL HTTPS en la aplicación de
@@ -167,6 +172,13 @@ La página obtiene el estado con `GET /api/orders/{public_token}/status` y puede
 - pago no completado, con reintento permitido;
 - necesitamos revisar el pago, sin ofrecer un segundo cobro.
 
+Al cargar la pantalla de resultado, el navegador solicita una reconciliación con
+`POST /api/orders/{public_token}/reconcile`. El token público solo identifica el
+pedido Canela: el servidor obtiene de Neon el `provider_order_id`, consulta
+Mercado Pago y aplica las mismas validaciones y transición idempotente que el
+Webhook. No acepta `status`, `payment_id`, `provider_order_id`, importes ni
+referencias externas desde el navegador.
+
 El carrito de venta directa se conserva en el navegador ante una recarga. Solo se
 vacía cuando el estado interno consultado es `paid`; regresar desde Mercado Pago,
 cerrar la pestaña o recibir un estado todavía incierto no elimina sus piezas.
@@ -204,18 +216,21 @@ La configuración real del panel y el nombre técnico `orders_v2` se capturan en
 
 ## Stock y expiración
 
-El reloj local no libera stock por sí solo.
+`expires_at` y `PT10M` delimitan la ventana de pago, pero el reloj local no
+libera stock por sí solo.
 
-1. El worker toma el bloqueo vencido con exclusión mutua.
-2. Si nunca se inició una llamada externa, libera.
-3. Si existe `provider_order_id` o un intento ambiguo, consulta/reintenta Mercado Pago.
+1. Mercado Pago notifica las actualizaciones de la order mediante Webhook y
+   reintenta cuando Canela no confirma la recepción.
+2. El retorno del comprador ofrece un segundo disparador inmediato, independiente
+   de los parámetros que Mercado Pago agregue a la URL.
+3. Ambos caminos consultan `GET /v1/orders/{provider_order_id}`.
 4. `processed/accredited`: consume el bloqueo y confirma venta.
-5. `processing`: conserva el bloqueo y reintenta.
-6. `created` o `action_required` después del límite: cancela la order con una
-   clave idempotente estable, vuelve a consultar y libera solo si confirma
-   `canceled`.
-7. `failed`, `canceled` o `expired`: libera una vez.
-8. Proveedor inaccesible o resultado incoherente: conserva y pasa a `review_required` tras el umbral.
+5. `processing`, un proveedor inaccesible o un resultado ambiguo: conserva el
+   bloqueo, aunque la ventana local haya terminado.
+6. `failed`, `canceled` o `expired`: libera una vez.
+7. Una orden cuyo Webhook se demora puede mantener la pieza fuera de venta más
+   de diez minutos; esta pérdida temporal de disponibilidad es preferible a una
+   sobreventa.
 
 Esto permite un estado público binario sin vender dos veces la última pieza.
 
@@ -261,7 +276,8 @@ Errores:
 
 ### `GET /api/orders/{public_token}/status`
 
-Devuelve solo estado presentable, expiración y si un nuevo intento está permitido:
+Devuelve solo estado presentable, fin de la ventana de pago y si un nuevo intento
+está permitido:
 
 ```json
 {
@@ -273,6 +289,20 @@ Devuelve solo estado presentable, expiración y si un nuevo intento está permit
 
 No expone ids internos, PII de otros compradores ni secretos. Los query params
 de retorno de Mercado Pago no participan de esta respuesta ni cambian el pedido.
+
+### `POST /api/orders/{public_token}/reconcile`
+
+- Acepta únicamente el token público no enumerable incluido en la ruta.
+- No recibe un body con datos del pago.
+- Resuelve el pedido y su `provider_order_id` desde Neon.
+- Consulta `GET /v1/orders/{provider_order_id}` con la credencial server-side.
+- Valida id, referencia externa, total, moneda, vendedor y aplicación antes de
+  aplicar una transición.
+- Reutiliza la transición transaccional e idempotente del Webhook sin registrar
+  una entrega Webhook ficticia.
+- Devuelve el mismo estado público acotado que el endpoint de lectura.
+- Un fallo transitorio conserva la reserva y devuelve un error recuperable; nunca
+  acepta el estado informado por los query params de retorno.
 
 ## Modelo mínimo de datos
 
@@ -298,6 +328,8 @@ MP-01 ya creó columnas con nombres de Preferences. No se reescribe la migració
 - Validación de esquema, límite de body y rate limit en checkout/estado público.
 - Token público aleatorio y no enumerable.
 - Ningún dato de retorno del navegador dispara email, stock o fulfillment.
+- El token público autoriza consultar y reconciliar únicamente su propio pedido;
+  no expone ni permite elegir el `provider_order_id`.
 
 ## Observabilidad
 
@@ -329,9 +361,9 @@ MP-01 ya creó columnas con nombres de Preferences. No se reescribe la migració
 - **CA-MP-016:** Un retorno `rejected` cuyo GET autoritativo informa
   `action_required/waiting_retry` conserva el bloqueo y permite reintentar sin
   crear otro pedido.
-- **CA-MP-017:** Una order vencida que continúa `created/action_required` se
-  cancela de forma idempotente y el stock solo se libera después de verificar
-  `canceled`.
+- **CA-MP-017:** Una order que Mercado Pago confirma como `expired`, `failed` o
+  `canceled` libera stock de forma idempotente; alcanzar `expiresAt` sin esa
+  confirmación conserva la reserva.
 - **CA-MP-012:** Si MP no responde al vencer, el sistema no libera por duda.
 - **CA-MP-013:** Una vista cacheada de un producto agotado no puede iniciar checkout.
 - **CA-MP-014:** Ningún evento de pago crea todavía un envío.
@@ -349,6 +381,18 @@ MP-01 ya creó columnas con nombres de Preferences. No se reescribe la migració
   piezas `encargo` conservan una acción de consulta. El feature flag controla la
   posibilidad de iniciar el pago online, no el lenguaje ni la arquitectura del
   catálogo.
+- **CA-MP-026:** Dado un pedido interno pendiente cuya order MP está
+  `processed/accredited`, cuando la pantalla de retorno solicita reconciliación,
+  entonces Canela consulta la order por el id persistido y confirma pedido,
+  reserva e inventario exactamente una vez.
+- **CA-MP-027:** Alterar `status`, `payment_id`, `external_reference` u otros
+  parámetros del retorno no cambia la order consultada ni puede confirmar un
+  pedido no acreditado.
+- **CA-MP-028:** Webhook y reconciliación de retorno pueden observar el mismo
+  pago en cualquier orden sin duplicar consumo de stock ni otros efectos.
+- **CA-MP-029:** Si el comprador no vuelve y un intento de Webhook falla, la
+  reserva permanece protegida y un reintento posterior de Mercado Pago puede
+  completar la misma transición idempotente.
 
 ## Estrategia de pruebas
 
@@ -356,7 +400,8 @@ MP-01 ya creó columnas con nombres de Preferences. No se reescribe la migració
 - PostgreSQL real: concurrencia, rollback, unicidad e idempotencia interna.
 - Contrato MP: matriz de `docs/research/001-mercado-pago-orders-api.md`.
 - Webhook: válido, inválido, duplicado, fuera de orden y retrasado.
-- E2E: aprobado, rechazado, processing, abandono, retorno falsificado y vencimiento.
+- E2E: aprobado, rechazado, processing, abandono, retorno falsificado,
+  reconciliación al retornar, vencimiento y reintento tardío de Webhook.
 - Operativa: localizar pedido, reconciliar y preparar un reembolso asistido.
 
 ## Plan de entrega
@@ -366,7 +411,8 @@ MP-01 ya creó columnas con nombres de Preferences. No se reescribe la migració
 3. **MP-02B — Contrato real:** ejecutar matriz con credenciales de prueba; fijar `PT10M`, medios y envío como ítem.
 4. **MP-03 — Inicio y retorno:** checkout, redirección y pantalla de estado.
 5. **MP-04 — Confirmación:** Webhook Order firmado, GET autoritativo y transición de stock.
-6. **MP-05 — Recuperación:** vencimiento seguro, reconciliación, alertas y operación mínima.
+6. **MP-05 — Recuperación:** vencimiento seguro por estado verificado, reintentos
+   del Webhook, alertas y operación mínima.
 7. **INT-04/05 — Correo posterior al pago:** panel, medidas reales, importación, rótulo, pickup y TN.
 8. **MP-06 — Verificación:** E2E, seguridad, observabilidad y feature flag de producción apagado.
 

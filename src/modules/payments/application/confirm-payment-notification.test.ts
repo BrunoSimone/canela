@@ -45,6 +45,7 @@ function dependencies(options: {
   const found = "found" in options ? options.found : target;
   const repository: PaymentConfirmationRepository = {
     findByProviderOrderId: vi.fn().mockResolvedValue(found),
+    findByPublicTokenHash: vi.fn(),
     apply: vi.fn().mockResolvedValue({ kind: "applied" }),
   };
   const payments: PaymentOrderGateway = {
@@ -86,7 +87,7 @@ describe("confirmPaymentNotification", () => {
       notification.providerOrderId,
     );
     expect(deps.repository.apply).toHaveBeenCalledWith({
-      deliveryId: notification.deliveryId,
+      webhookDeliveryId: notification.deliveryId,
       orderId: target.orderId,
       providerOrderId: notification.providerOrderId,
       providerStatus: "processed",

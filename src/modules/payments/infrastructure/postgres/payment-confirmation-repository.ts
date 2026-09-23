@@ -60,33 +60,47 @@ export class PostgresPaymentConfirmationRepository
         AND payment_attempt.provider_order_id = ${providerOrderId}
     `;
 
-    if (!row) {
-      return null;
-    }
-    if (row.currency !== "ARS") {
-      throw new Error("Payment confirmation target has an invalid currency");
-    }
+    return mapTarget(row);
+  }
 
-    return {
-      orderId: row.order_id,
-      providerOrderId: row.provider_order_id,
-      totalCents: toSafeInteger(row.total_cents),
-      currency: "ARS",
-    };
+  async findByPublicTokenHash(
+    publicTokenHash: string,
+  ): Promise<PaymentConfirmationTarget | null> {
+    const [row] = await this.sql<{
+      order_id: string;
+      provider_order_id: string;
+      total_cents: string;
+      currency: string;
+    }[]>`
+      SELECT
+        orders.id AS order_id,
+        payment_attempt.provider_order_id,
+        orders.total_cents,
+        orders.currency
+      FROM orders
+      JOIN payment_attempt ON payment_attempt.order_id = orders.id
+      WHERE orders.public_token_hash = ${publicTokenHash}
+        AND payment_attempt.provider = 'mercado_pago'
+        AND payment_attempt.provider_order_id IS NOT NULL
+    `;
+
+    return mapTarget(row);
   }
 
   async apply(
     input: ApplyPaymentConfirmationInput,
   ): Promise<ApplyPaymentConfirmationResult> {
     return this.sql.begin(async (transaction) => {
-      const inserted = await transaction`
-        INSERT INTO processed_webhook (provider, event_id)
-        VALUES ('mercado_pago', ${input.deliveryId})
-        ON CONFLICT DO NOTHING
-        RETURNING event_id
-      `;
-      if (inserted.count === 0) {
-        return { kind: "duplicate" };
+      if (input.webhookDeliveryId) {
+        const inserted = await transaction`
+          INSERT INTO processed_webhook (provider, event_id)
+          VALUES ('mercado_pago', ${input.webhookDeliveryId})
+          ON CONFLICT DO NOTHING
+          RETURNING event_id
+        `;
+        if (inserted.count === 0) {
+          return { kind: "duplicate" };
+        }
       }
 
       const [current] = await transaction<OrderRow[]>`
@@ -379,4 +393,29 @@ function toSafeInteger(value: string): number {
     throw new Error("Database amount exceeds safe integer range");
   }
   return parsed;
+}
+
+function mapTarget(
+  row:
+    | {
+        order_id: string;
+        provider_order_id: string;
+        total_cents: string;
+        currency: string;
+      }
+    | undefined,
+): PaymentConfirmationTarget | null {
+  if (!row) {
+    return null;
+  }
+  if (row.currency !== "ARS") {
+    throw new Error("Payment confirmation target has an invalid currency");
+  }
+
+  return {
+    orderId: row.order_id,
+    providerOrderId: row.provider_order_id,
+    totalCents: toSafeInteger(row.total_cents),
+    currency: "ARS",
+  };
 }

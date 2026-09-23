@@ -1,5 +1,8 @@
+import { createHash } from "node:crypto";
 import type { CreatePaymentOrderInput } from "../../domain/payment-order";
 import { formatArsCents } from "./money";
+
+const MAX_EXTERNAL_CODE_LENGTH = 30;
 
 export type MercadoPagoOrderPayload = {
   type: "online";
@@ -32,7 +35,7 @@ export function buildMercadoPagoOrderPayload(
   validateInput(input);
 
   const items = input.items.map((item) => ({
-    external_code: item.externalCode,
+    external_code: toMercadoPagoExternalCode(item.externalCode),
     title: item.title,
     unit_price: formatArsCents(item.unitPriceCents),
     quantity: item.quantity,
@@ -57,6 +60,15 @@ export function buildMercadoPagoOrderPayload(
       payment_method: { not_allowed_types: ["ticket"] },
     },
   };
+}
+
+function toMercadoPagoExternalCode(value: string): string {
+  if (value.length <= MAX_EXTERNAL_CODE_LENGTH) {
+    return value;
+  }
+
+  const digest = createHash("sha256").update(value).digest("hex").slice(0, 23);
+  return `canela_${digest}`;
 }
 
 function validateInput(input: CreatePaymentOrderInput): void {

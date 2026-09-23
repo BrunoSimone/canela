@@ -64,6 +64,69 @@ describeWithDatabase("PostgresPaymentConfirmationRepository", () => {
     ).resolves.toBeNull();
   });
 
+  it("finds the immutable order snapshot by public token hash", async () => {
+    const orderId = await createCheckout(sql);
+    const tokenHash = createHash("sha256").update(orderId).digest("hex");
+
+    await expect(repository.findByPublicTokenHash(tokenHash)).resolves.toEqual({
+      orderId,
+      providerOrderId,
+      totalCents: 3_400_000,
+      currency: "ARS",
+    });
+    await expect(
+      repository.findByPublicTokenHash("f".repeat(64)),
+    ).resolves.toBeNull();
+  });
+
+  it("reconciles without persisting a fictitious webhook delivery", async () => {
+    const orderId = await createCheckout(sql);
+
+    await repository.apply({
+      ...confirmation(orderId, "unused", "approved"),
+      webhookDeliveryId: null,
+    });
+
+    const [{ count }] = await sql<{ count: string }[]>`
+      SELECT count(*)::text AS count FROM processed_webhook
+    `;
+    expect(count).toBe("0");
+    await expect(readState(sql, orderId)).resolves.toMatchObject({
+      orderStatus: "paid",
+      reservationStatus: "consumed",
+      stockOnHand: 0,
+      reserved: 0,
+      adjustments: 1,
+    });
+  });
+
+  it("consumes stock once when webhook and return reconciliation race", async () => {
+    const orderId = await createCheckout(sql);
+    const webhook = confirmation(orderId, "delivery-race", "approved");
+    const reconciliation = { ...webhook, webhookDeliveryId: null };
+
+    const results = await Promise.all([
+      repository.apply(webhook),
+      repository.apply(reconciliation),
+    ]);
+
+    expect(results.map((result) => result.kind).sort()).toEqual([
+      "applied",
+      "unchanged",
+    ]);
+    const [{ deliveries }] = await sql<{ deliveries: string }[]>`
+      SELECT count(*)::text AS deliveries FROM processed_webhook
+    `;
+    expect(deliveries).toBe("1");
+    await expect(readState(sql, orderId)).resolves.toMatchObject({
+      orderStatus: "paid",
+      reservationStatus: "consumed",
+      stockOnHand: 0,
+      reserved: 0,
+      adjustments: 1,
+    });
+  });
+
   it("consumes an approved reservation exactly once under concurrent deliveries", async () => {
     const orderId = await createCheckout(sql);
 
@@ -228,7 +291,7 @@ function confirmation(
     | "review_required",
 ) {
   return {
-    deliveryId,
+    webhookDeliveryId: deliveryId,
     orderId,
     providerOrderId,
     providerStatus: state === "approved" ? "processed" : state,

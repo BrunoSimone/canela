@@ -79,4 +79,20 @@ describe("buildMercadoPagoOrderPayload", () => {
       }),
     ).toThrow();
   });
+
+  it("maps long internal product ids to stable provider codes of at most 30 characters", () => {
+    const longProductId = "56d7afe8-2e0a-4225-8cfe-4ec83f7d34f1";
+    const longIdInput = {
+      ...input,
+      items: [{ ...input.items[0], externalCode: longProductId }],
+      totalCents: input.items[0].unitPriceCents,
+    };
+
+    const first = buildMercadoPagoOrderPayload(longIdInput).items[0].external_code;
+    const second = buildMercadoPagoOrderPayload(longIdInput).items[0].external_code;
+
+    expect(first).toMatch(/^canela_[a-f0-9]{23}$/);
+    expect(first).toHaveLength(30);
+    expect(second).toBe(first);
+  });
 });

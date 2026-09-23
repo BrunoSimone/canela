@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   AlertTriangle,
@@ -13,6 +13,7 @@ import {
 import { clearCart } from "@/modules/cart/presentation/state/cart-slice";
 import {
   useGetPublicOrderStatusQuery,
+  useReconcilePublicOrderMutation,
   type PublicOrderStatusResponse,
 } from "@/modules/checkout/presentation/client/checkout-api";
 import {
@@ -25,9 +26,17 @@ import { MosaicMark } from "./mosaic-mark";
 
 export function CheckoutResult({ publicToken }: { publicToken: string }) {
   const dispatch = useAppDispatch();
+  const reconciled = useRef(false);
   const query = useGetPublicOrderStatusQuery(publicToken, {
     refetchOnFocus: true,
   });
+  const [reconcile] = useReconcilePublicOrderMutation();
+
+  useEffect(() => {
+    if (reconciled.current) return;
+    reconciled.current = true;
+    void reconcile(publicToken);
+  }, [publicToken, reconcile]);
 
   useEffect(() => {
     if (query.data && shouldClearCart(query.data.status)) dispatch(clearCart());
@@ -37,17 +46,33 @@ export function CheckoutResult({ publicToken }: { publicToken: string }) {
     return <PollingCheckoutResult publicToken={publicToken} />;
   }
 
-  return <CheckoutResultView {...query} />;
+  return <CheckoutResultView {...query} pollingEnabled={false} />;
 }
 
 function PollingCheckoutResult({ publicToken }: { publicToken: string }) {
+  const [pollingEnabled, setPollingEnabled] = useState(true);
+  const [isVisible, setIsVisible] = useState(true);
   const query = useGetPublicOrderStatusQuery(publicToken, {
-    pollingInterval: 3_000,
+    pollingInterval: pollingEnabled && isVisible ? 3_000 : 0,
     skipPollingIfUnfocused: true,
     refetchOnFocus: true,
   });
 
-  return <CheckoutResultView {...query} />;
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setPollingEnabled(false), 90_000);
+    return () => window.clearTimeout(timeout);
+  }, []);
+
+  useEffect(() => {
+    const updateVisibility = () =>
+      setIsVisible(document.visibilityState === "visible");
+    updateVisibility();
+    document.addEventListener("visibilitychange", updateVisibility);
+    return () =>
+      document.removeEventListener("visibilitychange", updateVisibility);
+  }, []);
+
+  return <CheckoutResultView {...query} pollingEnabled={pollingEnabled} />;
 }
 
 function CheckoutResultView({
@@ -55,11 +80,13 @@ function CheckoutResultView({
   isLoading,
   isFetching,
   isError,
+  pollingEnabled,
 }: {
   data?: PublicOrderStatusResponse;
   isLoading: boolean;
   isFetching: boolean;
   isError: boolean;
+  pollingEnabled: boolean;
 }) {
   if (isLoading) {
     return (
@@ -128,7 +155,9 @@ function CheckoutResultView({
         >
           {isFetching
             ? "Consultando a Canela…"
-            : "Volveremos a consultar automáticamente."}
+            : pollingEnabled
+              ? "Volveremos a consultar automáticamente."
+              : "Podés cerrar esta página. Canela seguirá recibiendo novedades de Mercado Pago."}
         </p>
       )}
       {presentation.allowNewAttempt ? (
