@@ -176,6 +176,15 @@ revisión; un fallo no pierde el evento.
 
 **Puerta:** duplicados, desorden, demora y firma inválida no producen efectos dobles.
 
+El 2026-09-24 una compra sandbox real permitió cerrar la discrepancia de firma:
+la aplicación de prueba firma `data.id` normalizado a minúsculas, mientras la
+documentación presenta el identificador literal. El receptor acepta ambas
+canonicalizaciones con el mismo secreto y conserva el rechazo de firmas
+alteradas. La entrega oficial corregida y su duplicado respondieron `200` dentro
+del límite, con una sola entrega y un solo ajuste en Neon. Falta observar por
+HTTPS real una order `processing` o un rechazo reintentable para cerrar toda la
+matriz de MP-04B.
+
 **Commit previsto:** `test: verify Mercado Pago webhook contract`
 
 ### MP-04C — Reconciliación segura desde el retorno — completada el 2026-09-23

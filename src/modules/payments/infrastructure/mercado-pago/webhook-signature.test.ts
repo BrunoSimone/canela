@@ -33,6 +33,17 @@ describe("verifyMercadoPagoWebhookSignature", () => {
     ).toBe(true);
   });
 
+  it("accepts the lowercase data id canonicalization emitted by Orders", () => {
+    expect(
+      verifyMercadoPagoWebhookSignature({
+        xSignature: signature({ dataId: input.dataId.toLowerCase() }),
+        xRequestId: input.requestId,
+        dataId: input.dataId,
+        secret: input.secret,
+      }),
+    ).toBe(true);
+  });
+
   it.each([
     [null, input.requestId, input.dataId],
     ["", input.requestId, input.dataId],

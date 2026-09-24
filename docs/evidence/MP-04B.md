@@ -2,17 +2,21 @@
 
 ## Estado
 
-En ejecución desde el 2026-09-16. El procesamiento de una order aprobada y su
-idempotencia quedaron confirmados. El 2026-09-22 una firma del simulador validó
-con el secreto de prueba, pero una nueva notificación de una compra sandbox real
-volvió a presentar una firma distinta. La firma real continúa abierta. La verificación usa
-exclusivamente la aplicación y las credenciales de prueba de Mercado Pago,
-Neon `development` y una URL HTTPS temporal de ngrok conectada al servidor
-local.
+En ejecución desde el 2026-09-16. El 2026-09-24 se validó una firma de una
+compra sandbox real con la aplicación de prueba que creó la order. Mercado Pago
+canonicalizó `data.id` a minúsculas para calcular ese HMAC, aunque el query
+string conservó el identificador en mayúsculas. El receptor acepta ahora tanto
+el manifiesto literal documentado como esa canonicalización observada, sin
+aceptar firmas calculadas con otro secreto.
+
+La entrega oficial capturada atravesó nuevamente la URL HTTPS de ngrok y obtuvo
+`200`; su repetición exacta también obtuvo `200` sin duplicar efectos. La
+verificación usa exclusivamente credenciales de prueba, Neon `development` y
+un servidor local.
 
 ## Fuentes oficiales
 
-- [Configurar notificaciones de Checkout Pro mediante Orders](https://www.mercadopago.com.ar/developers/es/docs/checkout-pro-orders/payment-notifications?scope=prod)
+- [Configurar notificaciones de Checkout Pro mediante Orders](https://www.mercadopago.com.ar/developers/es/docs/checkout-pro-orders/notifications?scope=prod)
 - [Probar Checkout Pro mediante Orders](https://www.mercadopago.com.ar/developers/es/docs/checkout-pro-orders/integration-test-introduction?scope=prod)
 - [Compra de prueba con tarjeta](https://www.mercadopago.com.ar/developers/es/docs/checkout-pro-orders/integration-test/test-purchase-with-card?scope=prod)
 
@@ -33,10 +37,11 @@ La URL temporal completa y los secretos no se versionan.
 | Simulación oficial firmada | La firma coincide con el secreto configurado | La firma validó; el fixture genérico fue rechazado con `400` porque informó `live_mode: true` y una identidad ajena al sandbox | Firma confirmada; fixture no procesable |
 | Firma ausente o alterada | `401`; no consulta MP ni modifica Neon | Firma alterada rechazada por la URL pública con `INVALID_SIGNATURE` | Confirmado |
 | Order real en estado no terminal | Respuesta `200`; reserva conservada | Order de prueba aceptada por MP; GET autoritativo mantuvo pedido pendiente, stock `1` y reserva `1` | Confirmado |
-| Pago aprobado real de prueba | Pedido `paid`; reserva consumida y stock descontado una vez | GET autoritativo devolvió `processed/accredited`; la notificación oficial recibió `401` por firma y conservó stock; una reconciliación controlada produjo pedido `paid`, pago `approved`, reserva `consumed`, stock `0` y reservado `0` | Procesamiento confirmado; firma oficial pendiente |
+| Pago aprobado real de prueba | Pedido `paid`; reserva consumida y stock descontado una vez | GET autoritativo devolvió `processed/accredited`; tras corregir la canonicalización, la entrega oficial capturada recibió `200` y Neon conservó pedido `paid`, pago `approved`, reserva `consumed`, stock `0` y reservado `0` | Confirmado |
 | Repetición exacta de la entrega | `200`; sin segundo descuento ni segundo ajuste | Dos entregas con el mismo `x-request-id` recibieron `200`; quedó una fila para la entrega, un ajuste `payment_confirmed`, stock `0` y reservado `0` | Confirmado |
-| Rechazo reintentable o estado `processing` | Stock conservado según estado autoritativo | Pendiente | Pendiente |
-| Latencia | Confirmación HTTP menor a 22 segundos | Entrega aprobada: 3,6 s; duplicado: 2,0 s | Confirmado |
+| Order real no terminal | `200`; reserva y stock conservados | Una order `created` consultada autoritativamente conservó pedido pendiente, stock `1` y reserva `1` | Confirmado |
+| Rechazo reintentable o estado `processing` | Stock conservado según estado autoritativo | La lógica está cubierta localmente; falta una entrega HTTPS real en uno de estos estados | Pendiente |
+| Latencia | Confirmación HTTP menor a 22 segundos | Entrega aprobada corregida: 3,3 s; duplicado: 1,2 s | Confirmado |
 
 ## Restricciones
 
@@ -74,20 +79,14 @@ Neon quedó con el pedido `paid`, el intento `approved`, la reserva `consumed`,
 stock `0`, reservado `0` y un único ajuste `payment_confirmed`. La repetición
 exacta conservó esos valores y una sola fila para el `x-request-id` procesado.
 
-### Discrepancia de la firma oficial
+### Discrepancia inicial de la firma oficial
 
-La notificación real `order.processed` sí alcanzó ngrok y el endpoint local,
-pero recibió `401 INVALID_SIGNATURE`. El HMAC recibido no coincidió con el
-manifiesto oficial `id:{data.id};request-id:{x-request-id};ts:{ts};` usando el
-secreto de prueba vigente. Tampoco coincidió al normalizar el identificador,
-omitirlo, incorporar la referencia externa, interpretar el secreto hexadecimal
-como bytes ni usar el secreto anterior. El cuerpo, el query string y el
-`application_id` correspondían a la order de prueba esperada.
-
-Por lo tanto, el receptor y la transición transaccional están demostrados, pero
-la integración no puede considerarse cerrada hasta recibir una nueva
-notificación oficial cuya firma valide o aclarar la discrepancia con Mercado
-Pago. No se relajará ni omitirá la autenticación para hacer pasar la prueba.
+Las primeras notificaciones reales `order.processed` alcanzaron ngrok y el
+endpoint local, pero recibieron `401 INVALID_SIGNATURE`. La investigación
+posterior demostró que la order pertenecía a la aplicación de prueba
+`1232783220387666`, mientras el secreto se había copiado desde la aplicación
+principal `7955035517497142`. La aplicación de prueba se obtiene al iniciar
+sesión en Developers con el Seller Test User vinculado a las credenciales.
 
 ### Repetición independiente del 2026-09-22
 
@@ -103,3 +102,32 @@ activa, stock físico `1` y reservado `1`. Esto demuestra el comportamiento
 fail-safe: una notificación no autenticada no vende ni libera la pieza. Una
 reconciliación controlada posterior consultó la misma order, confirmó la venta y
 dejó exactamente un ajuste de inventario.
+
+### Resolución del 2026-09-24
+
+Se configuró la URL HTTPS y `Order (Mercado Pago)` en modo productivo dentro de
+la aplicación del Seller Test User, se cargó su secreto como
+`MP_TEST_WEBHOOK_SECRET` y se reinició la aplicación. Una nueva compra sandbox
+produjo otra entrega real. El HMAC recibido coincidió exactamente con el secreto
+correcto al usar este manifiesto:
+
+```text
+id:{data.id en minúsculas};request-id:{x-request-id};ts:{ts};
+```
+
+El mismo secreto no validó el identificador literal, y el secreto de la
+aplicación principal no validó ninguna variante. Se agregó una prueba de
+regresión y el receptor quedó compatible con el manifiesto literal documentado
+y con la canonicalización real, manteniendo comparación constante del hash y
+rechazo de secretos incorrectos.
+
+La entrega oficial capturada se repitió por la URL pública después de la
+corrección. La primera llamada respondió `200` en 3,3 segundos y la repetición
+del mismo `x-request-id` respondió `200` en 1,2 segundos. Neon registró una sola
+entrega procesada, un solo ajuste, reserva consumida, stock físico `0` y
+reservado `0`.
+
+El simulador del panel agotó 22 segundos tanto en la aplicación principal como
+en la aplicación de prueba sin que ngrok registrara una solicitud. Por eso no se
+usa ese timeout como evidencia contra el receptor; las compras sandbox reales y
+la repetición controlada constituyen la evidencia HTTPS disponible.

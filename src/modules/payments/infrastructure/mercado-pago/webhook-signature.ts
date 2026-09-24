@@ -26,19 +26,22 @@ export function verifyMercadoPagoWebhookSignature(
     return false;
   }
 
-  const manifest =
-    `id:${input.dataId};request-id:${input.xRequestId};` +
-    `ts:${parts.timestamp};`;
-  const expected = createHmac("sha256", input.secret)
-    .update(manifest)
-    .digest("hex");
-  const expectedBytes = Buffer.from(expected, "ascii");
   const receivedBytes = Buffer.from(parts.hash, "ascii");
+  const dataIds = [input.dataId, input.dataId.toLowerCase()];
 
-  return (
-    expectedBytes.byteLength === receivedBytes.byteLength &&
-    timingSafeEqual(expectedBytes, receivedBytes)
-  );
+  return dataIds.reduce((accepted, dataId) => {
+    const manifest =
+      `id:${dataId};request-id:${input.xRequestId};` +
+      `ts:${parts.timestamp};`;
+    const expectedBytes = Buffer.from(
+      createHmac("sha256", input.secret).update(manifest).digest("hex"),
+      "ascii",
+    );
+    const matches =
+      expectedBytes.byteLength === receivedBytes.byteLength &&
+      timingSafeEqual(expectedBytes, receivedBytes);
+    return matches || accepted;
+  }, false);
 }
 
 function parseSignature(

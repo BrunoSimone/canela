@@ -125,6 +125,11 @@ Permitir el pago inmediato de productos con stock disponible, garantizando que c
   webhook no pudo procesarse y cuyo comprador cerró la página, cuando Mercado
   Pago reintenta la notificación, entonces el pedido converge al mismo estado sin
   depender del navegador.
+- **CA-020 — Canonicalización de firma:** Dado un Webhook oficial de Orders cuyo
+  `data.id` contiene letras mayúsculas, cuando Mercado Pago firma el manifiesto
+  con el identificador literal documentado o normalizado a minúsculas, entonces
+  Canela valida el HMAC con el secreto de la aplicación sin dejar de rechazar
+  firmas alteradas o calculadas con otro secreto.
 
 ## Datos e integraciones
 
