@@ -393,6 +393,10 @@ MP-01 ya creó columnas con nombres de Preferences. No se reescribe la migració
 - **CA-MP-029:** Si el comprador no vuelve y un intento de Webhook falla, la
   reserva permanece protegida y un reintento posterior de Mercado Pago puede
   completar la misma transición idempotente.
+- **CA-MP-030:** Cuando una comprobación autoritativa lleva un pedido a
+  `review_required`, Canela emite una señal estructurada con los identificadores
+  internos necesarios para investigar, sin incluir datos personales del
+  comprador.
 
 ## Estrategia de pruebas
 

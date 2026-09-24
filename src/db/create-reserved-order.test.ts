@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  CHECKOUT_LOCK_MINUTES,
   InvalidOrderInputError,
   validateReservedOrderInput,
   type CreateReservedOrderInput,
@@ -40,7 +39,6 @@ describe("validateReservedOrderInput", () => {
       "product-b",
     ]);
     expect(result.expiresAt.toISOString()).toBe("2026-09-09T12:10:00.000Z");
-    expect(CHECKOUT_LOCK_MINUTES).toBe(10);
   });
 
   it("rejects duplicate products before opening a transaction", () => {

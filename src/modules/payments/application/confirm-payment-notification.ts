@@ -1,5 +1,6 @@
 import type {
   PaymentConfirmationRepository,
+  PaymentReviewRequired,
 } from "../domain/payment-confirmation";
 import type {
   PaymentOrderGateway,
@@ -18,6 +19,7 @@ type ConfirmPaymentNotificationDependencies = {
   repository: PaymentConfirmationRepository;
   payments: PaymentOrderGateway;
   expectedProvider: ExpectedPaymentProvider;
+  reportReviewRequired?(review: PaymentReviewRequired): void;
 };
 
 export type ConfirmPaymentNotificationResult =
@@ -44,7 +46,7 @@ export async function confirmPaymentNotification(
     dependencies.expectedProvider,
   );
 
-  return dependencies.repository.apply({
+  const result = await dependencies.repository.apply({
     webhookDeliveryId: notification.deliveryId,
     orderId: target.orderId,
     providerOrderId: notification.providerOrderId,
@@ -52,4 +54,11 @@ export async function confirmPaymentNotification(
     providerStatusDetail: providerOrder.providerStatusDetail,
     state,
   });
+  if (state === "review_required" && result.kind === "applied") {
+    dependencies.reportReviewRequired?.({
+      orderId: target.orderId,
+      providerOrderId: notification.providerOrderId,
+    });
+  }
+  return result;
 }

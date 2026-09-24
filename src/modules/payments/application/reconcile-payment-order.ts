@@ -1,4 +1,7 @@
-import type { PaymentConfirmationRepository } from "../domain/payment-confirmation";
+import type {
+  PaymentConfirmationRepository,
+  PaymentReviewRequired,
+} from "../domain/payment-confirmation";
 import type { PaymentOrderGateway } from "../domain/payment-order";
 import {
   verifiedPaymentOrderState,
@@ -9,6 +12,7 @@ type ReconcilePaymentOrderDependencies = {
   repository: PaymentConfirmationRepository;
   payments: PaymentOrderGateway;
   expectedProvider: ExpectedPaymentProvider;
+  reportReviewRequired?(review: PaymentReviewRequired): void;
 };
 
 export type ReconcilePaymentOrderResult =
@@ -35,7 +39,7 @@ export async function reconcilePaymentOrder(
     dependencies.expectedProvider,
   );
 
-  return dependencies.repository.apply({
+  const result = await dependencies.repository.apply({
     webhookDeliveryId: null,
     orderId: target.orderId,
     providerOrderId: target.providerOrderId,
@@ -43,4 +47,11 @@ export async function reconcilePaymentOrder(
     providerStatusDetail: providerOrder.providerStatusDetail,
     state,
   });
+  if (state === "review_required" && result.kind === "applied") {
+    dependencies.reportReviewRequired?.({
+      orderId: target.orderId,
+      providerOrderId: target.providerOrderId,
+    });
+  }
+  return result;
 }

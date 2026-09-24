@@ -20,6 +20,11 @@ export type ApplyPaymentConfirmationResult = {
   kind: "applied" | "duplicate" | "unchanged";
 };
 
+export type PaymentReviewRequired = {
+  orderId: string;
+  providerOrderId: string;
+};
+
 export interface PaymentConfirmationRepository {
   findByProviderOrderId(
     providerOrderId: string,

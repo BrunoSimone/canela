@@ -8,6 +8,7 @@ import type {
   PaymentOrder,
   PaymentOrderGateway,
 } from "../domain/payment-order";
+import { PaymentOrderGatewayError } from "../domain/payment-order";
 import { reconcilePaymentOrder } from "./reconcile-payment-order";
 
 const tokenHash = "a".repeat(64);
@@ -92,12 +93,20 @@ describe("reconcilePaymentOrder", () => {
     const deps = dependencies({
       order: paymentOrder({ externalReference: "another-order" }),
     });
+    const reportReviewRequired = vi.fn();
 
-    await reconcilePaymentOrder({ ...deps, expectedProvider }, tokenHash);
+    await reconcilePaymentOrder(
+      { ...deps, expectedProvider, reportReviewRequired },
+      tokenHash,
+    );
 
     expect(deps.repository.apply).toHaveBeenCalledWith(
       expect.objectContaining({ state: "review_required" }),
     );
+    expect(reportReviewRequired).toHaveBeenCalledWith({
+      orderId: target.orderId,
+      providerOrderId: target.providerOrderId,
+    });
   });
 
   it("preserves the reservation while Mercado Pago is processing", async () => {
@@ -114,5 +123,18 @@ describe("reconcilePaymentOrder", () => {
     expect(deps.repository.apply).toHaveBeenCalledWith(
       expect.objectContaining({ state: "processing" }),
     );
+  });
+
+  it("does not transition the order when Mercado Pago is unavailable", async () => {
+    const deps = dependencies({});
+    vi.mocked(deps.payments.getOrder).mockRejectedValue(
+      new PaymentOrderGatewayError("retryable"),
+    );
+
+    await expect(
+      reconcilePaymentOrder({ ...deps, expectedProvider }, tokenHash),
+    ).rejects.toThrow(PaymentOrderGatewayError);
+
+    expect(deps.repository.apply).not.toHaveBeenCalled();
   });
 });

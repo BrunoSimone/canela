@@ -47,6 +47,8 @@ export async function POST(
             sellerUserId: config.sellerUserId,
             applicationId: config.applicationId,
           },
+          reportReviewRequired: (review) =>
+            report("mercado_pago_payment_review_required", review),
         },
         publicTokenHash,
       ),
@@ -54,6 +56,6 @@ export async function POST(
   });
 }
 
-function report(event: string): void {
-  console.error(JSON.stringify({ event }));
+function report(event: string, context: object = {}): void {
+  console.error(JSON.stringify({ event, ...context }));
 }

@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { CHECKOUT_EXPIRATION } from "../../../checkout/domain/checkout-expiration";
 import type { CreatePaymentOrderInput } from "../../domain/payment-order";
 import { formatArsCents } from "./money";
 
@@ -10,7 +11,7 @@ export type MercadoPagoOrderPayload = {
   capture_mode: "automatic_async";
   total_amount: string;
   external_reference: string;
-  expiration_time: "PT10M";
+  expiration_time: typeof CHECKOUT_EXPIRATION.mercadoPagoDuration;
   payer: { email: string };
   items: Array<{
     external_code: string;
@@ -47,7 +48,7 @@ export function buildMercadoPagoOrderPayload(
     capture_mode: "automatic_async",
     total_amount: formatArsCents(input.totalCents),
     external_reference: input.externalReference,
-    expiration_time: "PT10M",
+    expiration_time: CHECKOUT_EXPIRATION.mercadoPagoDuration,
     payer: { email: input.payerEmail },
     items,
     config: {

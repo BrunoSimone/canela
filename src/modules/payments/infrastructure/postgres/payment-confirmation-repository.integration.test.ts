@@ -164,6 +164,61 @@ describeWithDatabase("PostgresPaymentConfirmationRepository", () => {
     });
   });
 
+  it("does not release an elapsed reservation while the provider is processing", async () => {
+    const orderId = await createCheckout(sql);
+    await expireReservation(sql, orderId);
+
+    await repository.apply(
+      confirmation(orderId, "delivery-elapsed-processing", "processing"),
+    );
+
+    await expect(readState(sql, orderId)).resolves.toMatchObject({
+      orderStatus: "payment_pending",
+      paymentStatus: "payment_pending",
+      reservationStatus: "active",
+      stockOnHand: 1,
+      reserved: 1,
+      adjustments: 0,
+    });
+  });
+
+  it("consumes a late approved payment after the local window elapsed", async () => {
+    const orderId = await createCheckout(sql);
+    await expireReservation(sql, orderId);
+
+    await repository.apply(
+      confirmation(orderId, "delivery-late-approved", "approved"),
+    );
+
+    await expect(readState(sql, orderId)).resolves.toMatchObject({
+      orderStatus: "paid",
+      paymentStatus: "approved",
+      reservationStatus: "consumed",
+      stockOnHand: 0,
+      reserved: 0,
+      adjustments: 1,
+    });
+  });
+
+  it("releases an elapsed reservation only after provider-confirmed expiration", async () => {
+    const orderId = await createCheckout(sql);
+    await expireReservation(sql, orderId);
+
+    const result = await repository.apply(
+      confirmation(orderId, "delivery-expired", "expired"),
+    );
+
+    expect(result.kind).toBe("applied");
+    await expect(readState(sql, orderId)).resolves.toMatchObject({
+      orderStatus: "expired",
+      paymentStatus: "expired",
+      reservationStatus: "released",
+      stockOnHand: 1,
+      reserved: 0,
+      adjustments: 0,
+    });
+  });
+
   it("releases a verified terminal failure once", async () => {
     const orderId = await createCheckout(sql);
     const event = confirmation(orderId, "delivery-failed", "rejected");
@@ -277,6 +332,14 @@ async function createCheckout(sql: Sql): Promise<string> {
     UPDATE orders SET status = 'payment_pending' WHERE id = ${orderId}
   `;
   return orderId;
+}
+
+async function expireReservation(sql: Sql, orderId: string): Promise<void> {
+  await sql`
+    UPDATE stock_reservation
+    SET expires_at = now() - interval '1 minute'
+    WHERE order_id = ${orderId}
+  `;
 }
 
 function confirmation(

@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { Sql } from "postgres";
 
-export const CHECKOUT_LOCK_MINUTES = 10;
+import { checkoutExpiresAt } from "../modules/checkout/domain/checkout-expiration";
 
 export type AuthoritativeOrderItem = {
   productId: string;
@@ -122,9 +122,7 @@ export function validateReservedOrderInput(
   }
 
   const now = input.now ?? new Date();
-  const expiresAt = new Date(
-    now.getTime() + CHECKOUT_LOCK_MINUTES * 60 * 1000,
-  );
+  const expiresAt = checkoutExpiresAt(now);
 
   return {
     subtotalCents,

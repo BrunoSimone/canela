@@ -3,10 +3,10 @@
 ## Estado
 
 Aprobado el 2026-09-14. ADR-003 y `capture_mode = automatic_async` quedaron
-aceptados. MP-01, MP-02, MP-03, MP-03B3, MP-04A, MP-04B y MP-04C están
-cerrados. Una prueba manual del catálogo detectó que MP-03B2 no hacía visible
-la compra desde la landing; MP-03B3 corrigió esa integración antes de continuar
-con la confirmación autoritativa.
+aceptados. MP-01, MP-02, MP-03, MP-03B3, MP-04A, MP-04B, MP-04C y MP-05 están
+cerrados localmente. Una prueba manual del catálogo detectó que MP-03B2 no hacía
+visible la compra desde la landing; MP-03B3 corrigió esa integración antes de
+continuar con la confirmación autoritativa.
 
 ## Resultado esperado
 
@@ -218,7 +218,7 @@ La evidencia está registrada en `docs/evidence/MP-04C.md`.
 
 **Commit previsto:** `feat: reconcile Mercado Pago payments on checkout return`
 
-### MP-05 — Expiración y recuperación
+### MP-05 — Expiración y recuperación — completada localmente el 2026-09-24
 
 - Alinear `expires_at` y la vigencia de la order en `PT10M` sin convertir el
   reloj en una transición de inventario.
@@ -232,6 +232,17 @@ La evidencia está registrada en `docs/evidence/MP-04C.md`.
 
 **Puerta:** prueba de Webhook tardío, expiración verificada y caída de MP cerca
 de `PT10M`, demostrando que el reloj aislado no libera stock.
+
+La política temporal quedó centralizada para que reserva y Orders API compartan
+`10 minutos`/`PT10M`. Las pruebas con PostgreSQL 17 demostraron que el reloj
+vencido conserva `processing`, una aprobación tardía consume una sola vez y
+solo la expiración autoritativa libera. Una caída del proveedor no llega a
+persistencia y el Webhook conserva su respuesta reintentable. Las transiciones
+a `review_required` emiten una señal estructurada sin datos personales y el
+procedimiento operativo está documentado en
+`docs/runbooks/mercado-pago-recuperacion.md`.
+
+**Commit previsto:** `feat: secure Mercado Pago payment expiration recovery`
 
 ### INT-00/01 — Conectar Correo antes de producción
 

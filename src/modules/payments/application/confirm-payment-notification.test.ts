@@ -107,9 +107,10 @@ describe("confirmPaymentNotification", () => {
     "marks the order for review when the authoritative %s does not match",
     async (_field, overrides) => {
       const deps = dependencies({ order: paymentOrder(overrides) });
+      const reportReviewRequired = vi.fn();
 
       await confirmPaymentNotification(
-        { ...deps, expectedProvider },
+        { ...deps, expectedProvider, reportReviewRequired },
         notification,
       );
 
@@ -119,6 +120,10 @@ describe("confirmPaymentNotification", () => {
           state: "review_required",
         }),
       );
+      expect(reportReviewRequired).toHaveBeenCalledWith({
+        orderId: target.orderId,
+        providerOrderId: notification.providerOrderId,
+      });
     },
   );
 

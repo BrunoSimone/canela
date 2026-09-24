@@ -34,6 +34,8 @@ export async function POST(request: Request): Promise<Response> {
             sellerUserId: config.sellerUserId,
             applicationId: config.applicationId,
           },
+          reportReviewRequired: (review) =>
+            report("mercado_pago_payment_review_required", review),
         },
         notification,
       ),
@@ -41,6 +43,6 @@ export async function POST(request: Request): Promise<Response> {
   });
 }
 
-function report(event: string): void {
-  console.error(JSON.stringify({ event }));
+function report(event: string, context: object = {}): void {
+  console.error(JSON.stringify({ event, ...context }));
 }
