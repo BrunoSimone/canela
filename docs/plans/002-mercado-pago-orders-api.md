@@ -3,9 +3,10 @@
 ## Estado
 
 Aprobado el 2026-09-14. ADR-003 y `capture_mode = automatic_async` quedaron
-aceptados. MP-01, MP-02, MP-03, MP-03B3 y MP-04A están cerrados. Una prueba
-manual del catálogo detectó que MP-03B2 no hacía visible la compra desde la
-landing; MP-03B3 corrigió esa integración antes de continuar con MP-04B.
+aceptados. MP-01, MP-02, MP-03, MP-03B3, MP-04A, MP-04B y MP-04C están
+cerrados. Una prueba manual del catálogo detectó que MP-03B2 no hacía visible
+la compra desde la landing; MP-03B3 corrigió esa integración antes de continuar
+con la confirmación autoritativa.
 
 ## Resultado esperado
 
@@ -164,7 +165,7 @@ revisión; un fallo no pierde el evento.
 
 **Commit previsto:** `feat: confirm Mercado Pago payments from signed webhooks`
 
-### MP-04B — Contrato HTTPS del Webhook — en ejecución desde 2026-09-16
+### MP-04B — Contrato HTTPS del Webhook — completada el 2026-09-24
 
 - Desplegar el endpoint en una URL HTTPS de preview.
 - Configurar evento Order (Mercado Pago) y secreto de prueba.
@@ -181,9 +182,11 @@ la aplicación de prueba firma `data.id` normalizado a minúsculas, mientras la
 documentación presenta el identificador literal. El receptor acepta ambas
 canonicalizaciones con el mismo secreto y conserva el rechazo de firmas
 alteradas. La entrega oficial corregida y su duplicado respondieron `200` dentro
-del límite, con una sola entrega y un solo ajuste en Neon. Falta observar por
-HTTPS real una order `processing` o un rechazo reintentable para cerrar toda la
-matriz de MP-04B.
+del límite, con una sola entrega y un solo ajuste en Neon. Una segunda compra
+sandbox produjo `processing/in_process`: su Webhook oficial respondió `200` en
+2,2 segundos y Neon conservó el pedido pendiente, la reserva activa, stock `1`,
+reservado `1` y cero ajustes. La matriz HTTPS quedó cerrada sin usar el timeout
+del simulador del panel como evidencia del receptor.
 
 **Commit previsto:** `test: verify Mercado Pago webhook contract`
 

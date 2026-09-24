@@ -2,12 +2,13 @@
 
 ## Estado
 
-En ejecución desde el 2026-09-16. El 2026-09-24 se validó una firma de una
-compra sandbox real con la aplicación de prueba que creó la order. Mercado Pago
-canonicalizó `data.id` a minúsculas para calcular ese HMAC, aunque el query
-string conservó el identificador en mayúsculas. El receptor acepta ahora tanto
-el manifiesto literal documentado como esa canonicalización observada, sin
-aceptar firmas calculadas con otro secreto.
+Completada el 2026-09-24. Se validaron entregas firmadas de compras sandbox
+reales, tanto para un pago aprobado como para otro en procesamiento, usando la
+aplicación de prueba que creó cada order. Mercado Pago canonicalizó `data.id` a
+minúsculas para calcular el HMAC, aunque el query string conservó el
+identificador en mayúsculas. El receptor acepta ahora tanto el manifiesto
+literal documentado como esa canonicalización observada, sin aceptar firmas
+calculadas con otro secreto.
 
 La entrega oficial capturada atravesó nuevamente la URL HTTPS de ngrok y obtuvo
 `200`; su repetición exacta también obtuvo `200` sin duplicar efectos. La
@@ -40,8 +41,8 @@ La URL temporal completa y los secretos no se versionan.
 | Pago aprobado real de prueba | Pedido `paid`; reserva consumida y stock descontado una vez | GET autoritativo devolvió `processed/accredited`; tras corregir la canonicalización, la entrega oficial capturada recibió `200` y Neon conservó pedido `paid`, pago `approved`, reserva `consumed`, stock `0` y reservado `0` | Confirmado |
 | Repetición exacta de la entrega | `200`; sin segundo descuento ni segundo ajuste | Dos entregas con el mismo `x-request-id` recibieron `200`; quedó una fila para la entrega, un ajuste `payment_confirmed`, stock `0` y reservado `0` | Confirmado |
 | Order real no terminal | `200`; reserva y stock conservados | Una order `created` consultada autoritativamente conservó pedido pendiente, stock `1` y reserva `1` | Confirmado |
-| Rechazo reintentable o estado `processing` | Stock conservado según estado autoritativo | La lógica está cubierta localmente; falta una entrega HTTPS real en uno de estos estados | Pendiente |
-| Latencia | Confirmación HTTP menor a 22 segundos | Entrega aprobada corregida: 3,3 s; duplicado: 1,2 s | Confirmado |
+| Rechazo reintentable o estado `processing` | Stock conservado según estado autoritativo | Compra real con titular `CONT`: GET devolvió `processing/in_process`; el Webhook oficial recibió `200` y Neon conservó pedido pendiente, reserva activa, stock `1`, reservado `1` y cero ajustes | Confirmado |
+| Latencia | Confirmación HTTP menor a 22 segundos | Entrega aprobada corregida: 3,3 s; duplicado: 1,2 s; entrega `processing`: 2,2 s | Confirmado |
 
 ## Restricciones
 
@@ -131,3 +132,15 @@ El simulador del panel agotó 22 segundos tanto en la aplicación principal como
 en la aplicación de prueba sin que ngrok registrara una solicitud. Por eso no se
 usa ese timeout como evidencia contra el receptor; las compras sandbox reales y
 la repetición controlada constituyen la evidencia HTTPS disponible.
+
+### Pago en procesamiento y conservación de stock
+
+Se ejecutó una compra sandbox real con el resultado de prueba `CONT`. Mercado
+Pago envió la notificación oficial a la URL HTTPS y el receptor respondió `200`
+en 2,2 segundos. La consulta autoritativa de Orders API devolvió
+`processing/in_process` tanto para la order como para su pago.
+
+Neon quedó con el pedido y el intento en `payment_pending`, la reserva `active`,
+stock físico `1`, reservado `1`, ningún ajuste de inventario y una única entrega
+procesada. Esto confirma que una notificación válida no descuenta ni libera la
+pieza mientras el proveedor todavía no informa un resultado terminal.
