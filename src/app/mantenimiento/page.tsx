@@ -35,7 +35,7 @@ export default function MaintenancePage() {
         </h1>
         <p className="mx-auto mt-7 max-w-[470px] text-base leading-relaxed text-[#6E4E38] sm:text-lg">
           El catálogo y las compras online están en pausa mientras terminamos
-          los últimos detalles. Gracias por acompañar lo hecho a mano.
+          los últimos detalles.
         </p>
         <a
           href={siteConfig.instagramUrl}
@@ -50,7 +50,7 @@ export default function MaintenancePage() {
 
       <p className="max-w-64 text-sm leading-relaxed text-[#6E4E38]">
         Vidrio, cerámica y espejos.<br />
-        Hechos con amor en Mar del Plata.
+        Diseño y producción en Mar del Plata.
       </p>
     </main>
   );

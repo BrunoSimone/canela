@@ -21,7 +21,7 @@ export function Nosotros() {
             Sobre nosotros
           </span>
           <h2 className="my-2.5 mb-4 font-heading text-[clamp(32px,4.5vw,46px)] font-normal text-[var(--canela-brown)]">
-            Detalles que cuentan historias
+            Nuestro taller en Mar del Plata
           </h2>
           <p className="text-base leading-relaxed text-[#5a4130]">
             Soy{" "}
@@ -33,14 +33,9 @@ export function Nosotros() {
             >
               @Marieladeloso
             </a>{" "}
-            artista y tallerista de Mar del Plata. Canela Store es una nueva forma de
-            acercarme a la comunidad con los brazos abiertos, por medio de lo que
-            sé hacer y me encanta. Me siento muy afortunada de poder acompañarte
-            en tu día a día llenando los espacios de tu hogar con objetos con
-            buena energía.
-            <br />
-            <br />
-            ¡Gracias por tu confianza!
+            artista y tallerista de Mar del Plata. En Canela Store encontrás
+            mis trabajos en vidrio reciclado, vitrofusión, cerámica y mosaico:
+            objetos de uso cotidiano, espejos y cuadros.
           </p>
           <p className="mt-5 border-l-2 border-[var(--canela-ochre)] pl-4 text-sm leading-relaxed text-[#5a4130]">
             Cada pieza de Canela Store se produce en el{" "}

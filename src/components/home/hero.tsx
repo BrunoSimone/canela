@@ -115,11 +115,9 @@ export function Hero({ slides }: { slides: HeroSlideView[] }) {
             className="m-0 max-w-[460px] text-base leading-relaxed text-[#5a4130]"
             {...itemProps}
           >
-            En Canela utilizamos vidrios y espejos reciclados para cerrar el ciclo
-            del material proporcionándoles un nuevo uso. Además, por medio de la
-            cerámica le damos vida al barro, acercándonos así a la naturaleza.
-            Estas materias primas nos permiten diseñar con un valor que solo
-            tienen las cosas hechas con el corazón.
+            En Canela trabajamos con vidrio reciclado, cerámica y espejos.
+            Diseñamos y elaboramos piezas decorativas y utilitarias en
+            Mar del Plata.
           </motion.p>
           <motion.a
             href="#catalogo"
