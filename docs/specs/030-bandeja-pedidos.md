@@ -2,7 +2,7 @@
 
 ## Estado
 
-Borrador para evaluación. Define la primera pantalla que verá el dueño al entrar por email; no autoriza implementación hasta su aprobación.
+En implementación incremental. El 27/09/2026 se acordó construir las pantallas de esta spec con un contrato de lectura único: PostgreSQL aporta los datos actuales y fixtures exclusivas del backend de desarrollo permiten revisar los campos todavía inexistentes. Las fixtures no se combinan con pedidos reales ni están disponibles en producción.
 
 ## Objetivo
 
@@ -158,8 +158,16 @@ No permite cambiar estados ni crear envíos. Las mutaciones quedan en el detalle
 
 ## Decisiones pendientes
 
-1. Aprobar la composición maestro-detalle o usar lista que navega directamente.
-2. Elegir el email proveedor para los enlaces de acceso y notificaciones.
-3. Definir cuánto dura una sesión administrativa.
-4. Validar con el dueño los nombres de estados operativos.
+1. Validar con el dueño los nombres de estados operativos.
+2. Confirmar la cuenta y remitente verificado para el proveedor transaccional.
+3. Definir el contrato de creación de envío, rótulo y despacho al completar Correo Argentino. La preparación interna ya tiene contrato y auditoría.
 
+## Implementación actual
+
+- Se adoptó la composición maestro-detalle. La ficha se abre desde la vista previa.
+- `GET /api/admin/orders` y `GET /api/admin/orders/:id` sirven el mismo DTO para PostgreSQL y fixtures. `?demo=1` solo funciona con `ADMIN_DEMO_MODE=1` fuera de producción.
+- Los pedidos nuevos guardan comprador, destinatario, teléfono opcional, domicilio y código postal en `order_delivery`; PostgreSQL llena esos campos en la misma API. Los pedidos anteriores pueden conservar `null`. El TN sigue pendiente de Correo. La demostración devuelve valores ficticios, identificados como tales.
+- La base todavía no tiene número público de pedido ni miniatura congelada. La lista real usa un ID abreviado y un icono de producto. La búsqueda real funciona por prefijo de ID, email, nombre del comprador/destinatario o producto; TN solo se prueba con fixtures hasta incorporarlo.
+- El acceso usa allowlist, enlace de un solo uso que dura 15 minutos y sesión de 8 horas. El envío del enlace está conectado a un adaptador Resend; queda inactivo sin API key y dominio verificado. Las sesiones y enlaces se guardan por hash en PostgreSQL.
+- La ficha permite guardar la preparación de pedidos pagados: uno o más bultos con peso y dimensiones exteriores reales y una nota interna. `order_preparation` conserva la última versión y `order_preparation_event` audita cada guardado con el email de la sesión. `POST /api/admin/orders/:id/preparation` exige sesión, origen local y versión esperada; rechaza estados de pago no aptos. La demostración permanece de solo lectura.
+- Una preparación guardada presenta el estado operativo “Listo para crear envío”, derivado de los datos internos sin modificar `orders.status`. Crear el envío, generar TN/rótulo y registrar despacho siguen pendientes de Correo.

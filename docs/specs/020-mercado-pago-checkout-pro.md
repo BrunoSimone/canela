@@ -57,7 +57,7 @@ Permitir que un comprador pague una o varias piezas disponibles sin sobreventa, 
 - Consultar `GET /v1/orders/{id}` antes de cualquier transición irreversible.
 - Liberar bloqueos vencidos de forma segura.
 - Reconciliar orders sin resultado terminal.
-- Mantener el CTA actual de WhatsApp como alternativa durante el rollout.
+- Mostrar la compra online solo cuando el checkout esté habilitado; sin un canal de consulta alternativo en el frontend.
 
 ## Fuera de alcance
 
@@ -183,9 +183,10 @@ El carrito de venta directa se conserva en el navegador ante una recarga. Solo s
 vacía cuando el estado interno consultado es `paid`; regresar desde Mercado Pago,
 cerrar la pestaña o recibir un estado todavía incierto no elimina sus piezas.
 
-Las piezas publicadas como `encargo` no habilitan el pago inmediato. Permanecen
-disponibles en el flujo de consulta por WhatsApp, y un carrito mixto debe separar
-claramente ambas acciones sin intentar cobrar el encargo.
+Las piezas publicadas como `encargo` no habilitan el pago inmediato. Pueden
+permanecer en el carrito, pero el comprador debe quitarlas para pagar las piezas
+vendibles. Se conserva la persistencia del carrito y la navegación a Mercado Pago
+para las piezas elegibles; se eliminan los enlaces y mensajes de WhatsApp.
 
 ## Webhook
 
@@ -239,14 +240,30 @@ Esto permite un estado público binario sin vender dos veces la última pieza.
 ### `POST /api/checkout`
 
 Requiere el header `Idempotency-Key`, generado una vez por intento del navegador
-y reutilizado en reintentos técnicos. El body no acepta nombre, precio ni total.
+y reutilizado en reintentos técnicos. El body acepta datos del comprador y de
+entrega, pero no acepta nombres ni precios de productos ni total. Canela guarda
+la entrega en un snapshot separado y liga la clave idempotente a todos los datos
+del pedido para impedir que un reintento cambie destinatario o domicilio.
 
 Entrada:
 
 ```json
 {
   "items": [{ "productId": "sanity-product-id", "quantity": 1 }],
-  "buyer": { "email": "comprador@example.com" },
+  "buyer": { "name": "Ana López", "email": "comprador@example.com", "phone": "1123456789" },
+  "delivery": {
+    "type": "home",
+    "recipientName": "Martín Gómez",
+    "address": {
+      "streetName": "Calle 12",
+      "streetNumber": "430",
+      "floor": "2",
+      "apartment": "A",
+      "city": "La Plata",
+      "provinceCode": "B",
+      "postalCode": "1900"
+    }
+  },
   "shippingQuoteToken": "opaque-signed-token"
 }
 ```
@@ -267,8 +284,10 @@ Errores:
 - `409 OUT_OF_STOCK`.
 - `409 CHECKOUT_ATTEMPT_CLOSED` cuando se reutiliza una clave cuyo intento ya
   terminó; un reintento de red del mismo intento activo reutiliza su order.
+- `409 CHECKOUT_ATTEMPT_CHANGED` cuando la misma clave llega con comprador,
+  entrega, importe o productos distintos del snapshot reservado.
 - `409 SHIPPING_QUOTE_EXPIRED`.
-- `422 INVALID_CHECKOUT` para esquema, email, cantidades o idempotencia inválidos.
+- `422 INVALID_CHECKOUT` para esquema, contacto, domicilio, cantidades o idempotencia inválidos.
 - `422 PRODUCT_NOT_SELLABLE`.
 - `422 SHIPPING_QUOTE_INVALID`.
 - `502 PAYMENT_PROVIDER_UNAVAILABLE` ante error definitivo; libera una vez.
@@ -309,7 +328,8 @@ de retorno de Mercado Pago no participan de esta respuesta ni cambian el pedido.
 Los importes se guardan en centavos enteros; el adaptador convierte a strings decimales para Mercado Pago.
 
 - `inventory_item(product_id PK, stock_on_hand, reserved, updated_at, CHECK...)`.
-- `orders(id PK, public_token UNIQUE, status, currency, subtotal_cents, shipping_cents, total_cents, buyer_email, created_at, updated_at)`.
+- `orders(id PK, public_token UNIQUE, status, currency, subtotal_cents, shipping_cents, total_cents, buyer_email, checkout_payload_hash, created_at, updated_at)`.
+- `order_delivery(order_id PK, buyer_name, recipient_name, recipient_phone, domicilio, provincia, codigo_postal)`.
 - `order_item(order_id, product_id, name_snapshot, unit_price_cents, quantity)`.
 - `stock_reservation(id PK, order_id, product_id, quantity, status, expires_at, released_at, consumed_at, UNIQUE(order_id, product_id))`.
 - `payment_attempt(id PK, order_id, idempotency_key UNIQUE, provider_order_id UNIQUE NULL, checkout_url NULL, provider_status, provider_status_detail, verified_at)`.
@@ -370,17 +390,17 @@ MP-01 ya creó columnas con nombres de Preferences. No se reescribe la migració
 - **CA-MP-015:** El checkout productivo permanece apagado hasta incluir una cotización válida de Correo.
 - **CA-MP-018:** Recargar la página conserva el carrito local y un retorno que no
   esté confirmado como `paid` no lo vacía.
-- **CA-MP-019:** Un carrito con piezas de encargo no puede iniciar pago inmediato
-  por esas piezas y mantiene disponible la consulta por WhatsApp.
-- **CA-MP-020:** La confirmación previa muestra productos, envío controlado y total,
-  pero el request de checkout envía solo ids, cantidades, email y cotización firmada.
+- **CA-MP-019:** Un carrito con piezas `encargo` no puede iniciar pago inmediato
+  por esas piezas y muestra cómo quitarlas para continuar con las vendibles.
+- **CA-MP-020:** La confirmación previa muestra productos, envío controlado y total;
+  el request envía ids, cantidades, contacto, entrega y cotización firmada. No
+  envía nombres ni precios de productos o total calculado en el navegador.
 - **CA-MP-021:** Un resultado `verifying` o `review_required` advierte que no se
   inicie un segundo pago; los query params del navegador no alteran esa vista.
 - **CA-MP-025:** La landing identifica siempre las piezas de venta directa con la
-  acción `Agregar al carrito` y el panel de selección como `Mi carrito`. Las
-  piezas `encargo` conservan una acción de consulta. El feature flag controla la
-  posibilidad de iniciar el pago online, no el lenguaje ni la arquitectura del
-  catálogo.
+  acción `Agregar al carrito` y el panel de selección como `Mi carrito`. El
+  feature flag controla la posibilidad de iniciar el pago online, sin alterar
+  la navegación del carrito.
 - **CA-MP-026:** Dado un pedido interno pendiente cuya order MP está
   `processed/accredited`, cuando la pantalla de retorno solicita reconciliación,
   entonces Canela consulta la order por el id persistido y confirma pedido,

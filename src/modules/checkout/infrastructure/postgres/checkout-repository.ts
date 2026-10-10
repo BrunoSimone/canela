@@ -2,13 +2,16 @@ import type { Sql } from "postgres";
 
 import {
   ClosedCheckoutAttemptError,
+  ChangedCheckoutAttemptError,
   createReservedOrder,
   InventoryUnavailableError,
   type CreateReservedOrderInput,
 } from "../../../../db/create-reserved-order";
 import type { PaymentOrder } from "../../../payments/domain/payment-order";
+import { parseDeliverySnapshot } from "../../domain/delivery";
 import {
   CheckoutAttemptClosedError,
+  CheckoutAttemptChangedError,
   CheckoutInventoryUnavailableError,
   type CheckoutItem,
   type CheckoutRepository,
@@ -19,6 +22,16 @@ import {
 type CheckoutRow = {
   id: string;
   buyer_email: string | null;
+  buyer_name: string;
+  recipient_name: string;
+  recipient_phone: string | null;
+  street_name: string;
+  street_number: string;
+  floor: string | null;
+  apartment: string | null;
+  city: string;
+  province_code: string;
+  postal_code: string;
   currency: string;
   subtotal_cents: string;
   shipping_cents: string;
@@ -52,6 +65,9 @@ export class PostgresCheckoutRepository implements CheckoutRepository {
       }
       if (error instanceof ClosedCheckoutAttemptError) {
         throw new CheckoutAttemptClosedError();
+      }
+      if (error instanceof ChangedCheckoutAttemptError) {
+        throw new CheckoutAttemptChangedError();
       }
       throw error;
     }
@@ -175,6 +191,16 @@ export class PostgresCheckoutRepository implements CheckoutRepository {
       SELECT
         orders.id,
         orders.buyer_email,
+        delivery.buyer_name,
+        delivery.recipient_name,
+        delivery.recipient_phone,
+        delivery.street_name,
+        delivery.street_number,
+        delivery.floor,
+        delivery.apartment,
+        delivery.city,
+        delivery.province_code,
+        delivery.postal_code,
         orders.currency,
         orders.subtotal_cents,
         orders.shipping_cents,
@@ -185,9 +211,10 @@ export class PostgresCheckoutRepository implements CheckoutRepository {
         payment_attempt.checkout_url
       FROM orders
       JOIN stock_reservation ON stock_reservation.order_id = orders.id
+      JOIN order_delivery delivery ON delivery.order_id = orders.id
       JOIN payment_attempt ON payment_attempt.order_id = orders.id
       WHERE orders.id = ${orderId}
-      GROUP BY orders.id, payment_attempt.id
+      GROUP BY orders.id, payment_attempt.id, delivery.order_id
     `;
 
     if (
@@ -209,6 +236,19 @@ export class PostgresCheckoutRepository implements CheckoutRepository {
     return {
       orderId: checkout.id,
       buyerEmail: checkout.buyer_email,
+      delivery: parseDeliverySnapshot({
+        type: "home",
+        buyerName: checkout.buyer_name,
+        recipientName: checkout.recipient_name,
+        phone: checkout.recipient_phone,
+        streetName: checkout.street_name,
+        streetNumber: checkout.street_number,
+        floor: checkout.floor,
+        apartment: checkout.apartment,
+        city: checkout.city,
+        provinceCode: checkout.province_code,
+        postalCode: checkout.postal_code,
+      }),
       currency: "ARS",
       subtotalCents: toSafeInteger(checkout.subtotal_cents),
       shippingCents: toSafeInteger(checkout.shipping_cents),
@@ -230,6 +270,7 @@ function toCreateReservedOrderInput(
     publicTokenHash: input.publicTokenHash,
     idempotencyKey: input.idempotencyKey,
     buyerEmail: input.buyerEmail,
+    delivery: input.delivery,
     currency: input.currency,
     shippingCents: input.shippingCents,
     items: input.items,

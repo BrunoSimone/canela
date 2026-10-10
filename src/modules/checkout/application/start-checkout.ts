@@ -8,6 +8,7 @@ import type {
   CheckoutItem,
   CheckoutRepository,
 } from "../domain/checkout";
+import type { DeliverySnapshot } from "../domain/delivery";
 
 export type StartCheckoutInput = {
   orderId: string;
@@ -15,6 +16,7 @@ export type StartCheckoutInput = {
   publicTokenHash: string;
   idempotencyKey: string;
   buyerEmail: string;
+  delivery: DeliverySnapshot;
   returnUrl: string;
   shippingCents: number;
   items: CheckoutItem[];
@@ -55,6 +57,7 @@ export async function startCheckout(
     publicTokenHash: input.publicTokenHash,
     idempotencyKey: input.idempotencyKey,
     buyerEmail: input.buyerEmail,
+    delivery: input.delivery,
     currency: "ARS",
     shippingCents: input.shippingCents,
     items: input.items,

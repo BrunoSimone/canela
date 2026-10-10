@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { testDelivery } from "../modules/checkout/domain/delivery.test-fixture";
 import {
   InvalidOrderInputError,
   validateReservedOrderInput,
@@ -11,6 +12,8 @@ const validInput: CreateReservedOrderInput = {
   idempotencyKey: "97683b2b-6e37-493b-ae7a-271f249ee7db",
   currency: "ARS",
   shippingCents: 500,
+  buyerEmail: "buyer@example.com",
+  delivery: testDelivery,
   now: new Date("2026-09-09T12:00:00.000Z"),
   items: [
     {

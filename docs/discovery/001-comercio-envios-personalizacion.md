@@ -26,6 +26,7 @@ Borrador de descubrimiento. No constituye una especificación aprobada ni autori
 - **DEC-016 — Tracking delegado:** Canela confirma compra y despacho, guarda el TN y enlaza al seguimiento oficial. Correo Argentino es responsable de comunicar y mostrar los estados de tránsito; Canela no replicará el tracking en el MVP.
 - **DEC-017 — Orders API (aceptada el 2026-09-14):** Checkout Pro se integrará mediante Orders API con idempotencia, Webhooks de order y consulta autoritativa. Preferences queda solo como antecedente. Ver ADR-003.
 - **DEC-018 — Bandeja de pedidos (borrador):** el panel desktop-first tendrá una lista ordenada inicialmente de más nuevo a más viejo, búsqueda server-side, selector ascendente/descendente y una vista previa por pedido. Ver spec 030.
+- **DEC-019 — Retiro de consultas por WhatsApp (2026-09-27):** se eliminan del frontend los enlaces y mensajes de consulta por WhatsApp. Se conserva el carrito existente y el checkout de Mercado Pago para productos vendibles. Las piezas `encargo` pueden seguir en el carrito, pero no participan del pago inmediato; el comprador debe quitarlas para continuar. Esta decisión reemplaza las referencias anteriores que mantenían WhatsApp como canal secundario.
 
 Estas decisiones permiten continuar las specs ejecutables de Mercado Pago, cotización y operación administrativa. Neon ya fue aprobado; siguen abiertas la interfaz de reposición, las credenciales externas y algunos datos operativos del dueño.
 
@@ -36,6 +37,10 @@ Estas decisiones permiten continuar las specs ejecutables de Mercado Pago, cotiz
 **Spec de administración:** [`docs/specs/030-bandeja-pedidos.md`](../specs/030-bandeja-pedidos.md)
 
 **Investigación de Mercado Pago:** [`docs/research/001-mercado-pago-orders-api.md`](../research/001-mercado-pago-orders-api.md)
+
+**Investigación de Correo Argentino:** [`docs/research/002-correo-argentino-micorreo.md`](../research/002-correo-argentino-micorreo.md)
+
+**Spec de cotización y bultos:** [`docs/specs/040-correo-cotizacion.md`](../specs/040-correo-cotizacion.md)
 
 **Plan de secuencia propuesto:** [`docs/plans/001-secuencia-correo-mercado-pago.md`](../plans/001-secuencia-correo-mercado-pago.md)
 

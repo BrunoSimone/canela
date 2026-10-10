@@ -4,6 +4,7 @@ import type { ProductCatalog } from "../../catalog/domain/product-catalog";
 import type { PaymentOrderGateway } from "../../payments/domain/payment-order";
 import type { ShippingQuoteVerifier } from "../../shipping/domain/shipping-quote";
 import type { CheckoutRepository } from "../domain/checkout";
+import type { DeliverySnapshot } from "../domain/delivery";
 import { createOrderToken, hashOrderToken } from "../infrastructure/order-token";
 import {
   resolveCheckoutItems,
@@ -18,6 +19,7 @@ import {
 export type BeginCheckoutInput = {
   idempotencyKey: string;
   buyerEmail: string;
+  delivery: DeliverySnapshot;
   shippingQuoteToken: string;
   items: RequestedCheckoutItem[];
 };
@@ -67,6 +69,7 @@ export async function beginCheckout(
         publicTokenHash: hashOrderToken(orderToken),
         idempotencyKey: input.idempotencyKey,
         buyerEmail: input.buyerEmail,
+        delivery: input.delivery,
         returnUrl,
         shippingCents: quote.amountCents,
         items,

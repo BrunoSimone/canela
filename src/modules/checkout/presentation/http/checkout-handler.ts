@@ -9,6 +9,7 @@ import {
 } from "../../application/start-checkout";
 import {
   CheckoutAttemptClosedError,
+  CheckoutAttemptChangedError,
   CheckoutInventoryUnavailableError,
 } from "../../domain/checkout";
 import {
@@ -74,6 +75,9 @@ export async function handleCheckoutRequest(
     }
     if (error instanceof CheckoutAttemptClosedError) {
       return json({ code: "CHECKOUT_ATTEMPT_CLOSED" }, 409);
+    }
+    if (error instanceof CheckoutAttemptChangedError) {
+      return json({ code: "CHECKOUT_ATTEMPT_CHANGED" }, 409);
     }
     if (error instanceof PaymentProviderUnavailableError) {
       return json({ code: "PAYMENT_PROVIDER_UNAVAILABLE" }, 502);

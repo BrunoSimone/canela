@@ -1,4 +1,5 @@
 import type { PaymentOrder } from "../../payments/domain/payment-order";
+import type { DeliverySnapshot } from "./delivery";
 
 export type CheckoutItem = {
   productId: string;
@@ -12,6 +13,7 @@ export type ReserveCheckoutInput = {
   publicTokenHash: string;
   idempotencyKey: string;
   buyerEmail: string;
+  delivery: DeliverySnapshot;
   currency: "ARS";
   shippingCents: number;
   items: CheckoutItem[];
@@ -20,6 +22,7 @@ export type ReserveCheckoutInput = {
 export type ReservedCheckout = {
   orderId: string;
   buyerEmail: string;
+  delivery: DeliverySnapshot;
   currency: "ARS";
   subtotalCents: number;
   shippingCents: number;
@@ -50,5 +53,12 @@ export class CheckoutAttemptClosedError extends Error {
   constructor() {
     super("Checkout attempt is no longer active");
     this.name = "CheckoutAttemptClosedError";
+  }
+}
+
+export class CheckoutAttemptChangedError extends Error {
+  constructor() {
+    super("Checkout attempt details changed");
+    this.name = "CheckoutAttemptChangedError";
   }
 }

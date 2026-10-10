@@ -33,19 +33,21 @@ export function checkoutErrorMessage(code: string | null): string {
     case "OUT_OF_STOCK":
       return "Una de las piezas ya no está disponible. Revisá el pedido antes de continuar.";
     case "PRODUCT_NOT_SELLABLE":
-      return "Una pieza solo puede pedirse por encargo. Quitala del pago y consultanos por WhatsApp.";
+      return "Una pieza por encargo no participa de la compra online. Quitala del carrito para continuar.";
     case "SHIPPING_QUOTE_EXPIRED":
       return "La cotización de envío venció. Actualizá esta página para obtener una nueva.";
     case "SHIPPING_QUOTE_INVALID":
       return "No pudimos validar el envío. Actualizá esta página antes de intentar nuevamente.";
     case "CHECKOUT_ATTEMPT_CLOSED":
       return "Este intento ya terminó. Volvé a intentar para iniciar uno nuevo.";
+    case "CHECKOUT_ATTEMPT_CHANGED":
+      return "Los datos de este intento cambiaron. Actualizá la página y revisá el pedido antes de iniciar uno nuevo.";
     case "PAYMENT_PROVIDER_UNAVAILABLE":
       return "Mercado Pago no pudo iniciar el cobro. Podés intentar nuevamente.";
     case "CHECKOUT_DISABLED":
-      return "El pago online todavía no está disponible. Podés enviarnos la consulta por WhatsApp.";
+      return "El pago online todavía no está disponible. Conservamos tus piezas en el carrito.";
     case "INVALID_CHECKOUT":
-      return "Revisá el email y las piezas del pedido antes de continuar.";
+      return "Revisá tus datos, la dirección de entrega y las piezas del pedido antes de continuar.";
     default:
       return "No pudimos iniciar el pago. Tu pedido sigue guardado para que puedas intentar nuevamente.";
   }

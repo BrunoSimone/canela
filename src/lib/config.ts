@@ -20,8 +20,6 @@ export const siteConfig = {
   region: "Buenos Aires",
 
   url: siteUrl,
-  whatsappNumber: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "",
-
   instagram: "@canela_disign_art",
   instagramUrl: "https://www.instagram.com/canela_disign_art/",
   artistInstagramUrl: "https://www.instagram.com/marieladeloso/",
@@ -38,11 +36,3 @@ export const siteConfig = {
       ),
   },
 } as const;
-
-export function whatsappLink(message: string): string {
-  const base = `https://wa.me/${siteConfig.whatsappNumber}`;
-  return `${base}?text=${encodeURIComponent(message)}`;
-}
-
-export const WA_GENERAL_MESSAGE =
-  "¡Hola! Quería consultar por sus piezas artesanales 🙂";

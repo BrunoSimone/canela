@@ -4,10 +4,12 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createDatabaseClient } from "./client";
 import {
   createReservedOrder,
+  ChangedCheckoutAttemptError,
   InventoryUnavailableError,
   type CreateReservedOrderInput,
 } from "./create-reserved-order";
 import { runMigrations } from "./migrate";
+import { testDelivery } from "../modules/checkout/domain/delivery.test-fixture";
 
 const connectionString = process.env.TEST_DATABASE_URL;
 
@@ -25,6 +27,8 @@ function inputFor(productIds: string[]): CreateReservedOrderInput {
     idempotencyKey: randomUUID(),
     currency: "ARS",
     shippingCents: 0,
+    buyerEmail: "buyer@example.com",
+    delivery: testDelivery,
     items: productIds.map((productId) => ({
       productId,
       name: `Producto ${productId}`,
@@ -146,6 +150,16 @@ describeWithDatabase("createReservedOrder against PostgreSQL", () => {
       SELECT reserved FROM inventory_item WHERE product_id = 'repeatable-piece'
     `;
     expect(inventory.reserved).toBe(1);
+
+    await expect(createReservedOrder(sql, {
+      ...input,
+      orderId: randomUUID(),
+      delivery: { ...input.delivery, postalCode: "1425" },
+    })).rejects.toBeInstanceOf(ChangedCheckoutAttemptError);
+    const [{ order_count }] = await sql<{ order_count: number }[]>`
+      SELECT count(*)::int AS order_count FROM orders
+    `;
+    expect(order_count).toBe(1);
   });
 
   it("stores one Mercado Pago Orders identity per provider", async () => {

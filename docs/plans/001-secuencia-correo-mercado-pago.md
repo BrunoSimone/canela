@@ -2,7 +2,9 @@
 
 ## Estado
 
-Secuencia aprobada el 2026-09-14. La política de fuentes de Correo fue aceptada en ADR-002. MP-01 permanece completado.
+Secuencia aprobada el 2026-09-14. La política de fuentes de Correo fue aceptada
+en ADR-002. El bloque de Mercado Pago hasta MP-05 está implementado y validado;
+INT-00 está abierto a la espera del contrato y credenciales QA de Canela.
 
 ## Objetivo
 
@@ -127,7 +129,16 @@ Carrito
 
 ## Próximo trabajo
 
-1. Aprobar ADR-003 y la política de `capture_mode` de Mercado Pago.
-2. Conectar MP-01 a Neon y ejecutar MP-02A/MP-02B contra una aplicación de prueba.
-3. Ejecutar INT-00 de Correo cuando existan credenciales QA; mientras tanto se puede avanzar con su adaptador simulado y sin habilitar checkout productivo.
-4. Refinar y aprobar la spec de la bandeja administrativa antes de INT-04.
+1. Pedir a Correo la confirmación del producto/API habilitado para Canela, el
+   contrato vigente y credenciales QA.
+2. Ejecutar la matriz de contrato de INT-00 para `/token`, `/rates` y recuperación
+   segura de importaciones.
+3. Cargar los perfiles conservadores de peso/dimensiones y las reglas de
+   agrupación reales antes de habilitar cotización productiva. El modelo, el
+   planificador y la cotización interna con puerto simulado ya están preparados;
+   ninguna tarifa simulada se presenta como si proviniera de Correo.
+4. Conectar el proveedor QA con el núcleo interno, enlazar el código postal del
+   checkout a la cotización firmada y retirar la tarifa controlada de pruebas.
+5. Continuar INT-04 desde el panel y el registro auditado de bultos reales ya
+   implementados: comparar bulto cotizado contra real e importar el envío solo
+   después de confirmar el contrato de Correo.

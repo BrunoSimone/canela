@@ -22,7 +22,10 @@ Necesitamos distinguir tres cosas:
 4. Ningún endpoint pasa a producción sin una prueba de contrato en QA que cubra al menos autenticación, solicitud válida, errores relevantes e idempotencia o estrategia segura de repetición.
 5. Si la documentación oficial y QA se contradicen, no se elige una versión por intuición: el incremento queda bloqueado y se pide confirmación escrita al ejecutivo o soporte de Correo.
 6. La integración se implementará detrás de un adaptador interno normalizado para que un cambio de versión o API no contamine las reglas de checkout, órdenes y pagos.
-7. El objetivo inicial será API MiCorreo porque su documentación pública incluye cotización previa al pago mediante `/rates`. PAQ.AR no se implementará salvo que Correo confirme que es el contrato vigente requerido para la cuenta.
+7. El objetivo inicial de cotización será API MiCorreo porque es el único contrato
+   público que incluye `/rates`. Fulfillment podrá usar MiCorreo, PAQ.AR API 2.0 o
+   una combinación confirmada por Correo; no se implementará ninguna por
+   inferencia.
 
 ## Fuentes oficiales iniciales
 
@@ -34,6 +37,27 @@ Consultadas el 2026-09-14:
 - Condiciones de embalaje: <https://www.correoargentino.com.ar/servicios/paqueteria/condiciones-de-embalaje>
 
 Estas URLs son puntos de entrada, no una autorización permanente para asumir que su contenido seguirá igual. Cada implementación debe guardar su evidencia de contrato.
+
+## Revalidación del 2026-09-25
+
+- El manual público API MiCorreo continúa fechado el 2022-08-08.
+- El portal y el manual actual del plugin WooCommerce presentan tanto API
+  MiCorreo como PAQ.AR API 2.0. La web no permite inferir qué producto está
+  habilitado para Canela.
+- El manual oficial PAQ.AR API 2.0 enlazado por el portal está fechado en abril de
+  2023 y no incluye cotización; sí publica alta, cancelación, TN/rótulo, tracking
+  y sucursales.
+- Las rutas QA publicadas `POST /token` y `POST /rates` están activas y protegidas:
+  sin credenciales ambas respondieron `401` en menos de 300 ms.
+- Existe una contradicción pública de límites: API MiCorreo documenta 25 kg y
+  150 cm por lado, mientras la FAQ actual de PAQ.AR anuncia 50 kg, suma de 300 cm
+  y hasta 200 cm por lado. QA y Correo deben decidir qué aplica a Canela.
+- El contrato público de `/shipping/import` no explica cómo obtiene una
+  integración propia el TN o el rótulo. Eso debe confirmarse con Correo y probarse
+  en QA antes de diseñar INT-04.
+
+La matriz y la evidencia detalladas están en
+[`docs/research/002-correo-argentino-micorreo.md`](../research/002-correo-argentino-micorreo.md).
 
 ## Consecuencias
 

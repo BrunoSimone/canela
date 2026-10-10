@@ -5,6 +5,8 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createDatabaseClient } from "../../../../db/client";
 import { runMigrations } from "../../../../db/migrate";
 import type { PaymentOrder } from "../../../payments/domain/payment-order";
+import { testDelivery } from "../../domain/delivery.test-fixture";
+import { CheckoutAttemptChangedError } from "../../domain/checkout";
 import { PostgresCheckoutRepository } from "./checkout-repository";
 import { PostgresPublicOrderStatusRepository } from "./public-order-status-repository";
 
@@ -23,6 +25,7 @@ function reserveInput() {
     publicTokenHash: createHash("sha256").update(orderId).digest("hex"),
     idempotencyKey: randomUUID(),
     buyerEmail: "buyer@example.com",
+    delivery: testDelivery,
     currency: "ARS" as const,
     shippingCents: 400_000,
     items: [
@@ -115,13 +118,15 @@ describeWithDatabase("PostgresCheckoutRepository", () => {
     await repository.reserve(input);
     await repository.saveProviderOrder(input.orderId, providerOrder(input.orderId));
 
-    const retried = await repository.reserve({
+    await expect(repository.reserve({
       ...input,
       orderId: randomUUID(),
       buyerEmail: "changed@example.com",
       shippingCents: 1,
       items: [{ ...input.items[0], name: "Nombre cambiado" }],
-    });
+    })).rejects.toBeInstanceOf(CheckoutAttemptChangedError);
+
+    const retried = await repository.reserve({ ...input, orderId: randomUUID() });
 
     expect(retried).toMatchObject({
       orderId: input.orderId,
@@ -132,6 +137,7 @@ describeWithDatabase("PostgresCheckoutRepository", () => {
       reused: true,
     });
     expect(retried.items).toEqual(input.items);
+    expect(retried.delivery).toEqual(input.delivery);
   });
 
   it("releases a definitive failure exactly once", async () => {

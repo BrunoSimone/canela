@@ -1,10 +1,12 @@
 import type { RequestedCheckoutItem } from "../../application/resolve-checkout-items";
+import { InvalidDeliveryError, parseDeliverySnapshot, type DeliverySnapshot } from "../../domain/delivery";
 
 const MAX_CHECKOUT_ITEMS = 20;
 
 export type ParsedCheckoutRequest = {
   items: RequestedCheckoutItem[];
   buyerEmail: string;
+  delivery: DeliverySnapshot;
   shippingQuoteToken: string;
   idempotencyKey: string;
 };
@@ -27,6 +29,8 @@ export function parseCheckoutRequest(
     body.items.length > MAX_CHECKOUT_ITEMS ||
     !isRecord(body.buyer) ||
     typeof body.buyer.email !== "string" ||
+    !isRecord(body.delivery) ||
+    !isRecord(body.delivery.address) ||
     typeof body.shippingQuoteToken !== "string" ||
     !idempotencyKey ||
     !/^[A-Za-z0-9_-]{1,128}$/.test(idempotencyKey)
@@ -40,10 +44,31 @@ export function parseCheckoutRequest(
   }
 
   const items = body.items.map(parseItem);
+  let delivery: DeliverySnapshot;
+  try {
+    const address = body.delivery.address;
+    delivery = parseDeliverySnapshot({
+      type: body.delivery.type,
+      buyerName: body.buyer.name,
+      recipientName: body.delivery.recipientName ?? body.buyer.name,
+      phone: body.buyer.phone,
+      streetName: address.streetName,
+      streetNumber: address.streetNumber,
+      floor: address.floor,
+      apartment: address.apartment,
+      city: address.city,
+      provinceCode: address.provinceCode,
+      postalCode: address.postalCode,
+    });
+  } catch (error) {
+    if (error instanceof InvalidDeliveryError) throw new CheckoutRequestValidationError();
+    throw error;
+  }
 
   return {
     items,
     buyerEmail,
+    delivery,
     shippingQuoteToken: body.shippingQuoteToken,
     idempotencyKey,
   };

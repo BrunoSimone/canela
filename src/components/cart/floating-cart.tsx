@@ -6,14 +6,6 @@ import { CreditCard, Minus, Plus, ShoppingBag, X } from "lucide-react";
 import { formatPrice } from "@/lib/product-status";
 import { useCart } from "@/modules/cart/presentation/hooks/use-cart";
 
-function WhatsAppIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
-      <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.24.2 2.45.57 3.57.11.35.03.74-.24 1.02l-2.2 2.2z" />
-    </svg>
-  );
-}
-
 export function FloatingCart({ checkoutEnabled }: { checkoutEnabled: boolean }) {
   const {
     items,
@@ -24,8 +16,6 @@ export function FloatingCart({ checkoutEnabled }: { checkoutEnabled: boolean }) 
     remove,
     togglePanel,
     closePanel,
-    cartWhatsAppLink,
-    generalWhatsAppLink,
   } = useCart();
 
   const hasItems = items.length > 0;
@@ -106,64 +96,46 @@ export function FloatingCart({ checkoutEnabled }: { checkoutEnabled: boolean }) 
               )}
             </div>
 
-            <div className="border-t border-[rgba(184,132,42,.18)] p-3">
-              {checkoutEnabled && canStartCheckout && (
-                <Link
-                  href="/checkout"
-                  onClick={closePanel}
-                  className="mb-2.5 flex items-center justify-center gap-2 rounded-xl bg-[var(--canela-ochre)] px-4 py-3 text-sm font-extrabold text-[var(--canela-cream-card)] transition-colors hover:bg-[var(--canela-ochre-dark)]"
-                >
-                  <CreditCard className="size-4" />
-                  Comprar y pagar online
-                </Link>
-              )}
-              {checkoutEnabled && hasItems && !canStartCheckout && (
-                <p className="mb-2.5 border-l-2 border-[var(--canela-ochre)] pl-3 text-xs leading-relaxed text-[#6E4E38]">
-                  Los encargos se coordinan por WhatsApp. Quitalos del carrito
-                  para pagar online las piezas disponibles.
-                </p>
-              )}
-              <a
-                href={cartWhatsAppLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-disabled={!hasItems}
-                className="flex items-center justify-center gap-2 rounded-xl bg-[var(--canela-green)] px-4 py-3 text-sm font-bold text-[var(--canela-cream-card)] transition-opacity"
-                style={{
-                  opacity: hasItems ? 1 : 0.45,
-                  pointerEvents: hasItems ? "auto" : "none",
-                }}
-              >
-                <WhatsAppIcon className="size-4" />
-                Consultar por WhatsApp
-              </a>
-            </div>
+            {hasItems && (
+              <div className="border-t border-[rgba(184,132,42,.18)] p-3">
+                {checkoutEnabled && canStartCheckout && (
+                  <Link
+                    href="/checkout"
+                    onClick={closePanel}
+                    className="flex items-center justify-center gap-2 rounded-xl bg-[var(--canela-ochre)] px-4 py-3 text-sm font-extrabold text-[var(--canela-cream-card)] transition-colors hover:bg-[var(--canela-ochre-dark)]"
+                  >
+                    <CreditCard className="size-4" />
+                    Comprar y pagar online
+                  </Link>
+                )}
+                {checkoutEnabled && !canStartCheckout && (
+                  <p className="border-l-2 border-[var(--canela-ochre)] pl-3 text-xs leading-relaxed text-[#6E4E38]">
+                    Las piezas por encargo no participan del pago online. Quitalas
+                    del carrito para pagar las piezas disponibles.
+                  </p>
+                )}
+                {!checkoutEnabled && (
+                  <p className="text-center text-xs leading-relaxed text-[#6E4E38]">
+                    La compra online estará disponible cuando terminemos de conectar el envío.
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         )}
 
-        <div className="flex flex-col items-end gap-3">
-          <button
-            onClick={togglePanel}
-            aria-label="Mi carrito"
-            className="relative flex size-14 items-center justify-center rounded-full bg-[var(--canela-brown)] text-[var(--canela-cream)] shadow-[0_10px_26px_rgba(74,53,39,.35)]"
-          >
-            <ShoppingBag className="size-6" strokeWidth={1.7} />
-            {count > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-[22px] min-w-[22px] items-center justify-center rounded-full bg-[var(--canela-ochre)] px-1.5 text-xs font-extrabold text-[var(--canela-cream-card)]">
-                {count}
-              </span>
-            )}
-          </button>
-          <a
-            href={generalWhatsAppLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Contacto por WhatsApp"
-            className="flex size-14 items-center justify-center rounded-full bg-[var(--canela-green)] text-[var(--canela-cream-card)] shadow-[0_10px_26px_rgba(74,53,39,.35)]"
-          >
-            <WhatsAppIcon className="size-7" />
-          </a>
-        </div>
+        <button
+          onClick={togglePanel}
+          aria-label="Mi carrito"
+          className="relative flex size-14 items-center justify-center rounded-full bg-[var(--canela-brown)] text-[var(--canela-cream)] shadow-[0_10px_26px_rgba(74,53,39,.35)]"
+        >
+          <ShoppingBag className="size-6" strokeWidth={1.7} />
+          {count > 0 && (
+            <span className="absolute -right-1 -top-1 flex h-[22px] min-w-[22px] items-center justify-center rounded-full bg-[var(--canela-ochre)] px-1.5 text-xs font-extrabold text-[var(--canela-cream-card)]">
+              {count}
+            </span>
+          )}
+        </button>
       </div>
     </div>
   );

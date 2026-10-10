@@ -48,8 +48,8 @@ function CheckoutUnavailable() {
           Compra online en preparación
         </h1>
         <p className="mx-auto mt-4 max-w-lg leading-relaxed text-[#6E4E38]">
-          Mientras terminamos de conectar el envío, podés guardar tus piezas y
-          enviarnos la consulta por WhatsApp desde el botón flotante.
+          Estamos terminando de conectar el envío. Podés guardar tus piezas en
+          el carrito y volver cuando habilitemos la compra online.
         </p>
         <Link
           href="/#catalogo"

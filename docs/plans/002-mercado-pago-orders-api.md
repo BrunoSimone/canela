@@ -8,6 +8,11 @@ cerrados localmente. Una prueba manual del catálogo detectó que MP-03B2 no hac
 visible la compra desde la landing; MP-03B3 corrigió esa integración antes de
 continuar con la confirmación autoritativa.
 
+**Cambio posterior (DEC-019):** las referencias históricas de MP-03B2/MP-03B3
+al canal de consultas por WhatsApp quedaron reemplazadas. Se conserva el carrito
+y el checkout de Mercado Pago; las piezas por encargo siguen siendo no elegibles
+para el pago inmediato.
+
 ## Resultado esperado
 
 Checkout Pro probado de extremo a extremo contra una aplicación de prueba, con stock concurrente seguro, order expirable, Webhook firmado, reconciliación y feature flag productivo apagado hasta integrar la tarifa de Correo.
@@ -264,7 +269,7 @@ Los perfiles concretos no bloquean MP-02 a MP-05 en prueba; sí bloquean el feat
 - E2E completo con Correo QA + Mercado Pago prueba.
 - Revisión de privacidad, devolución, seguridad y observabilidad.
 - Smoke test productivo controlado.
-- Activar feature flag gradualmente y mantener WhatsApp como respaldo inicial.
+- Activar el feature flag gradualmente después de verificar el recorrido completo.
 
 ## Dependencias externas
 

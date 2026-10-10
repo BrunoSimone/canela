@@ -34,9 +34,7 @@ export function StoreJsonLd() {
         image: `${siteConfig.url}/canela-logo.png`,
         logo: `${siteConfig.url}/canela-logo.png`,
         priceRange: "$$",
-        ...(siteConfig.whatsappNumber
-          ? { telephone: `+${siteConfig.whatsappNumber}` }
-          : {}),
+        telephone: siteConfig.workshop.telephone,
         address: {
           "@type": "PostalAddress",
           streetAddress: siteConfig.workshop.streetAddress,

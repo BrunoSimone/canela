@@ -1,7 +1,8 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import type { Sql } from "postgres";
 
 import { checkoutExpiresAt } from "../modules/checkout/domain/checkout-expiration";
+import { InvalidDeliveryError, parseDeliverySnapshot, type DeliverySnapshot } from "../modules/checkout/domain/delivery";
 
 export type AuthoritativeOrderItem = {
   productId: string;
@@ -16,7 +17,8 @@ export type CreateReservedOrderInput = {
   idempotencyKey: string;
   currency: "ARS";
   shippingCents: number;
-  buyerEmail?: string;
+  buyerEmail: string;
+  delivery: DeliverySnapshot;
   items: AuthoritativeOrderItem[];
   now?: Date;
 };
@@ -48,11 +50,20 @@ export class ClosedCheckoutAttemptError extends Error {
   }
 }
 
+export class ChangedCheckoutAttemptError extends Error {
+  constructor() {
+    super("The same checkout key was reused with different order details");
+    this.name = "ChangedCheckoutAttemptError";
+  }
+}
+
 type ValidatedOrder = {
   subtotalCents: number;
   totalCents: number;
   expiresAt: Date;
   sortedItems: AuthoritativeOrderItem[];
+  delivery: DeliverySnapshot;
+  payloadHash: string;
 };
 
 export function validateReservedOrderInput(
@@ -123,14 +134,38 @@ export function validateReservedOrderInput(
 
   const now = input.now ?? new Date();
   const expiresAt = checkoutExpiresAt(now);
+  let delivery: DeliverySnapshot;
+  try {
+    delivery = parseDeliverySnapshot(input.delivery);
+  } catch (error) {
+    if (error instanceof InvalidDeliveryError) {
+      throw new InvalidOrderInputError("Delivery details are invalid");
+    }
+    throw error;
+  }
+  if (!input.buyerEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.buyerEmail)) {
+    throw new InvalidOrderInputError("Buyer email is invalid");
+  }
+  const sortedItems = [...input.items].sort((a, b) =>
+    a.productId.localeCompare(b.productId),
+  );
+  const payloadHash = createHash("sha256")
+    .update(JSON.stringify({
+      buyerEmail: input.buyerEmail,
+      delivery,
+      currency: input.currency,
+      shippingCents: input.shippingCents,
+      items: sortedItems,
+    }))
+    .digest("hex");
 
   return {
     subtotalCents,
     totalCents,
     expiresAt,
-    sortedItems: [...input.items].sort((a, b) =>
-      a.productId.localeCompare(b.productId),
-    ),
+    sortedItems,
+    delivery,
+    payloadHash,
   };
 }
 
@@ -150,9 +185,11 @@ export async function createReservedOrder(
       id: string;
       expires_at: Date;
       reservations_are_active: boolean;
+      checkout_payload_hash: string | null;
     }[]>`
       SELECT
         orders.id,
+        orders.checkout_payload_hash,
         min(stock_reservation.expires_at) AS expires_at,
         bool_and(stock_reservation.status = 'active') AS reservations_are_active
       FROM orders
@@ -164,6 +201,9 @@ export async function createReservedOrder(
     if (existing) {
       if (!existing.reservations_are_active) {
         throw new ClosedCheckoutAttemptError();
+      }
+      if (existing.checkout_payload_hash !== validated.payloadHash) {
+        throw new ChangedCheckoutAttemptError();
       }
       return {
         orderId: existing.id,
@@ -213,7 +253,8 @@ export async function createReservedOrder(
         subtotal_cents,
         shipping_cents,
         total_cents,
-        buyer_email
+        buyer_email,
+        checkout_payload_hash
       ) VALUES (
         ${input.orderId},
         ${input.publicTokenHash.toLowerCase()},
@@ -222,7 +263,22 @@ export async function createReservedOrder(
         ${validated.subtotalCents},
         ${input.shippingCents},
         ${validated.totalCents},
-        ${input.buyerEmail ?? null}
+        ${input.buyerEmail},
+        ${validated.payloadHash}
+      )
+    `;
+
+    await transaction`
+      INSERT INTO order_delivery (
+        order_id, delivery_type, buyer_name, recipient_name, recipient_phone,
+        street_name, street_number, floor, apartment, city, province_code, postal_code
+      ) VALUES (
+        ${input.orderId}, ${validated.delivery.type}, ${validated.delivery.buyerName},
+        ${validated.delivery.recipientName}, ${validated.delivery.phone},
+        ${validated.delivery.streetName}, ${validated.delivery.streetNumber},
+        ${validated.delivery.floor}, ${validated.delivery.apartment},
+        ${validated.delivery.city}, ${validated.delivery.provinceCode},
+        ${validated.delivery.postalCode}
       )
     `;
 

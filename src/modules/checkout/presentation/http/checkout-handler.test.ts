@@ -1,10 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { CheckoutStartUncertainError } from "../../application/begin-checkout";
+import { testDelivery } from "../../domain/delivery.test-fixture";
 import { InvalidCheckoutItemsError, ProductNotSellableError } from "../../application/resolve-checkout-items";
 import { PaymentProviderUnavailableError } from "../../application/start-checkout";
 import {
   CheckoutAttemptClosedError,
+  CheckoutAttemptChangedError,
   CheckoutInventoryUnavailableError,
 } from "../../domain/checkout";
 import {
@@ -27,7 +29,12 @@ function request(body: unknown = validBody()): Request {
 function validBody() {
   return {
     items: [{ productId: "product-a", quantity: 1 }],
-    buyer: { email: "buyer@example.com" },
+    buyer: { email: "buyer@example.com", name: testDelivery.buyerName, phone: testDelivery.phone },
+    delivery: {
+      type: "home",
+      recipientName: testDelivery.recipientName,
+      address: testDelivery,
+    },
     shippingQuoteToken: "signed.quote",
   };
 }
@@ -56,6 +63,7 @@ describe("handleCheckoutRequest", () => {
     expect(begin).toHaveBeenCalledWith({
       items: [{ productId: "product-a", quantity: 1 }],
       buyerEmail: "buyer@example.com",
+      delivery: testDelivery,
       shippingQuoteToken: "signed.quote",
       idempotencyKey: "97683b2b-6e37-493b-ae7a-271f249ee7db",
     });
@@ -80,6 +88,7 @@ describe("handleCheckoutRequest", () => {
     [new ProductNotSellableError(["a"]), 422, "PRODUCT_NOT_SELLABLE"],
     [new CheckoutInventoryUnavailableError(["a"]), 409, "OUT_OF_STOCK"],
     [new CheckoutAttemptClosedError(), 409, "CHECKOUT_ATTEMPT_CLOSED"],
+    [new CheckoutAttemptChangedError(), 409, "CHECKOUT_ATTEMPT_CHANGED"],
     [new PaymentProviderUnavailableError(), 502, "PAYMENT_PROVIDER_UNAVAILABLE"],
   ] as const)("maps a known failure to HTTP %s", async (error, status, code) => {
     const response = await handleCheckoutRequest(request(), {

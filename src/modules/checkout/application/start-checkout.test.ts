@@ -13,6 +13,7 @@ import type {
   CheckoutRepository,
   ReservedCheckout,
 } from "../domain/checkout";
+import { testDelivery } from "../domain/delivery.test-fixture";
 
 const request = {
   orderId: "d71466b7-f0e7-4434-bd72-047287217728",
@@ -20,6 +21,7 @@ const request = {
   publicTokenHash: "a".repeat(64),
   idempotencyKey: "97683b2b-6e37-493b-ae7a-271f249ee7db",
   buyerEmail: "buyer@example.com",
+  delivery: testDelivery,
   returnUrl: "https://canela.test/checkout/resultado/public-order-token",
   shippingCents: 400_000,
   items: [
@@ -38,6 +40,7 @@ function reservedCheckout(
   return {
     orderId: request.orderId,
     buyerEmail: request.buyerEmail,
+    delivery: request.delivery,
     currency: "ARS",
     subtotalCents: 3_000_000,
     shippingCents: 400_000,

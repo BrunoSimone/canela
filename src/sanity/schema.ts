@@ -87,6 +87,53 @@ const producto: SchemaTypeDefinition = {
       validation: (rule) => rule.required(),
     },
     {
+      name: "shippingProfile",
+      title: "Perfil de envío embalado",
+      type: "object",
+      description:
+        "Peso y medidas exteriores de una unidad ya protegida para el correo. No usar las medidas de exhibición. Dejar vacío hasta medir el embalaje real.",
+      fields: [
+        {
+          name: "version",
+          title: "Versión del perfil",
+          type: "number",
+          initialValue: 1,
+          validation: (rule) => rule.required().integer().min(1),
+        },
+        {
+          name: "weightGrams",
+          title: "Peso embalado (g)",
+          type: "number",
+          validation: (rule) => rule.required().integer().min(1),
+        },
+        {
+          name: "heightCm",
+          title: "Alto exterior (cm)",
+          type: "number",
+          validation: (rule) => rule.required().integer().min(1),
+        },
+        {
+          name: "widthCm",
+          title: "Ancho exterior (cm)",
+          type: "number",
+          validation: (rule) => rule.required().integer().min(1),
+        },
+        {
+          name: "lengthCm",
+          title: "Largo exterior (cm)",
+          type: "number",
+          validation: (rule) => rule.required().integer().min(1),
+        },
+        {
+          name: "shipSeparately",
+          title: "Enviar en caja individual",
+          type: "boolean",
+          initialValue: false,
+          validation: (rule) => rule.required(),
+        },
+      ],
+    },
+    {
       name: "material",
       title: "Material (opcional)",
       type: "string",

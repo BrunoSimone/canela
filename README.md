@@ -5,8 +5,8 @@ mirrors and framed art. Customers browse the Sanity-managed catalog, build a
 cart and pay through Mercado Pago Checkout Pro. Neon PostgreSQL is authoritative
 for orders, inventory and temporary stock reservations.
 
-Direct-sale products use the online checkout. Made-to-order pieces remain a
-WhatsApp inquiry because their details must be coordinated before payment.
+Direct-sale products use the online checkout. Made-to-order pieces may remain in
+the cart but cannot enter payment until removed; their separate flow is pending.
 Production checkout stays disabled until the Correo Argentino quote is part of
 the authoritative total.
 
@@ -58,7 +58,7 @@ src/
 │  ├─ brand/canela-badge   # logo (next/image), full + circular-crop variants
 │  ├─ home/                # hero, navbar, footer, nosotros, como-comprar
 │  ├─ catalog/             # category-section, catalog-grid (filters), product-card, image-lightbox
-│  ├─ cart/                # floating cart and optional WhatsApp assistance
+│  ├─ cart/                # floating cart for direct-sale products
 │  ├─ seo/json-ld          # Store structured data
 │  └─ ui/                  # button, dialog, carousel (Base UI + embla)
 ├─ content/catalog.ts      # canonical section metadata (copy, filter chips, nav links)
@@ -91,8 +91,8 @@ Content is fetched in `src/lib/api.ts` via GROQ with a 60s revalidation window. 
 - **Checkout Pro** — the backend rereads Sanity, reserves stock atomically in
   PostgreSQL and creates a ten-minute Mercado Pago order. Signed Webhooks and an
   authoritative provider query confirm payment independently from the browser.
-- **WhatsApp assistance** — remains available for made-to-order products and
-  questions, but is not a required step for direct-sale checkout.
+- **Made-to-order catalog** — pieces remain visible and may be kept in the cart,
+  but are excluded from direct checkout until their separate flow is defined.
 - **Data-driven hero** — the featured-piece carousel is content-managed (Sanity), with auto-advance, manual dots, and a decorative rotating ring.
 - **Accessibility & motion** — respects `prefers-reduced-motion` (entrance/float/spin animations are gated); dialog and carousel are built on accessible Base UI primitives.
 - **SEO** — per-route metadata, Open Graph, canonical URL, `robots.ts`, `sitemap.ts`, and `Store` JSON-LD structured data.
@@ -112,12 +112,12 @@ The visual language derives from the client's hand-painted watercolor logo: a wa
 | `--canela-ochre` | `#b8842a` | primary accent / CTAs |
 | `--canela-ochre-dark` | `#8a621d` | prices, hover |
 | `--canela-brown` | `#4a3527` | headings |
-| `--canela-green` | `#5e8c4e` | WhatsApp accent |
+| `--canela-green` | `#5e8c4e` | success accent |
 | `--canela-footer` | `#3e2c20` | footer |
 
 **Typography** — `Grand Hotel` (script display, for headings and the wordmark, echoing the logo) paired with `Mulish` (clean sans for body), loaded via `next/font`.
 
-**Layout** — mobile-first, fluid type with `clamp()`, gallery-style grids with generous whitespace to let the pieces breathe. Persistent, recognizable WhatsApp CTA.
+**Layout** — mobile-first, fluid type with `clamp()`, gallery-style grids with generous whitespace to let the pieces breathe.
 
 ---
 
@@ -143,7 +143,6 @@ Copy `.env.example` → `.env.local`:
 
 ```bash
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
-NEXT_PUBLIC_WHATSAPP_NUMBER=549XXXXXXXXXX   # international format, no "+"
 CHECKOUT_MODE=disabled
 CHECKOUT_SIGNING_SECRET=
 CHECKOUT_TEST_SHIPPING_CENTS=
@@ -156,6 +155,12 @@ provider is Neon through Vercel; use its pooled connection string as
 `DATABASE_URL` and its direct connection string as `DATABASE_URL_UNPOOLED` for
 migrations. Integration tests require a separate disposable database through
 `TEST_DATABASE_URL` and must never target production.
+
+The owner order panel lives at `/admin`. Its read-only screens can be reviewed
+locally with `ADMIN_DEMO_MODE=1` at `/admin?demo=1`; demo records come from the
+backend and are disabled in production. Real orders require database migrations,
+an authorized email and a verified transactional sender. See
+[`docs/runbooks/panel-pedidos.md`](docs/runbooks/panel-pedidos.md).
 
 Mercado Pago test traffic uses `MP_TEST_ACCESS_TOKEN`. Signed Order Webhooks
 add `MP_TEST_WEBHOOK_SECRET`, `MP_TEST_SELLER_USER_ID` and

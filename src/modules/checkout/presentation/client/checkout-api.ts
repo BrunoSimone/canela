@@ -1,8 +1,10 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import type { DeliverySnapshot } from "../../domain/delivery";
 
 export type StartCheckoutInput = {
   items: Array<{ productId: string; quantity: number }>;
   buyerEmail: string;
+  delivery: DeliverySnapshot;
   shippingQuoteToken: string;
   idempotencyKey: string;
 };
@@ -60,7 +62,24 @@ export function buildStartCheckoutRequest(input: StartCheckoutInput) {
     headers: { "Idempotency-Key": input.idempotencyKey },
     body: {
       items: input.items,
-      buyer: { email: input.buyerEmail },
+      buyer: {
+        name: input.delivery.buyerName,
+        email: input.buyerEmail,
+        phone: input.delivery.phone,
+      },
+      delivery: {
+        type: input.delivery.type,
+        recipientName: input.delivery.recipientName,
+        address: {
+          streetName: input.delivery.streetName,
+          streetNumber: input.delivery.streetNumber,
+          floor: input.delivery.floor,
+          apartment: input.delivery.apartment,
+          city: input.delivery.city,
+          provinceCode: input.delivery.provinceCode,
+          postalCode: input.delivery.postalCode,
+        },
+      },
       shippingQuoteToken: input.shippingQuoteToken,
     },
   };

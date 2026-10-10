@@ -29,3 +29,6 @@ dist/
 
 # Documentación de referencia descartada
 /apiPaqAr-v2.pdf
+
+# Artefactos temporales de investigación y renderizado
+/tmp/

@@ -26,6 +26,7 @@ import {
   resolveCheckoutNavigation,
 } from "@/modules/checkout/presentation/client/checkout-flow";
 import { useAppSelector } from "@/store/hooks";
+import { ARGENTINE_PROVINCES, InvalidDeliveryError, parseDeliverySnapshot } from "@/modules/checkout/domain/delivery";
 
 import { MosaicMark } from "./mosaic-mark";
 
@@ -45,6 +46,17 @@ export function CheckoutConfirmation({
   const hydrated = useAppSelector(selectCartHydrated);
   const canStartCheckout = useAppSelector(selectCanStartCheckout);
   const [email, setEmail] = useState("");
+  const [buyerName, setBuyerName] = useState("");
+  const [recipientName, setRecipientName] = useState("");
+  const [differentRecipient, setDifferentRecipient] = useState(false);
+  const [phone, setPhone] = useState("");
+  const [streetName, setStreetName] = useState("");
+  const [streetNumber, setStreetNumber] = useState("");
+  const [floor, setFloor] = useState("");
+  const [apartment, setApartment] = useState("");
+  const [city, setCity] = useState("");
+  const [provinceCode, setProvinceCode] = useState("");
+  const [postalCode, setPostalCode] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const idempotencyKey = useRef<string | null>(null);
   const [startCheckout, { isLoading }] = useStartCheckoutMutation();
@@ -60,6 +72,28 @@ export function CheckoutConfirmation({
     if (!canStartCheckout || isLoading) return;
 
     setErrorMessage(null);
+    let delivery;
+    try {
+      delivery = parseDeliverySnapshot({
+        type: "home",
+        buyerName,
+        recipientName: differentRecipient ? recipientName : buyerName,
+        phone,
+        streetName,
+        streetNumber,
+        floor,
+        apartment,
+        city,
+        provinceCode,
+        postalCode,
+      });
+    } catch (error) {
+      if (error instanceof InvalidDeliveryError) {
+        setErrorMessage("Revisá los datos de contacto y entrega antes de continuar.");
+        return;
+      }
+      throw error;
+    }
     idempotencyKey.current ??= crypto.randomUUID();
 
     try {
@@ -69,6 +103,7 @@ export function CheckoutConfirmation({
           quantity: item.qty,
         })),
         buyerEmail: email,
+        delivery,
         shippingQuoteToken,
         idempotencyKey: idempotencyKey.current,
       }).unwrap();
@@ -140,8 +175,8 @@ export function CheckoutConfirmation({
             Confirmá tu pedido
           </h1>
           <p className="mt-4 max-w-2xl leading-relaxed text-[#6E4E38]">
-            Revisá las piezas y dejanos un email. El stock se valida nuevamente
-            antes de enviarte a Mercado Pago.
+            Revisá las piezas y completá los datos de entrega. El stock se valida
+            nuevamente antes de enviarte a Mercado Pago.
           </p>
         </div>
         <div className="hidden sm:block">
@@ -149,7 +184,8 @@ export function CheckoutConfirmation({
         </div>
       </div>
 
-      <div className="grid items-start gap-12 lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,.65fr)]">
+      <form onSubmit={handleSubmit} className="grid items-start gap-12 lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,.65fr)]">
+        <div>
         <section aria-labelledby="order-heading">
           <div className="mb-3 flex items-center justify-between gap-4">
             <h2
@@ -178,7 +214,7 @@ export function CheckoutConfirmation({
                   </p>
                   {!item.checkoutEligible && (
                     <p className="mt-2 text-sm font-bold text-[#9b5944]">
-                      Esta pieza se coordina por WhatsApp y no entra al pago online.
+                      Esta pieza por encargo no entra al pago online.
                     </p>
                   )}
                 </div>
@@ -207,9 +243,63 @@ export function CheckoutConfirmation({
           </div>
         </section>
 
+        <fieldset className="mt-10 border-t border-[rgba(184,132,42,.26)] pt-8">
+          <legend className="text-xl font-extrabold text-[var(--canela-brown)]">Contacto y entrega</legend>
+          <p className="mt-2 text-sm leading-relaxed text-[#6E4E38]">Usaremos estos datos para preparar el pedido y enviarlo a domicilio.</p>
+          <div className="mt-6 grid gap-5 sm:grid-cols-2">
+            <label className="text-sm font-bold text-[var(--canela-brown)]">Nombre y apellido
+              <input className={checkoutFieldClass} type="text" name="buyerName" autoComplete="name" required minLength={2} maxLength={100} value={buyerName} onChange={(event) => setBuyerName(event.target.value)} />
+            </label>
+            <label className="text-sm font-bold text-[var(--canela-brown)]">Email para el pedido
+              <input className={checkoutFieldClass} type="email" name="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} />
+            </label>
+            <label className="text-sm font-bold text-[var(--canela-brown)] sm:col-span-2">Teléfono de contacto <span className="font-normal text-[#8a7048]">(opcional)</span>
+              <input className={checkoutFieldClass} type="tel" name="phone" autoComplete="tel" maxLength={24} value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="Código de área y número" />
+            </label>
+          </div>
+          <label className="mt-6 flex items-center gap-2 text-sm font-bold text-[var(--canela-brown)]">
+            <input type="checkbox" checked={differentRecipient} onChange={(event) => setDifferentRecipient(event.target.checked)} />
+            Recibe otra persona
+          </label>
+          {differentRecipient && <label className="mt-4 block text-sm font-bold text-[var(--canela-brown)]">Nombre de quien recibe
+            <input className={checkoutFieldClass} type="text" name="recipientName" required minLength={2} maxLength={100} value={recipientName} onChange={(event) => setRecipientName(event.target.value)} />
+          </label>}
+          <div className="mt-6 grid gap-5 sm:grid-cols-[minmax(0,1fr)_125px]">
+            <label className="text-sm font-bold text-[var(--canela-brown)]">Calle
+              <input className={checkoutFieldClass} type="text" name="streetName" autoComplete="address-line1" required minLength={2} maxLength={100} value={streetName} onChange={(event) => setStreetName(event.target.value)} />
+            </label>
+            <label className="text-sm font-bold text-[var(--canela-brown)]">Altura
+              <input className={checkoutFieldClass} type="text" name="streetNumber" required maxLength={12} value={streetNumber} onChange={(event) => setStreetNumber(event.target.value)} />
+            </label>
+          </div>
+          <div className="mt-5 grid gap-5 sm:grid-cols-2">
+            <label className="text-sm font-bold text-[var(--canela-brown)]">Piso <span className="font-normal text-[#8a7048]">(opcional)</span>
+              <input className={checkoutFieldClass} type="text" name="floor" maxLength={3} value={floor} onChange={(event) => setFloor(event.target.value)} />
+            </label>
+            <label className="text-sm font-bold text-[var(--canela-brown)]">Departamento <span className="font-normal text-[#8a7048]">(opcional)</span>
+              <input className={checkoutFieldClass} type="text" name="apartment" maxLength={3} value={apartment} onChange={(event) => setApartment(event.target.value)} />
+            </label>
+          </div>
+          <div className="mt-5 grid gap-5 sm:grid-cols-2">
+            <label className="text-sm font-bold text-[var(--canela-brown)]">Localidad
+              <input className={checkoutFieldClass} type="text" name="city" autoComplete="address-level2" required minLength={2} maxLength={100} value={city} onChange={(event) => setCity(event.target.value)} />
+            </label>
+            <label className="text-sm font-bold text-[var(--canela-brown)]">Provincia
+              <select className={checkoutFieldClass} name="provinceCode" autoComplete="address-level1" required value={provinceCode} onChange={(event) => setProvinceCode(event.target.value)}>
+                <option value="">Seleccioná una provincia</option>
+                {[...ARGENTINE_PROVINCES].sort((a, b) => a.name.localeCompare(b.name, "es-AR")).map((province) => <option key={province.code} value={province.code}>{province.name}</option>)}
+              </select>
+            </label>
+          </div>
+          <label className="mt-5 block max-w-48 text-sm font-bold text-[var(--canela-brown)]">Código postal
+            <input className={checkoutFieldClass} type="text" name="postalCode" autoComplete="postal-code" inputMode="numeric" required minLength={4} maxLength={4} pattern="[1-9][0-9]{3}" value={postalCode} onChange={(event) => setPostalCode(event.target.value)} placeholder="Ej. 1425" />
+          </label>
+          <p className="mt-3 text-xs leading-relaxed text-[#8a7048]">El costo de envío mostrado pertenece al entorno de prueba. La cotización real por código postal se habilitará con Correo Argentino.</p>
+        </fieldset>
+        </div>
+
         <aside className="lg:sticky lg:top-24">
-          <form
-            onSubmit={handleSubmit}
+          <div
             className="border-t-4 border-[var(--canela-ochre)] bg-[var(--canela-cream-card)] px-6 py-7 shadow-[0_20px_50px_rgba(74,53,39,.13)] sm:px-7"
           >
             <div className="flex items-center justify-between gap-4">
@@ -240,31 +330,9 @@ export function CheckoutConfirmation({
               </div>
             </dl>
 
-            <label
-              htmlFor="buyer-email"
-              className="mt-7 block text-sm font-extrabold text-[var(--canela-brown)]"
-            >
-              Email para el pedido
-            </label>
-            <input
-              id="buyer-email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              placeholder="tu@email.com"
-              className="mt-2 w-full border border-[rgba(184,132,42,.42)] bg-white/60 px-3.5 py-3 text-[var(--canela-brown)] outline-none transition-shadow placeholder:text-[#ad9876] focus:ring-2 focus:ring-[rgba(184,132,42,.25)]"
-            />
-            <p className="mt-2 text-xs leading-relaxed text-[#8a7048]">
-              Lo usamos para identificar el pago y avisarte sobre la preparación.
-            </p>
-
             {!canStartCheckout && (
               <p className="mt-5 border-l-2 border-[#b06a52] pl-3 text-sm leading-relaxed text-[#7e4b3a]">
-                Quitá las piezas por encargo para continuar. Podés consultarlas por
-                WhatsApp desde el botón flotante.
+                Quitá las piezas por encargo para continuar con el pago online.
               </p>
             )}
 
@@ -302,12 +370,14 @@ export function CheckoutConfirmation({
                 minute: "2-digit",
               }).format(new Date(quoteExpiresAt))}
             </p>
-          </form>
+          </div>
         </aside>
-      </div>
+      </form>
     </CheckoutShell>
   );
 }
+
+const checkoutFieldClass = "mt-2 block w-full border border-[rgba(184,132,42,.42)] bg-white/70 px-3.5 py-3 text-[var(--canela-brown)] outline-none transition-shadow placeholder:text-[#ad9876] focus:ring-2 focus:ring-[rgba(184,132,42,.25)]";
 
 function CheckoutShell({ children }: { children: React.ReactNode }) {
   return (

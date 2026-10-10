@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { testDelivery } from "../../domain/delivery.test-fixture";
 
 import {
   buildReconcilePublicOrderRequest,
@@ -10,6 +11,7 @@ describe("buildStartCheckoutRequest", () => {
     const request = buildStartCheckoutRequest({
       items: [{ productId: "piece-1", quantity: 2 }],
       buyerEmail: "buyer@example.com",
+      delivery: testDelivery,
       shippingQuoteToken: "signed-quote",
       idempotencyKey: "stable-attempt-key",
     });
@@ -20,11 +22,24 @@ describe("buildStartCheckoutRequest", () => {
       headers: { "Idempotency-Key": "stable-attempt-key" },
       body: {
         items: [{ productId: "piece-1", quantity: 2 }],
-        buyer: { email: "buyer@example.com" },
+        buyer: { email: "buyer@example.com", name: testDelivery.buyerName, phone: testDelivery.phone },
+        delivery: {
+          type: "home",
+          recipientName: testDelivery.recipientName,
+          address: {
+            streetName: testDelivery.streetName,
+            streetNumber: testDelivery.streetNumber,
+            floor: testDelivery.floor,
+            apartment: testDelivery.apartment,
+            city: testDelivery.city,
+            provinceCode: testDelivery.provinceCode,
+            postalCode: testDelivery.postalCode,
+          },
+        },
         shippingQuoteToken: "signed-quote",
       },
     });
-    expect(JSON.stringify(request.body)).not.toMatch(/price|total|name/i);
+    expect(JSON.stringify(request.body)).not.toMatch(/price|total/i);
   });
 
   it("reconciles only by opaque public token without browser payment data", () => {

@@ -5,6 +5,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createReservedOrder } from "../../../../db/create-reserved-order";
 import { createDatabaseClient } from "../../../../db/client";
 import { runMigrations } from "../../../../db/migrate";
+import { testDelivery } from "../../../checkout/domain/delivery.test-fixture";
 import { PostgresPaymentConfirmationRepository } from "./payment-confirmation-repository";
 
 const connectionString = process.env.TEST_DATABASE_URL;
@@ -308,6 +309,7 @@ async function createCheckout(sql: Sql): Promise<string> {
     publicTokenHash: createHash("sha256").update(orderId).digest("hex"),
     idempotencyKey: randomUUID(),
     buyerEmail: "buyer@example.com",
+    delivery: testDelivery,
     currency: "ARS",
     shippingCents: 400_000,
     items: [

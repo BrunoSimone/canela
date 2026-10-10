@@ -5,12 +5,14 @@ import type { PaymentOrderGateway } from "../../payments/domain/payment-order";
 import { InvalidShippingQuoteError } from "../../shipping/domain/shipping-quote";
 import type { ShippingQuoteVerifier } from "../../shipping/domain/shipping-quote";
 import type { CheckoutRepository } from "../domain/checkout";
+import { testDelivery } from "../domain/delivery.test-fixture";
 import { beginCheckout } from "./begin-checkout";
 
 const repository: CheckoutRepository = {
   reserve: vi.fn().mockResolvedValue({
     orderId: "d71466b7-f0e7-4434-bd72-047287217728",
     buyerEmail: "buyer@example.com",
+    delivery: testDelivery,
     currency: "ARS",
     subtotalCents: 1_500_000,
     shippingCents: 400_000,
@@ -61,6 +63,7 @@ const quotes: ShippingQuoteVerifier = {
 const input = {
   idempotencyKey: "attempt-key",
   buyerEmail: "buyer@example.com",
+  delivery: testDelivery,
   shippingQuoteToken: "signed.quote",
   items: [{ productId: "product-a", quantity: 1 }],
 };

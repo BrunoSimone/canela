@@ -16,16 +16,16 @@ describe("describeProductPurchaseAction", () => {
     });
   });
 
-  it("keeps commissioned products in the inquiry flow", () => {
+  it("uses the cart language for commissioned products without enabling checkout", () => {
     expect(
       describeProductPurchaseAction({
         quantity: 2,
         tone: "encargo",
       }),
     ).toEqual({
-      containerLabel: "En tu consulta",
-      idleLabel: "Agregar a mi consulta",
-      selectedLabel: "En tu consulta · 2",
+      containerLabel: "En tu carrito",
+      idleLabel: "Agregar al carrito",
+      selectedLabel: "En tu carrito · 2",
     });
   });
 

@@ -1,9 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
-
-import { whatsappLink, WA_GENERAL_MESSAGE } from "@/lib/config";
-import { formatPrice } from "@/lib/product-status";
 import {
   addItem,
   closeCartPanel,
@@ -35,15 +31,5 @@ export function useCart() {
     qtyOf: (id: string) => items.find((item) => item.id === id)?.qty ?? 0,
     togglePanel: () => dispatch(toggleCartPanel()),
     closePanel: () => dispatch(closeCartPanel()),
-    cartWhatsAppLink: useMemo(() => whatsappLink(buildMessage(items)), [items]),
-    generalWhatsAppLink: useMemo(() => whatsappLink(WA_GENERAL_MESSAGE), []),
   };
-}
-
-function buildMessage(items: CartItem[]): string {
-  if (items.length === 0) return WA_GENERAL_MESSAGE;
-  const lines = items
-    .map((item) => `• ${item.name} x${item.qty} (${formatPrice(item.price)})`)
-    .join("\n");
-  return `¡Hola! Quería consultar por estas piezas:\n${lines}\n¿Me ayudás con mi pedido? 🙂`;
 }

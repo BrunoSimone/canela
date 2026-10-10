@@ -108,8 +108,8 @@ function CheckoutResultView({
           No encontramos el pedido
         </h1>
         <p className="mt-3 max-w-lg leading-relaxed text-[#6E4E38]">
-          El enlace puede estar incompleto. Volvé a la tienda o escribinos por
-          WhatsApp si ya realizaste un pago.
+          El enlace puede estar incompleto. Si ya realizaste un pago, conservá el
+          comprobante mientras verificamos el pedido.
         </p>
         <ReturnToStore />
       </ResultShell>
