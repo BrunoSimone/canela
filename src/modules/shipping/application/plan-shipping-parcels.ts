@@ -1,3 +1,4 @@
+import { buildSharedBoxPlan, type ShippingBox } from "../domain/shared-box-plan";
 import {
   buildParcelPlan,
   normalizeShippingLines,
@@ -19,6 +20,7 @@ export type ShippingProfileCatalog = {
 type PlanShippingParcelsDependencies = {
   catalog: ShippingProfileCatalog;
   groupingRules: ParcelGroupingRule[];
+  boxes?: { list(): Promise<ShippingBox[]> };
   constraints: ParcelConstraints;
 };
 
@@ -43,6 +45,9 @@ export async function planShippingParcels(
   if (unavailable.length > 0) {
     throw new UnshippableProductError(unavailable);
   }
+
+  const profiles = products.flatMap((product) => product.profile ? [product.profile] : []);
+  if (dependencies.boxes) return buildSharedBoxPlan({ items: normalizedItems, profiles, boxes: await dependencies.boxes.list(), constraints: dependencies.constraints });
 
   return buildParcelPlan({
     items: normalizedItems,

@@ -1,4 +1,6 @@
 import { getDatabase } from "@/db/client";
+import { after } from "next/server";
+import { tryOrderNotifications } from "@/modules/notifications/infrastructure/notification-service";
 import { PostgresPublicOrderStatusRepository } from "@/modules/checkout/infrastructure/postgres/public-order-status-repository";
 import { handleReconcilePublicOrderRequest } from "@/modules/checkout/presentation/http/reconcile-public-order-handler";
 import { reconcilePaymentOrder } from "@/modules/payments/application/reconcile-payment-order";
@@ -36,7 +38,7 @@ export async function POST(
   const statusRepository = new PostgresPublicOrderStatusRepository(database);
   const payments = new MercadoPagoClient({ accessToken: config.accessToken });
 
-  return handleReconcilePublicOrderRequest(publicToken, {
+  const response = await handleReconcilePublicOrderRequest(publicToken, {
     statusRepository,
     reconcile: (publicTokenHash) =>
       reconcilePaymentOrder(
@@ -44,6 +46,7 @@ export async function POST(
           repository: confirmationRepository,
           payments,
           expectedProvider: {
+            environment: config.environment,
             sellerUserId: config.sellerUserId,
             applicationId: config.applicationId,
           },
@@ -54,6 +57,8 @@ export async function POST(
       ),
     reportUnexpectedError: () => report("mercado_pago_reconciliation_error"),
   });
+  if (response.ok) after(() => tryOrderNotifications());
+  return response;
 }
 
 function report(event: string, context: object = {}): void {

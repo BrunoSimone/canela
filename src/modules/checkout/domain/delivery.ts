@@ -32,6 +32,7 @@ export type DeliverySnapshot = {
   buyerName: string;
   recipientName: string;
   phone: string | null;
+  recipientDocument?: string | null;
   streetName: string;
   streetNumber: string;
   floor: string | null;
@@ -67,11 +68,14 @@ export function parseDeliverySnapshot(value: unknown): DeliverySnapshot {
   if (phone && (!/^\+?[\d\s()-]+$/.test(phone) || phone.replace(/\D/g, "").length < 7)) {
     throw new InvalidDeliveryError();
   }
+  const recipientDocument = optionalLine(value.recipientDocument, 20);
+  if (recipientDocument && !/^[A-Za-z0-9]{5,20}$/.test(recipientDocument)) throw new InvalidDeliveryError();
   return {
     type: "home",
     buyerName: line(value.buyerName, 2, 100),
     recipientName: line(value.recipientName, 2, 100),
     phone,
+    ...(recipientDocument ? { recipientDocument } : {}),
     streetName: line(value.streetName, 2, 100),
     streetNumber,
     floor: optionalLine(value.floor, 3),

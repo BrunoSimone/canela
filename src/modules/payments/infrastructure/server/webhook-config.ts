@@ -1,3 +1,4 @@
+import { paymentEnvironment, paymentCredentialPrefix } from "./payment-environment";
 type MercadoPagoWebhookEnvironment = {
   MP_TEST_ACCESS_TOKEN?: string;
   MP_TEST_WEBHOOK_SECRET?: string;
@@ -12,16 +13,18 @@ export type MercadoPagoWebhookConfig = {
   secret: string;
   sellerUserId: string;
   applicationId: string;
-  liveMode: false;
+  liveMode: boolean;
+  environment: "test" | "production";
 };
 
 export function readMercadoPagoWebhookConfig(
   environment: MercadoPagoWebhookEnvironment = process.env,
 ): MercadoPagoWebhookConfig {
-  const accessToken = environment.MP_TEST_ACCESS_TOKEN;
-  const secret = environment.MP_TEST_WEBHOOK_SECRET;
-  const sellerUserId = environment.MP_TEST_SELLER_USER_ID;
-  const applicationId = environment.MP_TEST_APPLICATION_ID;
+  const prefix=paymentCredentialPrefix(environment);
+  const accessToken = environment[`${prefix}_ACCESS_TOKEN`];
+  const secret = environment[`${prefix}_WEBHOOK_SECRET`];
+  const sellerUserId = environment[`${prefix}_SELLER_USER_ID`];
+  const applicationId = environment[`${prefix}_APPLICATION_ID`];
 
   if (
     !accessToken ||
@@ -41,6 +44,7 @@ export function readMercadoPagoWebhookConfig(
     secret,
     sellerUserId,
     applicationId,
-    liveMode: false,
+    liveMode: paymentEnvironment(environment) === "production",
+    environment: paymentEnvironment(environment),
   };
 }

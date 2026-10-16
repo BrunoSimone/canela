@@ -35,7 +35,7 @@ describe("checkout client flow", () => {
 
   it("gives actionable messages for expected checkout errors", () => {
     expect(checkoutErrorMessage("OUT_OF_STOCK")).toContain("ya no está disponible");
-    expect(checkoutErrorMessage("SHIPPING_QUOTE_EXPIRED")).toContain("Actualizá");
+    expect(checkoutErrorMessage("SHIPPING_QUOTE_EXPIRED")).toContain("calcular el envío");
     expect(checkoutErrorMessage("PAYMENT_PROVIDER_UNAVAILABLE")).toContain("intentar");
   });
 

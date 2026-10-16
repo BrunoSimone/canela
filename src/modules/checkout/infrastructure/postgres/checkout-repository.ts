@@ -273,6 +273,8 @@ function toCreateReservedOrderInput(
     delivery: input.delivery,
     currency: input.currency,
     shippingCents: input.shippingCents,
+    ...(input.environment ? { environment: input.environment } : {}),
+    ...(input.shippingSnapshot ? { shippingSnapshot: input.shippingSnapshot } : {}),
     items: input.items,
   };
 }

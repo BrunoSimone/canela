@@ -1,3 +1,4 @@
+import type { CourierQuoteSnapshot } from "../../shipping/domain/courier-quote";
 import {
   PaymentOrderGatewayError,
   type PaymentOrder,
@@ -12,6 +13,7 @@ import type { DeliverySnapshot } from "../domain/delivery";
 
 export type StartCheckoutInput = {
   orderId: string;
+  environment?: "test" | "production";
   orderToken: string;
   publicTokenHash: string;
   idempotencyKey: string;
@@ -19,6 +21,7 @@ export type StartCheckoutInput = {
   delivery: DeliverySnapshot;
   returnUrl: string;
   shippingCents: number;
+  shippingSnapshot?: CourierQuoteSnapshot;
   items: CheckoutItem[];
 };
 
@@ -60,6 +63,8 @@ export async function startCheckout(
     delivery: input.delivery,
     currency: "ARS",
     shippingCents: input.shippingCents,
+    ...(input.environment ? { environment: input.environment } : {}),
+    ...(input.shippingSnapshot ? { shippingSnapshot: input.shippingSnapshot } : {}),
     items: input.items,
   });
 

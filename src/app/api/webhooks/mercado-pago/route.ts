@@ -1,4 +1,6 @@
 import { getDatabase } from "@/db/client";
+import { after } from "next/server";
+import { tryOrderNotifications } from "@/modules/notifications/infrastructure/notification-service";
 import { confirmPaymentNotification } from "@/modules/payments/application/confirm-payment-notification";
 import { MercadoPagoClient } from "@/modules/payments/infrastructure/mercado-pago/client";
 import { PostgresPaymentConfirmationRepository } from "@/modules/payments/infrastructure/postgres/payment-confirmation-repository";
@@ -22,7 +24,7 @@ export async function POST(request: Request): Promise<Response> {
   const repository = new PostgresPaymentConfirmationRepository(getDatabase());
   const payments = new MercadoPagoClient({ accessToken: config.accessToken });
 
-  return handleMercadoPagoWebhook(request, {
+  const response = await handleMercadoPagoWebhook(request, {
     secret: config.secret,
     expectedLiveMode: config.liveMode,
     confirm: (notification) =>
@@ -31,6 +33,7 @@ export async function POST(request: Request): Promise<Response> {
           repository,
           payments,
           expectedProvider: {
+            environment: config.environment,
             sellerUserId: config.sellerUserId,
             applicationId: config.applicationId,
           },
@@ -41,6 +44,8 @@ export async function POST(request: Request): Promise<Response> {
       ),
     reportUnexpectedError: () => report("mercado_pago_webhook_retry"),
   });
+  if (response.ok) after(() => tryOrderNotifications());
+  return response;
 }
 
 function report(event: string, context: object = {}): void {

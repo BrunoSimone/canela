@@ -1,45 +1,24 @@
-# Relevamiento de perfiles embalados para Correo Argentino
+# Medición de productos y cajas para envíos
 
-## Propósito
+Actualizado el 16/10/2026. La [spec 090](../specs/090-apertura-caja-compartida.md)
+reemplaza la estrategia inicial de un bulto por unidad y reglas por combinación.
 
-Completar en Sanity el perfil de envío de cada producto vendible antes de pedir
-tarifas reales. `medidas` describe la pieza al comprador; `shippingProfile`
-describe **una unidad ya protegida y lista para despachar**.
+La guía operativa vigente es [Carga de catálogo, embalajes e inventario](carga-cliente.md).
+`medidas` describe el producto al comprador; `shippingProfile` describe una unidad
+con su protección individual, **sin la caja exterior compartida**. Las cajas se
+registran por separado en Sanity, con interior útil, exterior, tara y peso máximo.
 
-## Checklist por producto
+El sistema calcula una sola caja para el pedido, con posiciones sin superposición,
+sin giro ni apilado salvo autorización por producto. La tara se suma una sola vez.
+Si no encuentra un acomodo válido, no inicia el pago. El cálculo es conservador;
+el taller siempre debe comprobar el embalaje real antes de generar la etiqueta.
 
-- [ ] Embalar físicamente una unidad como saldrá del taller, con protección para
-  vidrio, cerámica o marco según corresponda.
-- [ ] Pesarla ya embalada y registrar `weightGrams` como entero en gramos.
-- [ ] Medir alto, ancho y largo exteriores de ese bulto y registrar `heightCm`,
-  `widthCm` y `lengthCm` como enteros en centímetros. Redondear hacia arriba si
-  la medición cae entre centímetros enteros.
-- [ ] Decidir `shipSeparately`: `true` si esa pieza nunca puede compartir una caja
-  exterior con otra; `false` solo si se podría aprobar alguna combinación. Un
-  valor `false` **no agrupa automáticamente** productos.
-- [ ] Cargar `version: 1` al crear el perfil. Si cambian protección, peso o caja,
-  actualizar las medidas y aumentar la versión.
-- [ ] Verificar que el perfil publicado coincide con el embalaje que efectivamente
-  puede preparar el taller.
+Publicar cambios actualiza automáticamente la revisión usada para invalidar
+cotizaciones; el dueño no debe incrementar una versión técnica manualmente.
 
-Repetir para cada producto vendible publicado. Si falta un perfil, el sistema
-rechazará la cotización de un carrito que contenga ese producto. Los productos
-por encargo quedan fuera de esta primera integración.
+La clasificación puede completarse después de las mediciones, pero es obligatoria
+para cotizar. Confirmar con Zipnova clasificación, aceptación y condiciones de
+vidrio, cerámica y espejos. No asignar General por defecto. Confirmar también
+sucursal de despacho, cobertura y límites efectivos del transporte.
 
-## Cajas compartidas
-
-El lanzamiento puede comenzar sin reglas de agrupación: se cotiza un bulto
-exterior por unidad protegida. Para aprobar una caja común más adelante, registrar
-la lista exacta de productos y cantidades que caben, el peso total embalado y las
-medidas exteriores de esa caja. El dueño debe confirmar que el conjunto es seguro
-de preparar; las dimensiones de las piezas sueltas no bastan para deducirlo.
-
-## Datos operativos adicionales
-
-- Confirmar el código postal desde el que saldrán realmente los paquetes.
-- Confirmar con Correo los límites efectivos de peso y tamaño del servicio
-  habilitado para la cuenta antes de activar la cotización.
-- Mantener credenciales API y datos de acceso fuera de Sanity y de este documento.
-
-Relacionado: [spec de cotización](../specs/040-correo-cotizacion.md) y
-[plan de implementación](../plans/003-correo-argentino-cotizacion.md).
+Credenciales y accesos privados nunca deben cargarse en Sanity.

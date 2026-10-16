@@ -1,0 +1,91 @@
+import { randomUUID } from "node:crypto";
+import { beforeAll,beforeEach,afterAll,describe,it,expect,vi } from "vitest";
+import type {Sql} from "postgres";
+import {createDatabaseClient} from "@/db/client";
+import {runMigrations} from "@/db/migrate";
+import {beginCheckout} from "@/modules/checkout/application/begin-checkout";
+import {PostgresCheckoutRepository} from "@/modules/checkout/infrastructure/postgres/checkout-repository";
+import {testDelivery} from "@/modules/checkout/domain/delivery.test-fixture";
+import {confirmPaymentNotification} from "@/modules/payments/application/confirm-payment-notification";
+import type {PaymentOrder, CreatePaymentOrderInput} from "@/modules/payments/domain/payment-order";
+import {PostgresPaymentConfirmationRepository} from "@/modules/payments/infrastructure/postgres/payment-confirmation-repository";
+import {quoteShipping,ZipnovaCheckoutQuotes} from "@/modules/shipping/application/quote-shipping";
+import {dependencies,destination,rate,profile} from "@/modules/shipping/testing/fixtures";
+import {FulfillOrder} from "@/modules/shipping/application/fulfill-order";
+import {PostgresShipmentRepository} from "@/modules/shipping/infrastructure/postgres-shipment-repository";
+import {PostgresDispatchRepository} from "@/modules/shipping/infrastructure/postgres-dispatch-repository";
+import {PostgresOrderPreparationRepository} from "@/modules/admin/infrastructure/postgres-preparation";
+import {deliverNotification} from "../application/deliver-notification";
+import {PostgresNotificationRepository} from "./postgres-notification-repository";
+import {renderNotification} from "./order-mail";
+import {validateFrozenMail,type OrderMailConfig} from "./mail-config";
+import type {OutboundEmail} from "../domain/notification";
+const url=process.env.TEST_DATABASE_URL;
+if(process.env.RUN_DB_INTEGRATION==="1"&&!url)throw Error("TEST_DATABASE_URL required");
+if(url&&!["localhost","127.0.0.1"].includes(new URL(url).hostname))throw Error("Disposable local DB only");
+(url?describe:describe.skip)("OPS-09 purchase through dispatch and durable mail (controlled external gateways)",()=>{
+ let sql:Sql;
+ beforeAll(async()=>{sql=createDatabaseClient(url!);await sql`SET client_min_messages TO warning`;await runMigrations(sql);});
+ beforeEach(async()=>{await sql`TRUNCATE orders,inventory_item,processed_webhook RESTART IDENTITY CASCADE`;await sql`INSERT INTO inventory_item(product_id,stock_on_hand) VALUES('piece',2)`;});
+ afterAll(async()=>{await sql?.end();});
+ async function fixture(environment:"test"|"production"="test"){
+  const base=dependencies();
+  base.catalog.findByIds.mockResolvedValue([{id:"piece",sellable:true,profile:{...profile,shipSeparately:false}}]);
+  const deps={...base,boxes:{list:async()=>[{id:"qa-box",revision:"1",name:"Caja de prueba",innerHeightCm:12,innerWidthCm:42,innerLengthCm:22,heightCm:14,widthCm:44,lengthCm:24,tareWeightGrams:200,maxWeightGrams:5000}]},now:()=>new Date(),accountMode:environment==="test"?"sandbox" as const:"operational" as const,maxParcels:1};
+  const quoted=await quoteShipping(deps,{destination,items:[{productId:"piece",quantity:2}]});
+  const snapshot=deps.issuer.authenticate(quoted.options[0].token,new Date());
+  let external:PaymentOrder;
+  const payments={createOrder:vi.fn(async(input:CreatePaymentOrderInput)=>external={providerOrderId:"MP-PIPELINE",externalReference:input.externalReference,totalCents:input.totalCents,currency:"ARS",checkoutUrl:"https://www.mercadopago.com.ar/checkout/test",sellerUserId:"seller",applicationId:"app",state:"processing",providerStatus:"processing",providerStatusDetail:null}),getOrder:vi.fn(async()=>({...external,state:"approved" as const,providerStatus:"processed",providerStatusDetail:"accredited"}))};
+  const beginDeps={environment,repository:new PostgresCheckoutRepository(sql),catalog:deps.products,payments,quotes:new ZipnovaCheckoutQuotes(deps),signingSecret:"test-secret".repeat(8),siteUrl:"https://canela.test"};
+  const input={idempotencyKey:randomUUID(),buyerEmail:"buyer@example.com",delivery:{...testDelivery,...destination,recipientDocument:"12345678"},shippingQuoteToken:quoted.options[0].token,items:[{productId:"piece",quantity:2}]};
+  return {deps,snapshot,payments,beginDeps,input};
+ }
+ it.each(["test","production"] as const)("persists %s and completes once through actual SQL/application services",async environment=>{
+  const f=await fixture(environment);const checkout=await beginCheckout(f.beginDeps,f.input);
+  expect(checkout.checkoutUrl).toContain("mercadopago");
+  const [order]=await sql`SELECT * FROM orders`;const id=order.id;
+  expect(order.environment).toBe(environment);
+  expect(f.snapshot.parcels).toHaveLength(1);expect(f.snapshot.parcels[0].packing?.placements).toHaveLength(2);expect(Number(order.total_cents)).toBe(3000000+rate.amountCents);
+  expect(f.payments.createOrder.mock.calls[0][0].items.at(-1)).toMatchObject({externalCode:"shipping",unitPriceCents:rate.amountCents});
+  expect(await sql`SELECT stock_on_hand,reserved FROM inventory_item`).toMatchObject([{stock_on_hand:2,reserved:2}]);
+  expect(await sql`SELECT * FROM order_notification`).toHaveLength(0);
+  const confirmation={repository:new PostgresPaymentConfirmationRepository(sql),payments:f.payments,expectedProvider:{sellerUserId:"seller",applicationId:"app",environment}};
+  await confirmPaymentNotification(confirmation,{deliveryId:"paid-first",providerOrderId:"MP-PIPELINE"});
+  await new PostgresOrderPreparationRepository(sql).save(id,"owner@example.com",{expectedVersion:0,note:null,parcels:f.snapshot.parcels});
+  const gateway={quoteShipment:f.deps.rates.quoteShipment,create:vi.fn(async(r:{externalId:string})=>({id:42,externalId:r.externalId,status:"new",trackingNumber:"TN-SAMPLE",trackingUrl:"https://tracking.example.com/42",amountCents:rate.amountCents})),find:vi.fn(),label:vi.fn(async()=>Buffer.from("%PDF-controlled-fixture"))};
+  const ships=new PostgresShipmentRepository(sql),fulfill=new FulfillOrder(ships,gateway,f.deps);
+  expect((await fulfill.confirm(id,1,"owner@example.com")).state).toBe("label_ready");
+  await fulfill.confirm(id,1,"owner@example.com");expect(gateway.create).toHaveBeenCalledTimes(1);
+  const dispatch=new PostgresDispatchRepository(sql,f.deps);
+  await Promise.all([dispatch.confirm(id,42,"owner@example.com"),dispatch.confirm(id,42,"owner@example.com")]);
+  await confirmPaymentNotification(confirmation,{deliveryId:"paid-late",providerOrderId:"MP-PIPELINE"});
+  expect(await sql`SELECT status FROM orders`).toMatchObject([{status:"shipped"}]);
+  expect(await sql`SELECT stock_on_hand,reserved FROM inventory_item`).toMatchObject([{stock_on_hand:0,reserved:0}]);
+  expect(await sql`SELECT * FROM inventory_adjustment`).toHaveLength(1);
+  const accepted=new Map<string,OutboundEmail>();let loseResponse=true;
+  const send=vi.fn(async(payload:OutboundEmail,key:string)=>{
+   if(accepted.has(key))expect(payload).toEqual(accepted.get(key));else accepted.set(key,payload);
+   if(loseResponse){loseResponse=false;throw Error("lost response after acceptance");}return `accepted-${key}`;
+  });
+  const config:OrderMailConfig={environment,apiKey:"fixture",from:"Canela <test@canela.test>",siteUrl:"https://canela.test",ownerEmail:"owner@example.com",testTo:"tester@example.com"};
+  const worker={repo:new PostgresNotificationRepository(sql),environment,send,render:(job:Parameters<typeof renderNotification>[2])=>renderNotification(sql,config,job),validate:(job:Parameters<typeof renderNotification>[2],payload:OutboundEmail)=>validateFrozenMail(config,job.environment,payload,job.kind)};
+  expect(await deliverNotification(worker,id)).toBe(true);
+  await sql`UPDATE order_notification SET available_at=now() WHERE state='pending'`;
+  while(await deliverNotification(worker,id)) { /* bounded by the two durable notices */ }
+  expect(accepted.size).toBe(2);expect(send).toHaveBeenCalledTimes(3);
+  expect(await sql`SELECT state FROM order_notification`).toMatchObject([{state:"sent"},{state:"sent"}]);
+  const mails=[...accepted.values()];
+  expect(mails.map(m=>m.to[0]).sort()).toEqual(environment==="test"?["tester@example.com","tester@example.com"]:["buyer@example.com","owner@example.com"]);
+  expect(mails.some(m=>m.text.includes("TN-SAMPLE"))).toBe(true);
+  expect(mails.every(m=>!m.text.includes("12345678")&&!m.text.includes("token="))).toBe(true);
+ });
+ it("blocks a changed rate before payment or inventory reservation",async()=>{
+  const f=await fixture();f.deps.rates.quoteShipment.mockResolvedValue([{...rate,amountCents:rate.amountCents+1}]);
+  await expect(beginCheckout(f.beginDeps,f.input)).rejects.toThrow();expect(f.payments.createOrder).not.toHaveBeenCalled();
+  expect(await sql`SELECT * FROM orders`).toHaveLength(0);expect(await sql`SELECT reserved FROM inventory_item`).toMatchObject([{reserved:0}]);
+ });
+ it("blocks a live quote in a test checkout before contacting payment",async()=>{
+  const f=await fixture("production");await expect(beginCheckout({...f.beginDeps,environment:"test"},f.input)).rejects.toThrow();
+  expect(f.payments.createOrder).not.toHaveBeenCalled();expect(await sql`SELECT * FROM orders`).toHaveLength(0);
+ });
+});

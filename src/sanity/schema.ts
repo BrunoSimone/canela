@@ -18,7 +18,7 @@ const SUB_OPTIONS = [
 
 const TONE_OPTIONS = [
   { title: "Pieza única", value: "unica" },
-  { title: "En stock", value: "stock" },
+  { title: "Venta por unidades", value: "stock" },
   { title: "Por encargo", value: "encargo" },
 ];
 
@@ -66,7 +66,7 @@ const producto: SchemaTypeDefinition = {
     },
     {
       name: "tone",
-      title: "Estado",
+      title: "Modalidad de venta",
       type: "string",
       options: { list: TONE_OPTIONS, layout: "radio" },
       initialValue: "stock",
@@ -88,48 +88,59 @@ const producto: SchemaTypeDefinition = {
     },
     {
       name: "shippingProfile",
-      title: "Perfil de envío embalado",
+      title: "Unidad protegida para envío",
       type: "object",
+      initialValue: { version: 1, shipSeparately: false, canRotate: false, canStack: false },
       description:
-        "Peso y medidas exteriores de una unidad ya protegida para el correo. No usar las medidas de exhibición. Dejar vacío hasta medir el embalaje real.",
+        "Medí y pesá UNA pieza con su papel, separadores o protección individual, SIN la caja exterior compartida. Podés cargar las medidas ahora y completar la clasificación después. La tienda solo cotiza perfiles completos.",
       fields: [
+        { name: "canRotate", title: "Se puede girar 90° sobre la base", type: "boolean", initialValue: false, description: "Conserva la pieza vertical; permite intercambiar ancho y largo." },
+        { name: "canStack", title: "Admite otras piezas protegidas encima", type: "boolean", initialValue: false, description: "Activar únicamente si la protección soporta ese apilado. Si alguna pieza no lo permite, el pedido se acomoda en una sola capa." },
+        {
+          name: "classificationId",
+          title: "Clasificación de mercadería en Zipnova",
+          type: "string",
+          description: "ID o código confirmado por Zipnova para esta pieza. Consultar condiciones para vidrio, cerámica y espejos; no asumir General. Sin este dato no se cotiza.",
+          validation: (rule) => rule.regex(/^[A-Za-z0-9_-]{1,50}$/),
+        },
         {
           name: "version",
           title: "Versión del perfil",
+          hidden: true,
           type: "number",
           initialValue: 1,
-          validation: (rule) => rule.required().integer().min(1),
+          validation: (rule) => rule.integer().min(1),
         },
         {
           name: "weightGrams",
-          title: "Peso embalado (g)",
+          title: "Peso de la unidad protegida (g)",
           type: "number",
-          validation: (rule) => rule.required().integer().min(1),
+          validation: (rule) => rule.required().integer().min(10),
         },
         {
           name: "heightCm",
-          title: "Alto exterior (cm)",
+          title: "Alto de la unidad protegida (cm)",
           type: "number",
           validation: (rule) => rule.required().integer().min(1),
         },
         {
           name: "widthCm",
-          title: "Ancho exterior (cm)",
+          title: "Ancho de la unidad protegida (cm)",
           type: "number",
           validation: (rule) => rule.required().integer().min(1),
         },
         {
           name: "lengthCm",
-          title: "Largo exterior (cm)",
+          title: "Largo de la unidad protegida (cm)",
           type: "number",
           validation: (rule) => rule.required().integer().min(1),
         },
         {
           name: "shipSeparately",
-          title: "Enviar en caja individual",
+          title: "Esta pieza necesita una caja exclusiva",
+          description: "Activar solo si nunca puede compartir caja con otras piezas.",
           type: "boolean",
           initialValue: false,
-          validation: (rule) => rule.required(),
         },
       ],
     },
@@ -197,6 +208,36 @@ const heroSlide: SchemaTypeDefinition = {
   },
 };
 
+const shippingBox: SchemaTypeDefinition = {
+  name: "shippingBox", title: "Caja de envío", type: "document",
+  fields: [
+    { name: "name", title: "Nombre para reconocerla en el taller", type: "string", validation: r => r.required() },
+    { name: "active", title: "Disponible para preparar pedidos", type: "boolean", initialValue: false },
+    ...["height", "width", "length"].map((axis, index) => ({
+      name: `inner${axis[0].toUpperCase()}${axis.slice(1)}Cm`,
+      title: `${["Alto", "Ancho", "Largo"][index]} interior útil (cm)`, type: "number",
+      description: "Espacio libre después de colocar revestimiento y protección de la caja.",
+      validation: (r: import("sanity").Rule) => r.required().integer().min(1).max(5000),
+    })),
+    ...["height", "width", "length"].map((axis, index) => ({
+      name: `${axis}Cm`, title: `${["Alto", "Ancho", "Largo"][index]} exterior (cm)`, type: "number",
+      validation: (r: import("sanity").Rule) => r.required().integer().min(1).max(5000),
+    })),
+    { name: "tareWeightGrams", title: "Peso de caja y relleno común (g)", type: "number", description: "Sin productos. Incluí cinta, separadores y relleno adicional habitual.", validation: r => r.required().integer().min(1) },
+    { name: "maxWeightGrams", title: "Peso máximo total que admite (g)", type: "number", description: "Incluye productos, protecciones y caja.", validation: r => r.required().integer().min(10) },
+  ],
+  validation: (rule: import("sanity").Rule) => rule.custom((value: unknown) => {
+    if (!value) return true;
+    const box = value as Record<string, unknown>;
+    for (const axis of ["height", "width", "length"]) {
+      const inside = box[`inner${axis[0].toUpperCase()}${axis.slice(1)}Cm`], outside = box[`${axis}Cm`];
+      if (typeof inside === "number" && typeof outside === "number" && inside > outside) return "El espacio interior no puede superar la medida exterior.";
+    }
+    return typeof box.tareWeightGrams === "number" && typeof box.maxWeightGrams === "number" && box.tareWeightGrams >= box.maxWeightGrams ? "El peso máximo debe ser mayor que el peso de la caja vacía." : true;
+  }),
+  preview: { select: { title: "name" } },
+};
+
 export const schema: { types: SchemaTypeDefinition[] } = {
-  types: [producto, heroSlide],
+  types: [producto, heroSlide, shippingBox],
 };

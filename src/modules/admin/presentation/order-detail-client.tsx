@@ -8,6 +8,8 @@ import type { AdminOrder } from "../domain/order";
 import { destinationLabel, formatDate, formatMoney } from "./order-format";
 import { StatusBadge } from "./orders-client";
 import { PreparationEditor } from "./preparation-editor";
+import { OrderOperations } from "./order-operations";
+import { ShipmentActions } from "./shipment-actions";
 import styles from "./admin.module.css";
 
 export function OrderDetailClient({ id, demo, backHref }: { id: string; demo: boolean; backHref: string }) {
@@ -67,21 +69,30 @@ export function OrderDetailClient({ id, demo, backHref }: { id: string; demo: bo
               <div><dt>Dirección</dt><dd className={!order.shippingAddress ? styles.pending : undefined}>{order.shippingAddress ?? "Aún no disponible"}</dd></div>
               <div><dt>Número de seguimiento</dt><dd>{order.trackingNumber ?? "Aún no disponible"}</dd></div>
             </dl>
-            {!demo && <p className={styles.integrationNote}>El seguimiento se mostrará cuando Correo Argentino confirme el envío. Los pedidos anteriores a la captura de domicilio pueden no tener dirección guardada.</p>}
+            {!demo && <p className={styles.integrationNote}>El seguimiento se mostrará cuando el transporte confirme el envío. Los pedidos anteriores a la captura de domicilio pueden no tener dirección guardada.</p>}
           </section>
         </div>
         <div className={styles.detailColumn}>
           <section className={styles.detailCard}>
             <h2>Próximo paso</h2>
             <div className={styles.actionBox}><StatusBadge order={order} /><p>{order.nextAction}</p></div>
-            <p className={styles.integrationNote}>La creación del envío y el seguimiento se habilitarán al conectar Correo Argentino.</p>
           </section>
+          <ShipmentActions order={order} onChanged={setOrder} />
+          <OrderOperations order={order} onChanged={setOrder} />
+          {order.packingPlan?.map((parcel, i) => <section className={styles.detailCard} key={i}>
+            <h2>Caja y acomodo cotizados</h2>
+            <p>{parcel.packing?.boxName ?? "Embalaje del pedido"} · {parcel.widthCm} × {parcel.lengthCm} × {parcel.heightCm} cm · {parcel.weightGrams} g totales.</p>
+            {parcel.packing && <><p>Las posiciones indican distancia desde una esquina interior: ancho (X), largo (Y) y altura (Z), en cm. Conservá las protecciones individuales.</p><ul>
+              {parcel.packing.placements.map(p => <li key={`${p.productId}-${p.unit}`}>{order.items.find(i => i.productId === p.productId)?.name ?? "Pieza"}, unidad {p.unit}: X {p.x}, Y {p.y}, Z {p.z} · ocupa {p.widthCm} × {p.lengthCm} × {p.heightCm} cm.</li>)}
+            </ul></>}
+            <p>Comprobá el paquete armado y registrá abajo su peso y medidas reales antes de solicitar la etiqueta.</p>
+          </section>)}
           <PreparationEditor order={order} demo={demo} onSaved={(preparation) => setOrder((current) => current ? {
             ...current,
             preparation,
             status: "ready_to_ship",
             statusLabel: "Listo para crear envío",
-            nextAction: "Esperar la habilitación de Correo Argentino para crear el envío.",
+            nextAction: "Confirmar el embalaje para generar la etiqueta.",
           } : current)} />
           <section className={styles.detailCard}>
             <h2>Comprador</h2>

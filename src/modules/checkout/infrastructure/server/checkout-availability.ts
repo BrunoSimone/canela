@@ -1,8 +1,12 @@
+import { readShippingConfig } from "../../../shipping/infrastructure/server/shipping-config";
 import { readCheckoutConfig } from "./checkout-config";
 
-export function isControlledCheckoutReady(): boolean {
+export function isCheckoutReady(): boolean {
   try {
-    return readCheckoutConfig().mode === "test";
+    const config = readCheckoutConfig();
+    if (config.mode === "disabled") return false;
+    if (config.shippingProvider === "zipnova") readShippingConfig();
+    return true;
   } catch {
     return false;
   }

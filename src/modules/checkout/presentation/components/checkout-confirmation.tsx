@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -19,7 +19,7 @@ import {
   selectCartHydrated,
   selectCartItems,
 } from "@/modules/cart/presentation/state/cart-slice";
-import { useStartCheckoutMutation } from "@/modules/checkout/presentation/client/checkout-api";
+import { useQuoteShippingMutation, useStartCheckoutMutation, type ShippingQuotesResponse } from "@/modules/checkout/presentation/client/checkout-api";
 import {
   checkoutErrorMessage,
   readCheckoutErrorCode,
@@ -28,19 +28,15 @@ import {
 import { useAppSelector } from "@/store/hooks";
 import { ARGENTINE_PROVINCES, InvalidDeliveryError, parseDeliverySnapshot } from "@/modules/checkout/domain/delivery";
 
+import { InvalidCourierQuoteInputError, normalizeShippingDestination } from "@/modules/shipping/domain/courier-quote";
+
 import { MosaicMark } from "./mosaic-mark";
 
 type CheckoutConfirmationProps = {
-  shippingQuoteToken: string;
-  shippingCents: number;
-  quoteExpiresAt: string;
+  shipping: { kind: "zipnova" } | { kind: "controlled_test"; shippingQuoteToken: string; shippingCents: number; quoteExpiresAt: string };
 };
 
-export function CheckoutConfirmation({
-  shippingQuoteToken,
-  shippingCents,
-  quoteExpiresAt,
-}: CheckoutConfirmationProps) {
+export function CheckoutConfirmation({ shipping: shippingConfig }: CheckoutConfirmationProps) {
   const router = useRouter();
   const items = useAppSelector(selectCartItems);
   const hydrated = useAppSelector(selectCartHydrated);
@@ -50,6 +46,7 @@ export function CheckoutConfirmation({
   const [recipientName, setRecipientName] = useState("");
   const [differentRecipient, setDifferentRecipient] = useState(false);
   const [phone, setPhone] = useState("");
+  const [recipientDocument, setRecipientDocument] = useState("");
   const [streetName, setStreetName] = useState("");
   const [streetNumber, setStreetNumber] = useState("");
   const [floor, setFloor] = useState("");
@@ -61,15 +58,42 @@ export function CheckoutConfirmation({
   const idempotencyKey = useRef<string | null>(null);
   const [startCheckout, { isLoading }] = useStartCheckoutMutation();
 
-  const subtotal = items.reduce(
-    (total, item) => total + item.price * item.qty,
-    0,
-  );
-  const shipping = shippingCents / 100;
+  const [requestQuote, { isLoading: isQuoting }] = useQuoteShippingMutation();
+  const [quoted, setQuoted] = useState<{ key: string; result: ShippingQuotesResponse } | null>(null);
+  const [selectedToken, setSelectedToken] = useState<string | null>(null);
+  const [quoteError, setQuoteError] = useState<string | null>(null);
+  const [clock, setClock] = useState(0);
+  const quoteRequestSequence = useRef(0);
+  useEffect(() => { const timer = setInterval(() => setClock(Date.now()), 1000); return () => clearInterval(timer); }, []);
+  const requestKey = JSON.stringify({ items: items.map(i => ({ productId: i.id, quantity: i.qty })).sort((a,b) => a.productId.localeCompare(b.productId)), city, provinceCode, postalCode });
+  const currentQuote = quoted?.key === requestKey ? quoted.result : null;
+  const selected = currentQuote?.options.find(o => o.quoteToken === selectedToken);
+  const isRealQuote = shippingConfig.kind === "zipnova";
+  const quoteExpiresAt = isRealQuote ? selected?.expiresAt : shippingConfig.quoteExpiresAt;
+  const quoteExpired = !!quoteExpiresAt && Date.parse(quoteExpiresAt) <= clock;
+  const shippingQuoteToken = isRealQuote ? (selected?.quoteToken ?? "") : shippingConfig.shippingQuoteToken;
+  const shippingCents = isRealQuote ? selected?.shippingCents : shippingConfig.shippingCents;
+  const quotedItems = isRealQuote ? currentQuote?.items : undefined;
+  const subtotal = (quotedItems ? quotedItems.reduce((sum, i) => sum + i.unitPriceCents * i.quantity, 0) : items.reduce((sum, i) => sum + i.price * 100 * i.qty, 0)) / 100;
+  const shipping = shippingCents === undefined ? null : shippingCents / 100;
+  const quoteReady = !!shippingQuoteToken && !quoteExpired && !isQuoting;
+
+  async function calculateShipping() {
+    if (!canStartCheckout || isLoading || isQuoting) return;
+    setQuoteError(null); setErrorMessage(null); setSelectedToken(null); setQuoted(null);
+    const sequence = ++quoteRequestSequence.current;
+    try {
+      const destination = normalizeShippingDestination({ city, provinceCode, postalCode });
+      const result = await requestQuote({ destination, items: items.map(i => ({ productId: i.id, quantity: i.qty })) }).unwrap();
+      if (sequence === quoteRequestSequence.current) setQuoted({ key: requestKey, result });
+    } catch (error) {
+      if (sequence === quoteRequestSequence.current) setQuoteError(checkoutErrorMessage(error instanceof InvalidCourierQuoteInputError ? "INVALID_SHIPPING_REQUEST" : readCheckoutErrorCode(error) ?? "SHIPPING_PROVIDER_UNAVAILABLE"));
+    }
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!canStartCheckout || isLoading) return;
+    if (!canStartCheckout || isLoading || !quoteReady) return;
 
     setErrorMessage(null);
     let delivery;
@@ -79,6 +103,7 @@ export function CheckoutConfirmation({
         buyerName,
         recipientName: differentRecipient ? recipientName : buyerName,
         phone,
+        ...(isRealQuote ? { recipientDocument } : {}),
         streetName,
         streetNumber,
         floor,
@@ -122,6 +147,7 @@ export function CheckoutConfirmation({
       ) {
         idempotencyKey.current = null;
       }
+      if (code?.startsWith("SHIPPING_") || code === "UNSHIPPABLE_ITEM") { setSelectedToken(null); setQuoted(null); }
       setErrorMessage(checkoutErrorMessage(code));
     }
   }
@@ -175,8 +201,8 @@ export function CheckoutConfirmation({
             Confirmá tu pedido
           </h1>
           <p className="mt-4 max-w-2xl leading-relaxed text-[#6E4E38]">
-            Revisá las piezas y completá los datos de entrega. El stock se valida
-            nuevamente antes de enviarte a Mercado Pago.
+            Revisá las piezas, completá los datos de entrega y elegí el envío
+            antes de continuar con el pago.
           </p>
         </div>
         <div className="hidden sm:block">
@@ -210,7 +236,7 @@ export function CheckoutConfirmation({
                     {item.name}
                   </h3>
                   <p className="mt-1 text-sm text-[#8a7048]">
-                    {formatPrice(item.price)} × {item.qty}
+                    {formatPrice((quotedItems?.find(i => i.productId === item.id)?.unitPriceCents ?? item.price * 100) / 100)} × {item.qty}
                   </p>
                   {!item.checkoutEligible && (
                     <p className="mt-2 text-sm font-bold text-[#9b5944]">
@@ -219,7 +245,7 @@ export function CheckoutConfirmation({
                   )}
                 </div>
                 <strong className="text-right text-[var(--canela-brown)]">
-                  {formatPrice(item.price * item.qty)}
+                  {formatPrice((quotedItems?.find(i => i.productId === item.id)?.unitPriceCents ?? item.price * 100) / 100 * item.qty)}
                 </strong>
               </div>
             ))}
@@ -229,8 +255,8 @@ export function CheckoutConfirmation({
             <div className="flex gap-3 border-l-2 border-[var(--canela-green)] pl-4">
               <ShieldCheck className="mt-0.5 size-5 shrink-0 text-[var(--canela-green)]" />
               <p className="text-sm leading-relaxed text-[#6E4E38]">
-                Canela relee precio y disponibilidad en el servidor. Una vista
-                desactualizada nunca alcanza para vender una pieza agotada.
+                Confirmamos el precio y la disponibilidad de tus piezas antes
+                de iniciar el pago.
               </p>
             </div>
             <div className="flex gap-3 border-l-2 border-[var(--canela-ochre)] pl-4">
@@ -253,8 +279,8 @@ export function CheckoutConfirmation({
             <label className="text-sm font-bold text-[var(--canela-brown)]">Email para el pedido
               <input className={checkoutFieldClass} type="email" name="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} />
             </label>
-            <label className="text-sm font-bold text-[var(--canela-brown)] sm:col-span-2">Teléfono de contacto <span className="font-normal text-[#8a7048]">(opcional)</span>
-              <input className={checkoutFieldClass} type="tel" name="phone" autoComplete="tel" maxLength={24} value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="Código de área y número" />
+            <label className="text-sm font-bold text-[var(--canela-brown)] sm:col-span-2">Teléfono de contacto {!isRealQuote && <span className="font-normal text-[#8a7048]">(opcional)</span>}
+              <input className={checkoutFieldClass} type="tel" name="phone" autoComplete="tel" required={isRealQuote} maxLength={24} value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="Código de área y número" />
             </label>
           </div>
           <label className="mt-6 flex items-center gap-2 text-sm font-bold text-[var(--canela-brown)]">
@@ -263,6 +289,10 @@ export function CheckoutConfirmation({
           </label>
           {differentRecipient && <label className="mt-4 block text-sm font-bold text-[var(--canela-brown)]">Nombre de quien recibe
             <input className={checkoutFieldClass} type="text" name="recipientName" required minLength={2} maxLength={100} value={recipientName} onChange={(event) => setRecipientName(event.target.value)} />
+          </label>}
+          {isRealQuote && <label className="mt-5 block text-sm font-bold text-[var(--canela-brown)]">Documento de quien recibe
+            <input className={checkoutFieldClass} type="text" name="recipientDocument" required minLength={5} maxLength={20} pattern="[A-Za-z0-9]{5,20}" value={recipientDocument} onChange={(event) => setRecipientDocument(event.target.value)} placeholder="DNI, CUIT o pasaporte, sin puntos ni guiones" />
+            <span className="mt-2 block text-xs font-normal text-[#6E4E38]">El transporte lo necesita para gestionar la entrega.</span>
           </label>}
           <div className="mt-6 grid gap-5 sm:grid-cols-[minmax(0,1fr)_125px]">
             <label className="text-sm font-bold text-[var(--canela-brown)]">Calle
@@ -294,7 +324,25 @@ export function CheckoutConfirmation({
           <label className="mt-5 block max-w-48 text-sm font-bold text-[var(--canela-brown)]">Código postal
             <input className={checkoutFieldClass} type="text" name="postalCode" autoComplete="postal-code" inputMode="numeric" required minLength={4} maxLength={4} pattern="[1-9][0-9]{3}" value={postalCode} onChange={(event) => setPostalCode(event.target.value)} placeholder="Ej. 1425" />
           </label>
-          <p className="mt-3 text-xs leading-relaxed text-[#8a7048]">El costo de envío mostrado pertenece al entorno de prueba. La cotización real por código postal se habilitará con Correo Argentino.</p>
+          {!isRealQuote && <p className="mt-3 text-xs leading-relaxed text-[#8a7048]">Compra de prueba con costo de envío de prueba.</p>}
+          {isRealQuote && <section aria-labelledby="shipping-heading" className="mt-8 border-t border-[rgba(184,132,42,.26)] pt-6">
+            <h2 id="shipping-heading" className="text-xl font-extrabold text-[var(--canela-brown)]">Elegí tu envío</h2>
+            <p className="mt-2 text-sm text-[#6E4E38]">Completá localidad, provincia y código postal para conocer las opciones.</p>
+            <button type="button" onClick={calculateShipping} disabled={!canStartCheckout || isQuoting || isLoading} className="mt-4 inline-flex items-center gap-2 border border-[var(--canela-ochre)] px-5 py-3 font-bold text-[var(--canela-brown)] disabled:opacity-50">
+              {isQuoting && <LoaderCircle className="canela-spin size-4" />}
+              {isQuoting ? "Consultando envíos…" : currentQuote ? "Volver a calcular envío" : "Calcular envío"}
+            </button>
+            {quoteError && <p role="alert" className="mt-4 text-sm text-[#7e4b3a]">{quoteError}</p>}
+            <div aria-live="polite" className="mt-4 space-y-3">
+              {currentQuote?.options.map(option => <label key={option.quoteToken} className="flex cursor-pointer items-start gap-3 border border-[rgba(184,132,42,.3)] bg-white/60 p-4">
+                <input type="radio" name="shippingOption" value={option.quoteToken} checked={selectedToken === option.quoteToken} onChange={() => setSelectedToken(option.quoteToken)} disabled={isLoading || Date.parse(option.expiresAt) <= clock} className="mt-1" />
+                <span className="flex-1"><strong>{option.carrierName}</strong><span className="mt-1 block text-sm text-[#6E4E38]">{option.serviceName} · {option.parcelCount} {option.parcelCount === 1 ? "bulto" : "bultos"}</span></span>
+                <strong>{formatPrice(option.shippingCents / 100)}</strong>
+              </label>)}
+              {quoted && !currentQuote && <p className="text-sm text-[#6E4E38]">El pedido o el destino cambió. Volvé a calcular el envío.</p>}
+              {quoteExpired && <p className="text-sm text-[#7e4b3a]">La cotización venció. Volvé a calcular el envío.</p>}
+            </div>
+          </section>}
         </fieldset>
         </div>
 
@@ -320,15 +368,17 @@ export function CheckoutConfirmation({
                 <dt className="flex items-center gap-2">
                   <Truck className="size-4" /> Envío
                 </dt>
-                <dd>{formatPrice(shipping)}</dd>
+                <dd>{shipping === null ? "A calcular" : formatPrice(shipping)}</dd>
               </div>
               <div className="flex items-end justify-between gap-4 border-t border-[rgba(184,132,42,.22)] pt-4">
                 <dt className="font-bold text-[var(--canela-brown)]">Total</dt>
                 <dd className="text-2xl font-extrabold text-[var(--canela-ochre-dark)]">
-                  {formatPrice(subtotal + shipping)}
+                  {shipping === null ? "Pendiente de envío" : formatPrice(subtotal + shipping)}
                 </dd>
               </div>
             </dl>
+
+            {!isRealQuote && quoteExpired && <button type="button" onClick={() => router.refresh()} className="mt-5 underline">Actualizar envío de prueba</button>}
 
             {!canStartCheckout && (
               <p className="mt-5 border-l-2 border-[#b06a52] pl-3 text-sm leading-relaxed text-[#7e4b3a]">
@@ -347,13 +397,13 @@ export function CheckoutConfirmation({
 
             <button
               type="submit"
-              disabled={!canStartCheckout || isLoading}
+              disabled={!canStartCheckout || isLoading || !quoteReady}
               className="mt-6 flex w-full items-center justify-center gap-2.5 bg-[var(--canela-ochre)] px-4 py-3.5 font-extrabold text-[var(--canela-cream-card)] shadow-[0_10px_22px_rgba(184,132,42,.24)] transition-colors hover:bg-[var(--canela-ochre-dark)] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isLoading ? (
                 <>
                   <LoaderCircle className="canela-spin size-5" />
-                  Reservando piezas…
+                  Confirmando pedido…
                 </>
               ) : (
                 <>
@@ -364,11 +414,8 @@ export function CheckoutConfirmation({
             </button>
 
             <p className="mt-4 text-center text-[11px] leading-relaxed text-[#8a7048]">
-              Entorno de prueba · cotización válida hasta{" "}
-              {new Intl.DateTimeFormat("es-AR", {
-                hour: "2-digit",
-                minute: "2-digit",
-              }).format(new Date(quoteExpiresAt))}
+              Pago en entorno de prueba{quoteExpiresAt && <> · cotización válida hasta {new Intl.DateTimeFormat("es-AR", { hour: "2-digit", minute: "2-digit" }).format(new Date(quoteExpiresAt))}</>}
+              {isRealQuote && <span className="mt-1 block">Confirmamos nuevamente el costo de envío antes de iniciar el pago.</span>}
             </p>
           </div>
         </aside>

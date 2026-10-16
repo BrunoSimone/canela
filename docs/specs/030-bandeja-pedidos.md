@@ -160,14 +160,14 @@ No permite cambiar estados ni crear envíos. Las mutaciones quedan en el detalle
 
 1. Validar con el dueño los nombres de estados operativos.
 2. Confirmar la cuenta y remitente verificado para el proveedor transaccional.
-3. Definir el contrato de creación de envío, rótulo y despacho al completar Correo Argentino. La preparación interna ya tiene contrato y auditoría.
+3. Validar la operación comercial y estados posteriores al despacho. El alta y rótulo tienen contrato en [spec 070](070-zipnova-alta-etiqueta.md) para Zipnova sandbox.
 
 ## Implementación actual
 
 - Se adoptó la composición maestro-detalle. La ficha se abre desde la vista previa.
 - `GET /api/admin/orders` y `GET /api/admin/orders/:id` sirven el mismo DTO para PostgreSQL y fixtures. `?demo=1` solo funciona con `ADMIN_DEMO_MODE=1` fuera de producción.
-- Los pedidos nuevos guardan comprador, destinatario, teléfono opcional, domicilio y código postal en `order_delivery`; PostgreSQL llena esos campos en la misma API. Los pedidos anteriores pueden conservar `null`. El TN sigue pendiente de Correo. La demostración devuelve valores ficticios, identificados como tales.
+- Los pedidos nuevos guardan comprador, destinatario, domicilio y código postal en `order_delivery`; PostgreSQL llena esos campos en la misma API. Checkout Zipnova exige teléfono y documento (este último no se expone en el DTO del panel). Los pedidos anteriores pueden conservar `null`. El TN llega de Zipnova si está disponible. La demostración devuelve valores ficticios, identificados como tales.
 - La base todavía no tiene número público de pedido ni miniatura congelada. La lista real usa un ID abreviado y un icono de producto. La búsqueda real funciona por prefijo de ID, email, nombre del comprador/destinatario o producto; TN solo se prueba con fixtures hasta incorporarlo.
 - El acceso usa allowlist, enlace de un solo uso que dura 15 minutos y sesión de 8 horas. El envío del enlace está conectado a un adaptador Resend; queda inactivo sin API key y dominio verificado. Las sesiones y enlaces se guardan por hash en PostgreSQL.
 - La ficha permite guardar la preparación de pedidos pagados: uno o más bultos con peso y dimensiones exteriores reales y una nota interna. `order_preparation` conserva la última versión y `order_preparation_event` audita cada guardado con el email de la sesión. `POST /api/admin/orders/:id/preparation` exige sesión, origen local y versión esperada; rechaza estados de pago no aptos. La demostración permanece de solo lectura.
-- Una preparación guardada presenta el estado operativo “Listo para crear envío”, derivado de los datos internos sin modificar `orders.status`. Crear el envío, generar TN/rótulo y registrar despacho siguen pendientes de Correo.
+- Una preparación guardada presenta el estado operativo “Listo para crear envío”, derivado de los datos internos sin modificar `orders.status`. La confirmación explícita inicia el alta Zipnova sandbox y pasa el pedido a `fulfillment_pending`; bloquea la preparación y obtiene el PDF. La ficha distingue creación en proceso, revisión y rótulo listo. Registrar despacho y enviar su aviso único al comprador siguen pendientes; no se deducen de la etiqueta. Ver [ZIP-02](../evidence/ZIP-02.md).

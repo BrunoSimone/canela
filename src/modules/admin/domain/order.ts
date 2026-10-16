@@ -10,6 +10,7 @@ export type OperationalStatus =
   | "cancelled";
 
 export type AdminOrder = {
+  environment?: "test" | "production";
   id: string;
   reference: string;
   createdAt: string;
@@ -22,7 +23,13 @@ export type AdminOrder = {
   destination: { locality: string; province: string; postalCode?: string } | null;
   shippingAddress: string | null;
   deliveryMethod: string | null;
+  packingPlan?: import("../../shipping/domain/parcel-plan").PlannedParcel[];
   preparation: import("./preparation").OrderPreparation | null;
+  shipment?: import("../../shipping/domain/fulfillment").ShipmentSummary | null;
+  shipmentEnabled?: boolean;
+  dispatch?: import("../../shipping/domain/fulfillment").DispatchSummary | null;
+  notifications?: import("../../notifications/domain/notification").NoticeSummary[];
+  notificationsEnabled?: boolean;
   trackingNumber: string | null;
   currency: string;
   subtotalCents: number;
@@ -54,7 +61,7 @@ const statusDescriptions: Record<string, Pick<AdminOrder, "status" | "statusLabe
   payment_pending: { status: "payment_verification", statusLabel: "Pago en verificación", nextAction: "Esperar la confirmación del pago." },
   paid: { status: "prepare", statusLabel: "Preparar pedido", nextAction: "Preparar las piezas y confirmar el embalaje." },
   fulfillment_pending: { status: "prepare", statusLabel: "Preparar pedido", nextAction: "Registrar los bultos reales antes de crear el envío." },
-  shipped: { status: "shipped", statusLabel: "Despachado", nextAction: "Consultar el seguimiento en Correo Argentino." },
+  shipped: { status: "shipped", statusLabel: "Despachado", nextAction: "Consultar el seguimiento del transporte." },
   delivered: { status: "shipped", statusLabel: "Entregado", nextAction: "No hay acciones pendientes." },
   review_required: { status: "attention", statusLabel: "Requiere atención", nextAction: "Revisar la verificación del pago antes de preparar el pedido." },
   refund_pending: { status: "attention", statusLabel: "Requiere atención", nextAction: "Revisar el reintegro pendiente." },

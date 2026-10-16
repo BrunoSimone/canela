@@ -1,5 +1,23 @@
 # Producción de Canela
 
+## Estado de apertura — 16 de octubre de 2026
+
+Studio publicado para cargar unidades protegidas y cajas; panel con inventario,
+preparación, aprobación del costo real, etiqueta y despacho. Migraciones `0001`
+a `0012` aplicadas sobre la rama productiva de Neon después de crear un respaldo.
+El correo del dueño está configurado junto con el acceso existente del desarrollador.
+El worker dispone de ejecución periódica en GitHub Actions y un secreto de servidor.
+
+La tienda continúa en mantenimiento, con checkout y operaciones comerciales
+cerrados. Los registros de stock deben cargarse desde `/admin/inventario` con
+cantidades reales; nunca se copia el inventario sintético local. Los templates
+transaccionales están implementados; su envío productivo queda sujeto a la
+habilitación comercial. Consultar [OPEN-01](../evidence/OPEN-01.md) para evidencia
+de publicación y pendientes, [la guía del cliente](carga-cliente.md) para la carga y
+[el runbook de apertura](despacho-avisos-apertura.md) para las flags.
+
+Lo que sigue documenta la recuperación histórica del 10/10 y no reemplaza ese estado.
+
 ## Entornos
 
 - Sitio: `https://www.canela-store.com`.

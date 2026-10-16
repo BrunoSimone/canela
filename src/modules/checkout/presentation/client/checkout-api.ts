@@ -1,4 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import type { ShippingDestination } from "../../../shipping/domain/courier-quote";
 import type { DeliverySnapshot } from "../../domain/delivery";
 
 export type StartCheckoutInput = {
@@ -26,11 +27,18 @@ export type PublicOrderStatusResponse = {
   expiresAt: string;
 };
 
+export type ShippingOptionResponse = { quoteToken: string; shippingCents: number; carrierName: string; serviceName: string; parcelCount: number; expiresAt: string };
+export type ShippingQuotesResponse = { subtotalCents: number; items: Array<{ productId: string; name: string; quantity: number; unitPriceCents: number }>; options: ShippingOptionResponse[] };
+export type ShippingQuoteRequest = { items: Array<{ productId: string; quantity: number }>; destination: ShippingDestination };
+
 export const checkoutApi = createApi({
   reducerPath: "checkoutApi",
   baseQuery: fetchBaseQuery({ baseUrl: "/api" }),
   tagTypes: ["PublicOrder"],
   endpoints: (builder) => ({
+    quoteShipping: builder.mutation<ShippingQuotesResponse, ShippingQuoteRequest>({
+      query: input => ({ url: "/shipping/quotes", method: "POST", body: input }),
+    }),
     startCheckout: builder.mutation<
       StartedCheckoutResponse | UncertainCheckoutResponse,
       StartCheckoutInput
@@ -70,6 +78,7 @@ export function buildStartCheckoutRequest(input: StartCheckoutInput) {
       delivery: {
         type: input.delivery.type,
         recipientName: input.delivery.recipientName,
+        ...(input.delivery.recipientDocument ? { recipientDocument: input.delivery.recipientDocument } : {}),
         address: {
           streetName: input.delivery.streetName,
           streetNumber: input.delivery.streetNumber,
@@ -94,6 +103,7 @@ export function buildReconcilePublicOrderRequest(publicToken: string) {
 
 export const {
   useStartCheckoutMutation,
+  useQuoteShippingMutation,
   useGetPublicOrderStatusQuery,
   useReconcilePublicOrderMutation,
 } = checkoutApi;

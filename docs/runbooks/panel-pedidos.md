@@ -6,7 +6,7 @@ En desarrollo local, definir `ADMIN_DEMO_MODE=1` y ejecutar `pnpm dev`. Abrir `/
 
 ## Activar pedidos reales
 
-1. Aplicar las migraciones con `pnpm db:migrate` usando la base de datos del entorno correspondiente. `0005` agrega acceso y auditoría del panel, `0006` guarda el domicilio del pedido y `0007` guarda la preparación de bultos con historial.
+1. Aplicar las migraciones con `pnpm db:migrate` usando la base de datos del entorno correspondiente. `0005` agrega acceso y auditoría del panel, `0006` guarda el domicilio del pedido, `0007` guarda la preparación de bultos con historial, `0008` la cotización `0009` el envío/etiqueta y `0010` el entorno, despacho y cola de avisos. Probar primero en una base independiente; estas tres últimas aún no se aplicaron en producción.
 2. Configurar `DATABASE_URL` y `ADMIN_ALLOWED_EMAILS` como lista de emails separados por comas.
 3. Crear una cuenta gratuita en [Resend](https://resend.com/), [verificar un dominio propio](https://resend.com/docs/add-a-domain) con los registros DNS que indique el panel y dejar desactivado el seguimiento de apertura y clics para los enlaces de acceso. Resend recomienda un subdominio para correo transaccional, por ejemplo `acceso.tudominio.com`. Crear una [API key](https://resend.com/docs/create-an-api-key) con permiso **Sending access**, restringida a ese dominio. Configurar `RESEND_API_KEY` y `ADMIN_EMAIL_FROM` con una dirección del dominio verificado, por ejemplo `Canela <ingreso@acceso.tudominio.com>`; `NEXT_PUBLIC_SITE_URL` debe apuntar al origen HTTPS público en producción. La clave se configura solamente en el servidor.
 4. Abrir `/admin/ingresar`, solicitar el enlace con un email autorizado, abrirlo y pulsar «Entrar al panel». El enlace vence en 15 minutos, se consume una vez y la sesión dura 8 horas.
@@ -21,6 +21,14 @@ La plantilla vive en `src/emails/admin-login.tsx` y usa React Email. El mailer d
 
 ## Datos y siguientes campos
 
-`orders` y `order_item` aportan fecha, estado, email, productos e importes. Los pedidos nuevos guardan el snapshot de contacto y domicilio en `order_delivery`; los anteriores pueden no tenerlo. El TN llega solo cuando exista una integración real con Correo. Nunca completar un pedido cobrado con valores de ejemplo.
+`orders` y `order_item` aportan fecha, estado, email, productos e importes. Los pedidos nuevos guardan el snapshot de contacto y domicilio en `order_delivery`; los anteriores pueden no tenerlo. El número y enlace de seguimiento llegan de Zipnova cuando estén disponibles. Nunca completar un pedido cobrado con valores de ejemplo.
 
-La ficha de un pedido pagado permite registrar el peso y las medidas exteriores de cada bulto, más una nota. Guardar crea una nueva versión auditable y exige la versión anterior para evitar sobrescrituras entre sesiones. La ficha de demostración no escribe datos. Crear el envío y registrar despacho esperan el contrato y credenciales de Correo. La spec funcional vive en `docs/specs/030-bandeja-pedidos.md`.
+La ficha de un pedido pagado permite registrar el peso y las medidas exteriores de cada bulto, más una nota. Guardar crea una nueva versión auditable y exige la versión anterior para evitar sobrescrituras entre sesiones. La ficha de demostración no escribe datos. El alta y etiqueta de Zipnova sandbox se habilitan de forma explícita según el [runbook de Zipnova](zipnova.md); el dueño confirma el embalaje antes del alta y desde entonces no puede editarlo. La etiqueta no indica despacho. Specs: [panel](../specs/030-bandeja-pedidos.md) y [alta/etiqueta](../specs/070-zipnova-alta-etiqueta.md).
+
+## Despacho y avisos
+
+La ficha permite confirmar la entrega al transporte cuando hay pago y etiqueta.
+En sandbox la acción se llama «Simular despacho». Se guardan operador y fecha;
+los avisos de compra y despacho tienen estado visible y reintento controlado.
+El número de seguimiento también puede buscarse desde la bandeja. Ver el
+[runbook de operación y recuperación](despacho-avisos-apertura.md).

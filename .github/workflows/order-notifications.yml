@@ -1,0 +1,23 @@
+name: Procesar avisos de pedidos
+on:
+  schedule:
+    - cron: '3-58/5 * * * *'
+  workflow_dispatch:
+permissions: {}
+concurrency:
+  group: canela-order-notifications
+  cancel-in-progress: false
+jobs:
+  process:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Procesar cola y comprobar avisos que necesitan atención
+        env:
+          WORKER_SECRET: ${{ secrets.NOTIFICATION_WORKER_SECRET }}
+        run: |
+          test -n "$WORKER_SECRET" || { echo 'Falta configurar el secreto del worker.'; exit 1; }
+          curl --silent --show-error --fail-with-body --max-time 100 \
+            --request POST \
+            --header "Authorization: Bearer $WORKER_SECRET" \
+            https://www.canela-store.com/api/internal/notifications

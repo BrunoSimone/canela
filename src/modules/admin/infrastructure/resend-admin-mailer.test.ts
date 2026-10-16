@@ -6,7 +6,7 @@ afterEach(() => vi.unstubAllGlobals());
 
 describe("admin login email", () => {
   it("uses the configured origin in the one-time login link", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(new Response("{}", { status: 200 }));
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({id:"mail-1"}), { status: 200 }));
     vi.stubGlobal("fetch", fetchMock);
 
     await sendAdminLoginEmail("owner@example.com", "a".repeat(43), {
@@ -20,6 +20,8 @@ describe("admin login email", () => {
     const body = JSON.parse(String(request.body));
     expect(url).toBe("https://api.resend.com/emails");
     expect((request.headers as Record<string, string>).Authorization).toBe("Bearer resend-test-key");
+    expect((request.headers as Record<string, string>)["Idempotency-Key"]).toMatch(/^canela-login\/[a-f0-9]{64}$/);
+    expect((request.headers as Record<string, string>)["Idempotency-Key"]).not.toContain("a".repeat(43));
     expect(body.from).toBe("Canela <pedidos@canela.test>");
     expect(body.to).toEqual(["owner@example.com"]);
     expect(body.subject).toBe("Ingresar al panel de pedidos de Canela");
@@ -35,6 +37,6 @@ describe("admin login email", () => {
       apiKey: "resend-test-key",
       from: "pedidos@canela.test",
       siteUrl: "https://canela.test",
-    })).rejects.toThrow("ADMIN_MAIL_SEND_FAILED_422");
+    })).rejects.toThrow("MAIL_REJECTED");
   });
 });

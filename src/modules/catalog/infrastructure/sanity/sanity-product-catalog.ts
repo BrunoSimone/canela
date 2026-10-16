@@ -57,7 +57,8 @@ export class SanityProductCatalog implements ProductCatalog {
       id: product.id,
       name: product.name,
       priceArs: product.priceArs,
-      sellable: product.tone !== "encargo",
+      sellable: product.tone === "unica" || product.tone === "stock",
+      ...(product.tone === "unica" ? { maxQuantity: 1 } : {}),
     }));
   }
 }

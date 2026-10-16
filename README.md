@@ -7,8 +7,12 @@ for orders, inventory and temporary stock reservations.
 
 Direct-sale products use the online checkout. Made-to-order pieces may remain in
 the cart but cannot enter payment until removed; their separate flow is pending.
-Production checkout stays disabled until the Correo Argentino quote is part of
-the authoritative total.
+Production checkout stays disabled until shipping is validated from quotation
+through fulfillment. Zipnova quotation and checkout selection are implemented
+locally. Shipment creation, recovery and private PDF labels are also implemented
+and validated against Zipnova sandbox after the owner confirms the packaged order.
+Explicit dispatch, durable order emails and guarded production configuration are now
+implemented locally. This iteration has not been deployed to production.
 
 > **Flow:** browse → inspect → add to cart → review products and shipping → pay
 > in Mercado Pago → confirm the result from Canela's server-side payment state.
@@ -135,6 +139,8 @@ pnpm test           # unit tests; DB integration tests skip without TEST_DATABAS
 pnpm test:db        # PostgreSQL concurrency/integrity tests
 pnpm test:mp        # Mercado Pago contract tests; creates expiring test orders
 pnpm db:migrate     # apply migrations to DATABASE_URL_UNPOOLED (or DATABASE_URL)
+pnpm notifications:process # bounded mail queue worker (loads .env.local)
+pnpm commerce:preflight    # read-only configuration/migration checks
 ```
 
 ### Environment
@@ -165,15 +171,34 @@ an authorized email and a verified transactional sender. See
 Mercado Pago test traffic uses `MP_TEST_ACCESS_TOKEN`. Signed Order Webhooks
 add `MP_TEST_WEBHOOK_SECRET`, `MP_TEST_SELLER_USER_ID` and
 `MP_TEST_APPLICATION_ID`; all four are server-only and must never use the
-`NEXT_PUBLIC_` prefix. The real Webhook contract still requires an HTTPS preview
-configured in Mercado Pago before production.
+`NEXT_PUBLIC_` prefix. The production environment needs its own matching HTTPS webhook configuration.
 
-`CHECKOUT_MODE=test` enables only the controlled development flow. Production
-mode does not exist until the Correo Argentino integration supplies a real quote.
+`CHECKOUT_MODE=test` enables development payments only. `SHIPPING_PROVIDER` selects
+the controlled test tariff or Zipnova quotations; Zipnova requires explicit account
+mode, dispatch type and real packaged-product profiles. Production mode is implemented behind explicit gates and remains inactive. See the [Zipnova runbook](docs/runbooks/zipnova.md) for configuration,
+the required database migrations and remaining launch conditions, and the
+[quotation evidence](docs/evidence/ZIP-01.md) and
+[shipment/label evidence](docs/evidence/ZIP-02.md) for verified behavior.
+`ZIPNOVA_FULFILLMENT_MODE=sandbox` explicitly enables shipment creation only for
+the sandbox account with carrier dropoff. It defaults to disabled.
+
+Order emails use React Email and Resend with a durable PostgreSQL outbox. Test
+mode redirects both messages to one authorized test address. Dispatch requires
+explicit confirmation after the package is handed to the carrier. See the
+[dispatch/mail/launch runbook](docs/runbooks/despacho-avisos-apertura.md),
+[spec 080](docs/specs/080-despacho-avisos-apertura.md) and
+[OPS evidence](docs/evidence/OPS-01.md). The GitHub Actions workflow calls the authenticated
+worker every five minutes (best effort), with a manual dispatch option and failure
+signals for overdue/review jobs. See [opening evidence](docs/evidence/OPEN-01.md).
 
 ### Content
 
-Products and hero slides are managed in the Sanity Studio (`pnpm studio`). Images are uploaded there by the shop owner and served through Sanity's image CDN via `next/image`.
+Products, protected-unit measurements, shipping boxes and hero slides are managed
+in [Sanity Studio](https://canela-artesanal.sanity.studio/) (`pnpm studio`).
+Physical stock is managed separately at `/admin/inventario`, with reservations,
+optimistic concurrency and an audit trail. Orders share one suitable box; packaging
+changes are quoted and approved by the operator before label creation.
+See the [client guide](docs/runbooks/carga-cliente.md) and [spec 090](docs/specs/090-apertura-caja-compartida.md). Images are uploaded there by the shop owner and served through Sanity's image CDN via `next/image`.
 
 ---
 

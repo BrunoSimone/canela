@@ -1,120 +1,80 @@
-import { checkoutExpiresAt } from "../../checkout/domain/checkout-expiration";
-import {
-  InsufficientCourierRateValidityError,
-  InvalidCourierQuoteInputError,
-  InvalidCourierRateError,
-  UnavailableCourierRateError,
-  type CourierQuoteIssuer,
-  type IssuedCourierQuote,
-  type ParcelRateGateway,
-} from "../domain/courier-quote";
-import type {
-  ParcelConstraints,
-  ParcelGroupingRule,
-  ShippingLine,
-} from "../domain/parcel-plan";
-import {
-  planShippingParcels,
-  type ShippingProfileCatalog,
-} from "./plan-shipping-parcels";
+import { createHash } from "node:crypto";
+import type { ProductCatalog } from "../../catalog/domain/product-catalog";
+import { resolveCheckoutItems } from "../../checkout/application/resolve-checkout-items";
+import type { CheckoutItem } from "../../checkout/domain/checkout";
+import { COURIER_QUOTE_TTL_MS, CourierQuoteMismatchError, CourierRateChangedError, InvalidCourierRateError, UnavailableCourierRateError, normalizeShippingDestination, rateKey, sameDestination, type CourierQuoteIssuer, type ShipmentRateGateway, type ShippingDestination } from "../domain/courier-quote";
+import { ParcelLimitExceededError, type ParcelConstraints, type ParcelGroupingRule, type ShippingLine } from "../domain/parcel-plan";
+import { ExpiredShippingQuoteError, InvalidShippingQuoteError, type ShippingQuote, type ShippingQuoteVerifier } from "../domain/shipping-quote";
+import { planShippingParcels, UnshippableProductError, type ShippingProfileCatalog } from "./plan-shipping-parcels";
 
-type QuoteShippingDependencies = {
+export type QuoteShippingDependencies = {
   catalog: ShippingProfileCatalog;
+  products: ProductCatalog;
   groupingRules: ParcelGroupingRule[];
+  boxes?: { list(): Promise<import("../domain/shared-box-plan").ShippingBox[]> };
   constraints: ParcelConstraints;
-  rates: ParcelRateGateway;
+  rates: ShipmentRateGateway;
   issuer: CourierQuoteIssuer;
-  environment: "qa" | "production";
-  originPostalCode: string;
-  serviceCode: string;
+  accountMode: "operational" | "sandbox";
+  contextFingerprint: string;
+  maxParcels?: number;
   now?: () => Date;
 };
+export type QuoteShippingInput = { destination: ShippingDestination; items: ShippingLine[] };
 
-export async function quoteShipping(
-  dependencies: QuoteShippingDependencies,
-  input: { destinationPostalCode: string; items: ShippingLine[] },
-): Promise<IssuedCourierQuote> {
-  const originPostalCode = postalCode(dependencies.originPostalCode);
-  const destinationPostalCode = postalCode(input.destinationPostalCode);
-  const serviceCode = dependencies.serviceCode;
-  if (!serviceCode?.trim()) {
-    throw new InvalidCourierQuoteInputError("A confirmed courier service is required");
-  }
-  const plan = await planShippingParcels(dependencies, input.items);
-  let amountCents = 0;
-  let expiresAt = Number.POSITIVE_INFINITY;
-  let serviceName: string | null = null;
-
-  for (const parcel of plan.parcels) {
-    const result = await dependencies.rates.quoteParcel({
-      deliveryType: "home",
-      originPostalCode,
-      destinationPostalCode,
-      parcel,
-    });
-    if (
-      !result || !(result.validTo instanceof Date) ||
-      !Number.isFinite(result.validTo.getTime()) ||
-      !Array.isArray(result.rates)
-    ) {
-      throw new InvalidCourierRateError();
-    }
-    const matching = result.rates.filter((rate) =>
-      rate?.deliveryType === "home" && rate.serviceCode === serviceCode);
-    if (matching.length === 0) {
-      throw new UnavailableCourierRateError();
-    }
-    if (matching.length !== 1) {
-      throw new InvalidCourierRateError();
-    }
-    const rate = matching[0];
-    if (
-      typeof rate.serviceName !== "string" ||
-      !rate.serviceName.trim() ||
-      !Number.isSafeInteger(rate.amountCents) ||
-      rate.amountCents < 0 ||
-      (serviceName !== null && serviceName !== rate.serviceName)
-    ) {
-      throw new InvalidCourierRateError();
-    }
-    serviceName = rate.serviceName;
-    amountCents += rate.amountCents;
-    if (!Number.isSafeInteger(amountCents)) {
-      throw new InvalidCourierRateError();
-    }
-    expiresAt = Math.min(expiresAt, result.validTo.getTime());
-  }
-
-  const now = (dependencies.now ?? (() => new Date()))();
-  if (!Number.isFinite(now.getTime())) {
-    throw new InvalidCourierQuoteInputError("Current time is invalid");
-  }
-  if (expiresAt < checkoutExpiresAt(now).getTime()) {
-    throw new InsufficientCourierRateValidityError();
-  }
-  if (serviceName === null) {
-    throw new InvalidCourierRateError();
-  }
-
-  return dependencies.issuer.issue({
-    provider: "correo_argentino",
-    environment: dependencies.environment,
-    deliveryType: "home",
-    originPostalCode,
-    destinationPostalCode,
-    items: plan.items,
-    planFingerprint: plan.fingerprint,
-    parcelCount: plan.parcels.length,
-    serviceCode,
-    serviceName,
-    amountCents,
-    expiresAt: new Date(expiresAt),
-  });
+export async function quoteShipping(deps: QuoteShippingDependencies, input: QuoteShippingInput) {
+  const destination = normalizeShippingDestination(input.destination);
+  const items = await resolveCheckoutItems(deps.products, input.items);
+  const { plan, merchandiseCents, cartFingerprint } = await prepare(deps, items);
+  const rates = await deps.rates.quoteShipment({ destination, declaredValueCents: merchandiseCents, parcels: plan.parcels });
+  if (!rates.length) throw new UnavailableCourierRateError();
+  const issuedAt = (deps.now ?? (() => new Date()))();
+  const expiresAt = new Date(issuedAt.getTime() + COURIER_QUOTE_TTL_MS).toISOString();
+  return {
+    subtotalCents: merchandiseCents,
+    items,
+    options: rates.map(rate => deps.issuer.issue({ ...rate, version: 3, provider: "zipnova", accountMode: deps.accountMode,
+      contextFingerprint: deps.contextFingerprint, destination, items: plan.items, cartFingerprint,
+      planFingerprint: plan.fingerprint, parcels: plan.parcels, merchandiseCents,
+      issuedAt: issuedAt.toISOString(), expiresAt })),
+  };
 }
 
-function postalCode(value: string): string {
-  if (typeof value !== "string" || !value.trim() || value.trim().length > 16) {
-    throw new InvalidCourierQuoteInputError("Postal code is required");
+export class ZipnovaCheckoutQuotes implements ShippingQuoteVerifier {
+  constructor(private readonly deps: QuoteShippingDependencies) {}
+  verify(token: string): ShippingQuote {
+    const snapshot = this.deps.issuer.authenticate(token, this.now());
+    return { source: "zipnova", amountCents: snapshot.amountCents, expiresAt: new Date(snapshot.expiresAt), snapshot };
   }
-  return value.trim();
+  async verifyForCheckout(quote: ShippingQuote, context: { items: CheckoutItem[]; destination: ShippingDestination }): Promise<ShippingQuote> {
+    if (quote.source !== "zipnova") throw new InvalidShippingQuoteError();
+    const snapshot = quote.snapshot;
+    const destination = normalizeShippingDestination(context.destination);
+    if (snapshot.contextFingerprint !== this.deps.contextFingerprint || snapshot.accountMode !== this.deps.accountMode ||
+        !sameDestination(snapshot.destination, destination)) throw new CourierQuoteMismatchError();
+    const { plan, merchandiseCents, cartFingerprint } = await prepare(this.deps, context.items);
+    if (snapshot.planFingerprint !== plan.fingerprint || snapshot.cartFingerprint !== cartFingerprint ||
+        snapshot.merchandiseCents !== merchandiseCents) throw new CourierQuoteMismatchError();
+    const rates = await this.deps.rates.quoteShipment({ destination, declaredValueCents: merchandiseCents, parcels: plan.parcels });
+    const rate = rates.find(r => rateKey(r) === rateKey(snapshot));
+    if (!rate) throw new UnavailableCourierRateError();
+    if (rate.amountCents !== snapshot.amountCents || rate.sellerAmountCents !== snapshot.sellerAmountCents) throw new CourierRateChangedError();
+    // Recheck after network latency. Preserve the original snapshot for idempotent retries.
+    if (new Date(snapshot.expiresAt).getTime() <= this.now().getTime()) {
+      throw new ExpiredShippingQuoteError();
+    }
+    return quote;
+  }
+  private now(): Date { return (this.deps.now ?? (() => new Date()))(); }
+}
+
+async function prepare(deps: QuoteShippingDependencies, items: CheckoutItem[]) {
+  const plan = await planShippingParcels(deps, items.map(({ productId, quantity }) => ({ productId, quantity })));
+  if (plan.parcels.length > (deps.maxParcels ?? 20)) throw new ParcelLimitExceededError();
+  if (plan.parcels.some(p => p.weightGrams < 10)) throw new ParcelLimitExceededError();
+  if (plan.parcels.some(p => !p.classificationId)) throw new UnshippableProductError(plan.items.map(i => i.productId));
+  const merchandiseCents = items.reduce((sum, i) => sum + i.unitPriceCents * i.quantity, 0);
+  if (!Number.isSafeInteger(merchandiseCents) || merchandiseCents < 0) throw new InvalidCourierRateError();
+  const cartFingerprint = createHash("sha256").update(JSON.stringify([...items].sort((a,b) => a.productId.localeCompare(b.productId)))).digest("hex");
+  return { plan, merchandiseCents, cartFingerprint };
 }

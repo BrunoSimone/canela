@@ -5,6 +5,7 @@ import type {
 } from "../domain/payment-order";
 
 export type ExpectedPaymentProvider = {
+  environment?: "test" | "production";
   sellerUserId: string;
   applicationId: string;
 };
@@ -15,6 +16,7 @@ export function verifiedPaymentOrderState(
   expectedProvider: ExpectedPaymentProvider,
 ): PaymentOrderState {
   const matches =
+    (target.environment ?? "test") === (expectedProvider.environment ?? "test") &&
     providerOrder.providerOrderId === target.providerOrderId &&
     providerOrder.externalReference === target.orderId &&
     providerOrder.totalCents === target.totalCents &&

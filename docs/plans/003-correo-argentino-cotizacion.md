@@ -2,6 +2,10 @@
 
 ## Estado
 
+Actualización 2026-10-13: la integración de tarifas fue sustituida por
+[Zipnova, plan 004](004-zipnova-cotizacion.md). Se conservan el planificador y
+las reglas de embalaje. Lo siguiente documenta el plan histórico de MiCorreo.
+
 Propuesto el 2026-09-25. Requiere aprobación de la spec 040 y completar la puerta
 de contrato de INT-00 antes de conectar el proveedor real.
 

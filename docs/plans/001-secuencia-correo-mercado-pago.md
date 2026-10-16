@@ -2,6 +2,13 @@
 
 ## Estado
 
+Actualización 2026-10-13: el camino activo de cotización es Zipnova, según
+[spec 060](../specs/060-zipnova-cotizacion.md) y
+[plan 004](004-zipnova-cotizacion.md). El tramo de INT-04 hasta alta y etiqueta
+sandbox está implementado según [spec 070](../specs/070-zipnova-alta-etiqueta.md)
+y [ZIP-02](../evidence/ZIP-02.md). Este documento conserva la secuencia y
+las alternativas evaluadas para Correo; no describe el adaptador actual.
+
 Secuencia aprobada el 2026-09-14. La política de fuentes de Correo fue aceptada
 en ADR-002. El bloque de Mercado Pago hasta MP-05 está implementado y validado;
 INT-00 está abierto a la espera del contrato y credenciales QA de Canela.
@@ -142,3 +149,10 @@ Carrito
 5. Continuar INT-04 desde el panel y el registro auditado de bultos reales ya
    implementados: comparar bulto cotizado contra real e importar el envío solo
    después de confirmar el contrato de Correo.
+
+## Actualización 2026-10-14
+
+La continuación implementada está en [plan 006](006-despacho-avisos-apertura.md):
+registro explícito de despacho, avisos transaccionales con Resend/React Email,
+aislamiento de entornos y preparación de apertura. La aceptación comercial y
+el despliegue productivo permanecen pendientes. [Evidencia OPS-01](../evidence/OPS-01.md).

@@ -2,9 +2,10 @@ import { randomUUID } from "node:crypto";
 
 import type { ProductCatalog } from "../../catalog/domain/product-catalog";
 import type { PaymentOrderGateway } from "../../payments/domain/payment-order";
-import type { ShippingQuoteVerifier } from "../../shipping/domain/shipping-quote";
+import { InvalidShippingQuoteError, type ShippingQuoteVerifier } from "../../shipping/domain/shipping-quote";
 import type { CheckoutRepository } from "../domain/checkout";
 import type { DeliverySnapshot } from "../domain/delivery";
+import { InvalidDeliveryError } from "../domain/delivery";
 import { createOrderToken, hashOrderToken } from "../infrastructure/order-token";
 import {
   resolveCheckoutItems,
@@ -25,6 +26,7 @@ export type BeginCheckoutInput = {
 };
 
 type BeginCheckoutDependencies = {
+  environment?: "test" | "production";
   repository: CheckoutRepository;
   payments: PaymentOrderGateway;
   catalog: ProductCatalog;
@@ -45,8 +47,16 @@ export async function beginCheckout(
   dependencies: BeginCheckoutDependencies,
   input: BeginCheckoutInput,
 ): Promise<StartedCheckout> {
-  const quote = dependencies.quotes.verify(input.shippingQuoteToken);
+  let quote = dependencies.quotes.verify(input.shippingQuoteToken);
+  const environment = dependencies.environment ?? "test";
+  if ((quote.source === "zipnova" && quote.snapshot.accountMode !== (environment === "production" ? "operational" : "sandbox")) ||
+      (environment === "production" && quote.source !== "zipnova")) throw new InvalidShippingQuoteError();
   const items = await resolveCheckoutItems(dependencies.catalog, input.items);
+  if (quote.source === "zipnova") {
+    if (!input.delivery.phone || !input.delivery.recipientDocument) throw new InvalidDeliveryError();
+    if (!dependencies.quotes.verifyForCheckout) throw new InvalidShippingQuoteError();
+    quote = await dependencies.quotes.verifyForCheckout(quote, { items, destination: input.delivery });
+  }
   const orderToken = createOrderToken(
     dependencies.signingSecret,
     input.idempotencyKey,
@@ -65,6 +75,7 @@ export async function beginCheckout(
       },
       {
         orderId,
+        environment,
         orderToken,
         publicTokenHash: hashOrderToken(orderToken),
         idempotencyKey: input.idempotencyKey,
@@ -72,6 +83,7 @@ export async function beginCheckout(
         delivery: input.delivery,
         returnUrl,
         shippingCents: quote.amountCents,
+        ...(quote.source === "zipnova" ? { shippingSnapshot: quote.snapshot } : {}),
         items,
       },
     );

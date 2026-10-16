@@ -1,100 +1,31 @@
 import { describe, expect, it } from "vitest";
-
-import { CourierQuoteMismatchError } from "../domain/courier-quote";
-import {
-  ExpiredShippingQuoteError,
-  InvalidShippingQuoteError,
-} from "../domain/shipping-quote";
-import { SignedCourierQuoteService } from "./signed-courier-quote";
+import { ExpiredShippingQuoteError, InvalidShippingQuoteError } from "../domain/shipping-quote";
+import { now, quoteFixture } from "../testing/fixtures";
 import { SignedShippingQuoteService } from "./signed-shipping-quote";
+import { SignedCourierQuoteService } from "./signed-courier-quote";
 
-const now = new Date("2026-09-27T12:00:00.000Z");
-const service = new SignedCourierQuoteService("secret".repeat(10));
-const snapshot = {
-  provider: "correo_argentino" as const,
-  environment: "qa" as const,
-  deliveryType: "home" as const,
-  originPostalCode: "7600",
-  destinationPostalCode: "1000",
-  items: [{ productId: "plate", quantity: 2 }],
-  planFingerprint: "a".repeat(64),
-  parcelCount: 2,
-  serviceCode: "approved-home",
-  serviceName: "Domicilio",
-  amountCents: 43_575,
-  expiresAt: new Date("2026-09-27T12:30:00.000Z"),
-};
-const expected = {
-  environment: "qa" as const,
-  deliveryType: "home" as const,
-  originPostalCode: "7600",
-  destinationPostalCode: "1000",
-  items: [{ productId: "plate", quantity: 2 }],
-  planFingerprint: "a".repeat(64),
-  serviceCode: "approved-home",
-};
-
-describe("SignedCourierQuoteService", () => {
-  it("authenticates the snapshot without storing credentials in the token", () => {
-    const issued = service.issue(snapshot);
-    const verified = service.verify(issued.token, expected, now);
-    const payload = JSON.parse(
-      Buffer.from(issued.token.split(".")[0], "base64url").toString("utf8"),
-    ) as Record<string, unknown>;
-
-    expect(verified).toEqual(snapshot);
-    expect(Object.keys(payload).sort()).toEqual([
-      "amountCents", "deliveryType", "destinationPostalCode", "environment",
-      "expiresAt", "items", "originPostalCode", "parcelCount",
-      "planFingerprint", "provider", "serviceCode", "serviceName", "version",
-    ].sort());
-    expect(JSON.stringify(payload)).not.toContain("secret");
+describe("signed courier snapshots v3", () => {
+  it("authenticates the complete snapshot without exposing credentials", async () => {
+    const { deps, token, snapshot } = await quoteFixture();
+    expect(deps.issuer.authenticate(token, now)).toEqual(snapshot);
+    expect(JSON.stringify(snapshot)).not.toMatch(/apiToken|apiSecret|Authorization/);
   });
-
-  it("rejects altered signatures and the controlled test token version", () => {
-    const issued = service.issue(snapshot);
-    const [payload, signature] = issued.token.split(".");
-    const altered = `${payload}.${signature.slice(0, -1)}${signature.endsWith("A") ? "B" : "A"}`;
-    expect(() => service.authenticate(altered, now))
-      .toThrow(InvalidShippingQuoteError);
-    const changedAmount = Buffer.from(
-      Buffer.from(payload, "base64url").toString("utf8").replace("43575", "43576"),
-    ).toString("base64url");
-    expect(() => service.authenticate(`${changedAmount}.${signature}`, now))
-      .toThrow(InvalidShippingQuoteError);
-
-    const controlled = new SignedShippingQuoteService("secret".repeat(10))
-      .issueControlled(43_575, now);
-    expect(() => service.authenticate(controlled.token, now))
-      .toThrow(InvalidShippingQuoteError);
+  it.each(["amountCents", "carrierId", "merchandiseCents", "parcels", "destination", "contextFingerprint"])("rejects tampering with %s", async field => {
+    const { deps, token } = await quoteFixture(); const [encoded, signature] = token.split(".");
+    const payload = JSON.parse(Buffer.from(encoded, "base64url").toString()); payload[field] = 0;
+    const altered = Buffer.from(JSON.stringify(payload)).toString("base64url") + "." + signature;
+    expect(() => deps.issuer.authenticate(altered, now)).toThrow(InvalidShippingQuoteError);
   });
-
-  it("rejects another cart, destination, packing plan or service", () => {
-    const token = service.issue(snapshot).token;
-    for (const change of [
-      { items: [{ productId: "plate", quantity: 1 }] },
-      { destinationPostalCode: "1001" },
-      { planFingerprint: "b".repeat(64) },
-      { serviceCode: "other" },
-      { originPostalCode: "7601" },
-      { environment: "production" as const },
-    ]) {
-      expect(() => service.verify(token, { ...expected, ...change }, now))
-        .toThrow(CourierQuoteMismatchError);
-    }
+  it("rejects a controlled tariff, a different key, expiration and oversized tokens", async () => {
+    const { deps, token } = await quoteFixture();
+    expect(() => deps.issuer.authenticate(new SignedShippingQuoteService("a".repeat(64)).issueControlled(1, now).token, now)).toThrow(InvalidShippingQuoteError);
+    expect(() => new SignedCourierQuoteService("b".repeat(64)).authenticate(token, now)).toThrow(InvalidShippingQuoteError);
+    expect(() => deps.issuer.authenticate(token, new Date("2026-10-13T17:10:00Z"))).toThrow(ExpiredShippingQuoteError);
+    expect(() => deps.issuer.authenticate("a".repeat(33000) + ".b", now)).toThrow(InvalidShippingQuoteError);
   });
-
-  it("rejects a quote that cannot cover another ten-minute checkout", () => {
-    const token = service.issue(snapshot).token;
-
-    expect(() => service.authenticate(token, new Date("2026-09-27T12:20:00.001Z")))
-      .toThrow(ExpiredShippingQuoteError);
-  });
-
-  it("rejects malformed input before issuing a token", () => {
-    expect(() => service.issue({ ...snapshot, amountCents: 1.5 }))
-      .toThrow(InvalidShippingQuoteError);
-    expect(() => service.issue({ ...snapshot, planFingerprint: "invalid" }))
-      .toThrow(InvalidShippingQuoteError);
+  it("does not issue invalid monetary values or longer validity", async () => {
+    const { deps, snapshot } = await quoteFixture();
+    expect(() => deps.issuer.issue({ ...snapshot, amountCents: 0.1 })).toThrow();
+    expect(() => deps.issuer.issue({ ...snapshot, expiresAt: "2026-10-13T18:00:00Z" })).toThrow();
   });
 });

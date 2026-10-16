@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { Sql, TransactionSql } from "postgres";
+import { enqueueOrderNotice } from "@/modules/notifications/infrastructure/enqueue";
 
 import type {
   ApplyPaymentConfirmationInput,
@@ -48,12 +49,13 @@ export class PostgresPaymentConfirmationRepository
       provider_order_id: string;
       total_cents: string;
       currency: string;
+      environment: "test" | "production";
     }[]>`
       SELECT
         orders.id AS order_id,
         payment_attempt.provider_order_id,
         orders.total_cents,
-        orders.currency
+        orders.currency, orders.environment
       FROM payment_attempt
       JOIN orders ON orders.id = payment_attempt.order_id
       WHERE payment_attempt.provider = 'mercado_pago'
@@ -71,12 +73,13 @@ export class PostgresPaymentConfirmationRepository
       provider_order_id: string;
       total_cents: string;
       currency: string;
+      environment: "test" | "production";
     }[]>`
       SELECT
         orders.id AS order_id,
         payment_attempt.provider_order_id,
         orders.total_cents,
-        orders.currency
+        orders.currency, orders.environment
       FROM orders
       JOIN payment_attempt ON payment_attempt.order_id = orders.id
       WHERE orders.public_token_hash = ${publicTokenHash}
@@ -239,6 +242,7 @@ async function applyApproved(
       updated_at = now()
     WHERE order_id = ${input.orderId}
   `;
+  await enqueueOrderNotice(transaction, input.orderId, "owner_paid");
   return { kind: "applied" };
 }
 
@@ -402,6 +406,7 @@ function mapTarget(
         provider_order_id: string;
         total_cents: string;
         currency: string;
+        environment: "test" | "production";
       }
     | undefined,
 ): PaymentConfirmationTarget | null {
@@ -417,5 +422,6 @@ function mapTarget(
     providerOrderId: row.provider_order_id,
     totalCents: toSafeInteger(row.total_cents),
     currency: "ARS",
+    ...(row.environment === "production" ? { environment: row.environment } : {}),
   };
 }

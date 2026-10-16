@@ -13,6 +13,7 @@ const environment = {
 describe("readMercadoPagoWebhookConfig", () => {
   it("returns an explicit test identity without exposing production mode", () => {
     expect(readMercadoPagoWebhookConfig(environment)).toEqual({
+      environment: "test",
       accessToken: "test-access-token",
       secret: "test-webhook-secret",
       sellerUserId: "123456789",

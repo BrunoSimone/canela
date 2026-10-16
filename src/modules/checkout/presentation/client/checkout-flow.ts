@@ -35,9 +35,27 @@ export function checkoutErrorMessage(code: string | null): string {
     case "PRODUCT_NOT_SELLABLE":
       return "Una pieza por encargo no participa de la compra online. Quitala del carrito para continuar.";
     case "SHIPPING_QUOTE_EXPIRED":
-      return "La cotización de envío venció. Actualizá esta página para obtener una nueva.";
+      return "La cotización de envío venció. Volvé a calcular el envío para continuar.";
     case "SHIPPING_QUOTE_INVALID":
-      return "No pudimos validar el envío. Actualizá esta página antes de intentar nuevamente.";
+      return "No pudimos validar el envío. Volvé a calcular el envío antes de intentar nuevamente.";
+    case "SHIPPING_QUOTE_MISMATCH":
+    case "SHIPPING_RATE_CHANGED":
+      return "El pedido o la tarifa cambió. Volvé a calcular el envío y confirmá el nuevo total.";
+    case "UNSHIPPABLE_ITEM":
+      return "Todavía no podemos calcular el envío de una de estas piezas. Su embalaje está pendiente de confirmación.";
+    case "PACKAGE_LIMIT_EXCEEDED":
+      return "El embalaje de este pedido supera los límites de envío disponibles.";
+    case "SHIPPING_NOT_AVAILABLE":
+      return "No encontramos un envío disponible para esa localidad y código postal. Revisá el destino.";
+    case "SHIPPING_PROVIDER_UNAVAILABLE":
+    case "SHIPPING_MISCONFIGURED":
+      return "No pudimos consultar el costo de envío. Intentá nuevamente en unos minutos.";
+    case "SHIPPING_RATE_LIMITED":
+      return "Hay muchas consultas de envío. Esperá un minuto y volvé a intentarlo.";
+    case "INVALID_SHIPPING_REQUEST":
+      return "Revisá la localidad, provincia y código postal para calcular el envío.";
+    case "SHIPPING_DISABLED":
+      return "La cotización de envíos todavía no está disponible.";
     case "CHECKOUT_ATTEMPT_CLOSED":
       return "Este intento ya terminó. Volvé a intentar para iniciar uno nuevo.";
     case "CHECKOUT_ATTEMPT_CHANGED":

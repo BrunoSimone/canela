@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+import { sendResendEmail } from "@/modules/notifications/infrastructure/resend-mailer";
 import type { adminMailConfig } from "./admin-config";
 import { renderAdminLoginEmail } from "@/emails/admin-login";
 
@@ -11,18 +13,6 @@ export async function sendAdminLoginEmail(
   const link = new URL("/admin/acceso", config.siteUrl);
   link.searchParams.set("token", rawToken);
   const message = await renderAdminLoginEmail({ loginUrl: link.toString() });
-  const result = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${config.apiKey}`,
-    },
-    body: JSON.stringify({
-      from: config.from,
-      to: [email],
-      ...message,
-    }),
-    signal: AbortSignal.timeout(10_000),
-  });
-  if (!result.ok) throw new Error(`ADMIN_MAIL_SEND_FAILED_${result.status}`);
+  await sendResendEmail(config.apiKey, { from: config.from, to: [email], ...message },
+    `canela-login/${createHash("sha256").update(rawToken).digest("hex")}`);
 }

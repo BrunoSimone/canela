@@ -1,199 +1,111 @@
 import { describe, expect, it, vi } from "vitest";
+import { beginCheckout } from "../../checkout/application/begin-checkout";
+import { testDelivery } from "../../checkout/domain/delivery.test-fixture";
+import { InvalidDeliveryError } from "../../checkout/domain/delivery";
+import { CourierQuoteMismatchError, CourierRateChangedError, UnavailableCourierRateError } from "../domain/courier-quote";
+import { ExpiredShippingQuoteError } from "../domain/shipping-quote";
+import { dependencies, destination, items, now, profile, quoteFixture, rate } from "../testing/fixtures";
+import { quoteShipping, ZipnovaCheckoutQuotes } from "./quote-shipping";
 
-import {
-  InsufficientCourierRateValidityError,
-  InvalidCourierQuoteInputError,
-  InvalidCourierRateError,
-  UnavailableCourierRateError,
-  type ParcelRate,
-} from "../domain/courier-quote";
-import { MissingShippingProfileError } from "../domain/parcel-plan";
-import { SignedCourierQuoteService } from "../infrastructure/signed-courier-quote";
-import { quoteShipping } from "./quote-shipping";
-
-const now = new Date("2026-09-27T12:00:00.000Z");
-const profile = {
-  productId: "plate",
-  version: 1,
-  weightGrams: 900,
-  heightCm: 12,
-  widthCm: 24,
-  lengthCm: 24,
-  shipSeparately: false,
-};
-
-function homeRate(amountCents: number, overrides: Partial<ParcelRate> = {}): ParcelRate {
-  return {
-    deliveryType: "home",
-    serviceCode: "approved-home",
-    serviceName: "Domicilio",
-    amountCents,
-    ...overrides,
-  };
-}
-
-function dependencies() {
-  const catalog = { findByIds: vi.fn().mockResolvedValue([{
-    id: "plate", sellable: true, profile,
-  }]) };
-  const rates = { quoteParcel: vi.fn().mockResolvedValue({
-    validTo: new Date("2026-09-27T12:30:00.000Z"),
-    rates: [homeRate(125_50)],
-  }) };
-  const issuer = new SignedCourierQuoteService("s".repeat(64));
-  return {
-    catalog,
-    rates,
-    issuer,
-    environment: "qa" as const,
-    groupingRules: [],
-    constraints: {
-      maxWeightGrams: 25_000,
-      maxHeightCm: 150,
-      maxWidthCm: 150,
-      maxLengthCm: 150,
-      maxUnits: 10,
-    },
-    originPostalCode: "7600",
-    serviceCode: "approved-home",
-    now: () => now,
-  };
-}
-
-const input = {
-  destinationPostalCode: "1000",
-  items: [{ productId: "plate", quantity: 2 }],
-};
-
-describe("quoteShipping", () => {
-  it("quotes every parcel and signs the exact sum and earliest expiry", async () => {
-    const deps = dependencies();
-    deps.rates.quoteParcel
-      .mockResolvedValueOnce({
-        validTo: new Date("2026-09-27T12:30:00.000Z"),
-        rates: [homeRate(125_50)],
-      })
-      .mockResolvedValueOnce({
-        validTo: new Date("2026-09-27T12:20:00.000Z"),
-        rates: [homeRate(310_25)],
-      });
-
-    const issued = await quoteShipping(deps, input);
-
-    expect(deps.catalog.findByIds).toHaveBeenCalledWith(["plate"]);
-    expect(deps.rates.quoteParcel).toHaveBeenCalledTimes(2);
-    expect(deps.rates.quoteParcel).toHaveBeenNthCalledWith(1, {
-      deliveryType: "home",
-      originPostalCode: "7600",
-      destinationPostalCode: "1000",
-      parcel: expect.objectContaining({ weightGrams: 900 }),
-    });
-    expect(issued).toMatchObject({
-      provider: "correo_argentino",
-      environment: "qa",
-      deliveryType: "home",
-      amountCents: 435_75,
-      parcelCount: 2,
-      serviceCode: "approved-home",
-      expiresAt: new Date("2026-09-27T12:20:00.000Z"),
-    });
-    expect(deps.issuer.verify(issued.token, {
-      environment: "qa",
-      deliveryType: "home",
-      originPostalCode: "7600",
-      destinationPostalCode: "1000",
-      items: input.items,
-      planFingerprint: issued.planFingerprint,
-      serviceCode: "approved-home",
-    }, now).amountCents).toBe(435_75);
+const contextItems = [{ productId: "piece", name: "Pieza", unitPriceCents: 1500000, quantity: 2 }];
+describe("Zipnova shipping application", () => {
+  it("rejects a revised shared box before reserving stock or creating a payment", async () => {
+    const deps = { ...dependencies(), maxParcels: 1, boxes: { list: vi.fn() } };
+    deps.catalog.findByIds.mockResolvedValue([{ id: "piece", sellable: true, profile: { ...profile, shipSeparately: false } }]);
+    const box = { id: "box", revision: "r1", name: "Caja", innerHeightCm: 20, innerWidthCm: 40, innerLengthCm: 40, heightCm: 22, widthCm: 42, lengthCm: 42, tareWeightGrams: 200, maxWeightGrams: 10000 };
+    deps.boxes.list.mockResolvedValue([box]);
+    const quoted = await quoteShipping(deps, { items, destination });
+    expect(quoted.options[0].parcels).toHaveLength(1);
+    deps.boxes.list.mockResolvedValue([{ ...box, revision: "r2" }]);
+    const repository = { reserve: vi.fn(), saveProviderOrder: vi.fn(), markProviderCreationUncertain: vi.fn(), releaseForDefinitiveProviderFailure: vi.fn() };
+    const payments = { createOrder: vi.fn(), getOrder: vi.fn() };
+    await expect(beginCheckout({ repository, payments, catalog: deps.products, quotes: new ZipnovaCheckoutQuotes(deps), signingSecret: "a".repeat(64), siteUrl: "https://canela.test" }, {
+      idempotencyKey: "box-change", shippingQuoteToken: quoted.options[0].token, items,
+      buyerEmail: "buyer@example.com", delivery: { ...testDelivery, ...destination, recipientDocument: "12345678" },
+    })).rejects.toBeInstanceOf(CourierQuoteMismatchError);
+    expect(repository.reserve).not.toHaveBeenCalled();
+    expect(payments.createOrder).not.toHaveBeenCalled();
+    expect(deps.rates.quoteShipment).toHaveBeenCalledTimes(1);
   });
-
-  it("rejects an invalid destination or missing profile before calling the gateway", async () => {
-    const deps = dependencies();
-    await expect(quoteShipping(deps, { ...input, destinationPostalCode: " " }))
-      .rejects.toBeInstanceOf(InvalidCourierQuoteInputError);
-    expect(deps.catalog.findByIds).not.toHaveBeenCalled();
-
-    deps.catalog.findByIds.mockResolvedValue([{ id: "plate", sellable: true, profile: null }]);
-    await expect(quoteShipping(deps, input))
-      .rejects.toBeInstanceOf(MissingShippingProfileError);
-    expect(deps.rates.quoteParcel).not.toHaveBeenCalled();
+  it("blocks multi-parcel carts under the single-parcel policy before requesting rates", async () => {
+    const deps = { ...dependencies(), maxParcels: 1 };
+    await expect(quoteShipping(deps, { items, destination })).rejects.toThrow();
+    expect(deps.rates.quoteShipment).not.toHaveBeenCalled();
   });
-
-  it("rejects a branch-only rate for any parcel without issuing a partial quote", async () => {
-    const deps = dependencies();
-    deps.rates.quoteParcel.mockResolvedValueOnce({
-      validTo: new Date("2026-09-27T12:30:00.000Z"),
-      rates: [homeRate(100)],
-    }).mockResolvedValueOnce({
-      validTo: new Date("2026-09-27T12:30:00.000Z"),
-      rates: [homeRate(200, { deliveryType: "branch" })],
-    });
-    const issue = vi.spyOn(deps.issuer, "issue");
-
-    await expect(quoteShipping(deps, input))
-      .rejects.toBeInstanceOf(UnavailableCourierRateError);
-    expect(issue).not.toHaveBeenCalled();
+  it.each(["document", "phone"])("requires recipient %s before reserving stock or creating payment", async missing => {
+    const { deps, token } = await quoteFixture();
+    const quotes = new ZipnovaCheckoutQuotes(deps);
+    const verify = vi.spyOn(quotes, "verifyForCheckout");
+    const repository = { reserve: vi.fn(), saveProviderOrder: vi.fn(), markProviderCreationUncertain: vi.fn(), releaseForDefinitiveProviderFailure: vi.fn() };
+    const payments = { createOrder: vi.fn(), getOrder: vi.fn() };
+    await expect(beginCheckout({ repository, payments, catalog: deps.products, quotes, signingSecret: "a".repeat(64), siteUrl: "https://canela.test" }, {
+      idempotencyKey: "test", shippingQuoteToken: token, items, buyerEmail: "buyer@example.com",
+      delivery: { ...testDelivery, ...destination, recipientDocument: missing === "document" ? null : "12345678", phone: missing === "phone" ? null : testDelivery.phone },
+    })).rejects.toBeInstanceOf(InvalidDeliveryError);
+    expect(verify).not.toHaveBeenCalled();
+    expect(repository.reserve).not.toHaveBeenCalled();
+    expect(payments.createOrder).not.toHaveBeenCalled();
   });
-
-  it("rejects malformed, ambiguous and overflowing prices", async () => {
-    const deps = dependencies();
-    deps.rates.quoteParcel.mockResolvedValue({
-      validTo: new Date("2026-09-27T12:30:00.000Z"),
-      rates: [homeRate(12.5)],
-    });
-    await expect(quoteShipping(deps, input)).rejects.toBeInstanceOf(InvalidCourierRateError);
-
-    deps.rates.quoteParcel.mockResolvedValue({
-      validTo: new Date("2026-09-27T12:30:00.000Z"),
-      rates: [
-        homeRate(100),
-        homeRate(200),
-      ],
-    });
-    await expect(quoteShipping(deps, input)).rejects.toBeInstanceOf(InvalidCourierRateError);
-
-    deps.rates.quoteParcel.mockResolvedValue({
-      validTo: new Date("2026-09-27T12:30:00.000Z"),
-      rates: [homeRate(Number.MAX_SAFE_INTEGER)],
-    });
-    await expect(quoteShipping(deps, input)).rejects.toBeInstanceOf(InvalidCourierRateError);
+  it("quotes the complete package plan once, using authoritative prices as declared value", async () => {
+    const { deps, quoted } = await quoteFixture();
+    expect(deps.rates.quoteShipment).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ declaredValueCents: 3000000, destination, parcels: expect.any(Array) }));
+    expect(deps.rates.quoteShipment.mock.calls[0][0].parcels).toHaveLength(2);
+    expect(quoted.options[0].amountCents).toBe(1425300);
+    expect(quoted.options[0].expiresAt).toBe("2026-10-13T17:10:00.000Z");
+    expect(quoted.subtotalCents).toBe(3000000);
   });
-
-  it("requires the rate to cover the full checkout window", async () => {
+  it.each([null, { ...profile, classificationId: undefined }])("blocks missing logistics data before calling the carrier", async p => {
     const deps = dependencies();
-    deps.rates.quoteParcel.mockResolvedValue({
-      validTo: new Date("2026-09-27T12:09:59.000Z"),
-      rates: [homeRate(0)],
-    });
-    await expect(quoteShipping(deps, input))
-      .rejects.toBeInstanceOf(InsufficientCourierRateValidityError);
+    deps.catalog.findByIds.mockResolvedValue([{ id: "piece", sellable: true, profile: p }]);
+    await expect(quoteShipping(deps, { items, destination })).rejects.toThrow();
+    expect(deps.rates.quoteShipment).not.toHaveBeenCalled();
   });
-
-  it("checks the checkout window after the last provider response", async () => {
-    const deps = dependencies();
-    let currentTime = now;
-    deps.now = () => currentTime;
-    deps.rates.quoteParcel.mockImplementation(async () => {
-      currentTime = new Date("2026-09-27T12:22:00.000Z");
-      return {
-        validTo: new Date("2026-09-27T12:30:00.000Z"),
-        rates: [homeRate(0)],
-      };
-    });
-
-    await expect(quoteShipping(deps, input))
-      .rejects.toBeInstanceOf(InsufficientCourierRateValidityError);
+  it("preserves the signed snapshot when a fresh quote matches", async () => {
+    const { deps, token, snapshot } = await quoteFixture();
+    const verifier = new ZipnovaCheckoutQuotes(deps);
+    const quote = await verifier.verifyForCheckout(verifier.verify(token), { items: contextItems, destination });
+    expect(quote).toMatchObject({ source: "zipnova", snapshot });
+    expect(deps.rates.quoteShipment).toHaveBeenCalledTimes(2);
   });
-
-  it("accepts a zero tariff only when returned for the configured service", async () => {
-    const deps = dependencies();
-    deps.rates.quoteParcel.mockResolvedValue({
-      validTo: new Date("2026-09-27T12:30:00.000Z"),
-      rates: [homeRate(0)],
-    });
-
-    const quote = await quoteShipping(deps, input);
-    expect(quote.amountCents).toBe(0);
+  it.each(["city", "provinceCode", "postalCode", "price", "quantity", "profile", "classification", "origin"])("rejects changed %s before recotizing", async kind => {
+    const { deps, token } = await quoteFixture();
+    const context = { items: structuredClone(contextItems), destination: { ...destination } };
+    if (kind === "city") context.destination.city = "Belgrano";
+    if (kind === "provinceCode") context.destination.provinceCode = "B";
+    if (kind === "postalCode") context.destination.postalCode = "1426";
+    if (kind === "price") context.items[0].unitPriceCents++;
+    if (kind === "quantity") context.items[0].quantity++;
+    if (kind === "profile" || kind === "classification") deps.catalog.findByIds.mockResolvedValue([{ id: "piece", sellable: true, profile: { ...profile, ...(kind === "profile" ? { weightGrams: 2000 } : { classificationId: "fragile" }) } }]);
+    if (kind === "origin") deps.contextFingerprint = "d".repeat(64);
+    const verifier = new ZipnovaCheckoutQuotes(deps);
+    await expect(verifier.verifyForCheckout(verifier.verify(token), context)).rejects.toBeInstanceOf(CourierQuoteMismatchError);
+    expect(deps.rates.quoteShipment).toHaveBeenCalledTimes(1);
+  });
+  it.each(["amountCents", "sellerAmountCents"] as const)("requires confirmation after %s changes", async key => {
+    const { deps, token } = await quoteFixture();
+    deps.rates.quoteShipment.mockResolvedValue([{ ...rate, [key]: rate[key] + 1 }]);
+    const verifier = new ZipnovaCheckoutQuotes(deps);
+    await expect(verifier.verifyForCheckout(verifier.verify(token), { items: contextItems, destination })).rejects.toBeInstanceOf(CourierRateChangedError);
+  });
+  it("rejects a selected carrier disappearing", async () => {
+    const { deps, token } = await quoteFixture(); deps.rates.quoteShipment.mockResolvedValue([]);
+    const verifier = new ZipnovaCheckoutQuotes(deps);
+    await expect(verifier.verifyForCheckout(verifier.verify(token), { items: contextItems, destination })).rejects.toBeInstanceOf(UnavailableCourierRateError);
+  });
+  it("expires quotes that time out during revalidation", async () => {
+    const { deps, token } = await quoteFixture();
+    deps.now = vi.fn().mockReturnValueOnce(now).mockReturnValue(new Date("2026-10-13T17:10:00Z"));
+    const verifier = new ZipnovaCheckoutQuotes(deps);
+    await expect(verifier.verifyForCheckout(verifier.verify(token), { items: contextItems, destination })).rejects.toBeInstanceOf(ExpiredShippingQuoteError);
+  });
+  it("never reserves stock or invokes payments if revalidation changes the price", async () => {
+    const { deps, token } = await quoteFixture();
+    deps.rates.quoteShipment.mockResolvedValue([{ ...rate, amountCents: 1 }]);
+    const repository = { reserve: vi.fn(), saveProviderOrder: vi.fn(), markProviderCreationUncertain: vi.fn(), releaseForDefinitiveProviderFailure: vi.fn() };
+    const payments = { createOrder: vi.fn(), getOrder: vi.fn() };
+    await expect(beginCheckout({ repository, payments, catalog: deps.products, quotes: new ZipnovaCheckoutQuotes(deps), signingSecret: "a".repeat(64), siteUrl: "https://canela.test" }, {
+      idempotencyKey: "test", shippingQuoteToken: token, items, buyerEmail: "buyer@example.com", delivery: { ...testDelivery, ...destination, recipientDocument: "12345678" },
+    })).rejects.toBeInstanceOf(CourierRateChangedError);
+    expect(repository.reserve).not.toHaveBeenCalled(); expect(payments.createOrder).not.toHaveBeenCalled();
   });
 });

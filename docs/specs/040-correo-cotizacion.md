@@ -1,5 +1,9 @@
 # Cotización de Correo Argentino y plan de bultos
 
+> Actualización 16/10/2026: la [spec 090](090-apertura-caja-compartida.md)
+> reemplaza la estrategia de bultos por unidad y agrega caja compartida, inventario,
+> aprobación de costo real y ejecución periódica de avisos.
+
 ## Estado
 
 En revisión. Deriva de DEC-014, DEC-015, ADR-002 y la investigación oficial de
@@ -9,6 +13,12 @@ La iteración interna autorizada el 2026-09-27 cubre perfiles embalados, plan de
 bultos, suma de tarifas normalizadas y token firmado ligado a carrito, destino,
 servicio y vencimiento. Usa un puerto de tarifas simulado en pruebas. La conexión
 con Correo, el endpoint público y el checkout quedan pendientes del contrato QA.
+
+Actualización 2026-10-13: se validaron autenticación y cotizaciones con Zipnova
+como alternativa. Ver [evidencia y diferencias de contrato](../research/003-zipnova-validacion.md).
+El retiro en origen y el alta de envíos siguen pendientes. El contrato de tarifas
+de esta spec queda reemplazado por [spec 060](060-zipnova-cotizacion.md) para la
+iteración Zipnova autorizada; las reglas de embalaje se conservan.
 
 ## Contexto y problema
 

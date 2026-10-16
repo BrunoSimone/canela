@@ -18,7 +18,7 @@ describe("SanityProductCatalog", () => {
       { cache: "no-store", perspective: "published" },
     );
     expect(result).toEqual([
-      { id: "available", name: "Disponible", priceArs: 15_000, sellable: true },
+      { id: "available", name: "Disponible", priceArs: 15_000, sellable: true, maxQuantity: 1 },
       { id: "commission", name: "Encargo", priceArs: 20_000, sellable: false },
     ]);
   });

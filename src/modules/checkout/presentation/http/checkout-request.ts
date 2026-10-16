@@ -39,7 +39,7 @@ export function parseCheckoutRequest(
   }
 
   const buyerEmail = body.buyer.email.trim().toLowerCase();
-  if (!isEmail(buyerEmail) || body.shippingQuoteToken.length > 4_096) {
+  if (!isEmail(buyerEmail) || body.shippingQuoteToken.length > 32_768) {
     throw new CheckoutRequestValidationError();
   }
 
@@ -51,6 +51,7 @@ export function parseCheckoutRequest(
       type: body.delivery.type,
       buyerName: body.buyer.name,
       recipientName: body.delivery.recipientName ?? body.buyer.name,
+      recipientDocument: body.delivery.recipientDocument,
       phone: body.buyer.phone,
       streetName: address.streetName,
       streetNumber: address.streetNumber,

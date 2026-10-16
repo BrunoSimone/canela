@@ -14,6 +14,11 @@ function catalogReturning(
 }
 
 describe("resolveCheckoutItems", () => {
+  it("rejects two units of a unique piece even if the request bypasses the cart", async () => {
+    const catalog = catalogReturning([{ id: "unique", name: "Única", priceArs: 100, sellable: true, maxQuantity: 1 }]);
+    await expect(resolveCheckoutItems(catalog, [{ productId: "unique", quantity: 2 }])).rejects.toBeInstanceOf(InvalidCheckoutItemsError);
+    await expect(resolveCheckoutItems(catalog, [{ productId: "unique", quantity: 1 }])).resolves.toHaveLength(1);
+  });
   it("uses published names and prices from the catalog", async () => {
     const catalog = catalogReturning([
       {

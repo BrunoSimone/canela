@@ -26,7 +26,8 @@ export function PreparationEditor({ order, demo, onSaved }: {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [version, setVersion] = useState(order.preparation?.version ?? 0);
-  const editable = !demo && (order.status === "prepare" || order.status === "ready_to_ship");
+  const editable = !demo && !order.shipment && (order.status === "prepare" || order.status === "ready_to_ship");
+  const maxParcels = order.packingPlan ? 1 : 20;
 
   function updateParcel(index: number, field: keyof DraftParcel, value: string) {
     setParcels((current) => current.map((parcel, position) =>
@@ -88,9 +89,9 @@ export function PreparationEditor({ order, demo, onSaved }: {
 
   return <section className={styles.detailCard}>
     <h2>Preparación del envío</h2>
-    <p className={styles.integrationNote}>Anotá el peso y las medidas exteriores reales de cada bulto embalado. Estos datos quedan en Canela para crear el envío cuando Correo esté habilitado.</p>
+    <p className={styles.integrationNote}>Anotá el peso y las medidas exteriores reales del paquete listo para despachar. Después podrás confirmar el embalaje y generar la etiqueta.</p>
     {demo && <p className={styles.integrationNote}>Vista de demostración: no se guardan cambios.</p>}
-    {!editable && !demo && <p className={styles.integrationNote}>La preparación se habilita cuando el pago está confirmado.</p>}
+    {!editable && !demo && <p className={styles.integrationNote}>{order.shipment ? "El embalaje está confirmado para este envío y ya no se puede editar." : "La preparación se habilita cuando el pago está confirmado."}</p>}
     <form onSubmit={save} className={styles.preparationForm}>
       {parcels.map((parcel, index) => <fieldset key={index} className={styles.parcelCard} disabled={!editable || saving}>
         <legend>Bulto {index + 1}</legend>
@@ -106,7 +107,7 @@ export function PreparationEditor({ order, demo, onSaved }: {
         </div>
         {editable && parcels.length > 1 && <button type="button" className={styles.textButton} onClick={() => setParcels((current) => current.filter((_, position) => position !== index))}>Quitar bulto</button>}
       </fieldset>)}
-      {editable && parcels.length < 20 && <button type="button" className={styles.textButton} onClick={() => setParcels((current) => [...current, emptyParcel()])}>+ Agregar bulto</button>}
+      {editable && parcels.length < maxParcels && <button type="button" className={styles.textButton} onClick={() => setParcels((current) => [...current, emptyParcel()])}>+ Agregar bulto</button>}
       <label className={styles.preparationNote}>Nota para el taller (opcional)
         <textarea maxLength={2000} rows={3} value={note} disabled={!editable || saving} onChange={(event) => setNote(event.target.value)} />
       </label>

@@ -1,3 +1,4 @@
+import type { CourierQuoteSnapshot } from "../modules/shipping/domain/courier-quote";
 import { createHash, randomUUID } from "node:crypto";
 import type { Sql } from "postgres";
 
@@ -12,11 +13,13 @@ export type AuthoritativeOrderItem = {
 };
 
 export type CreateReservedOrderInput = {
+  environment?: "test" | "production";
   orderId: string;
   publicTokenHash: string;
   idempotencyKey: string;
   currency: "ARS";
   shippingCents: number;
+  shippingSnapshot?: CourierQuoteSnapshot;
   buyerEmail: string;
   delivery: DeliverySnapshot;
   items: AuthoritativeOrderItem[];
@@ -156,6 +159,8 @@ export function validateReservedOrderInput(
       currency: input.currency,
       shippingCents: input.shippingCents,
       items: sortedItems,
+      ...(input.environment === "production" ? { environment: input.environment } : {}),
+      ...(input.shippingSnapshot ? { shippingSnapshot: input.shippingSnapshot } : {}),
     }))
     .digest("hex");
 
@@ -254,7 +259,9 @@ export async function createReservedOrder(
         shipping_cents,
         total_cents,
         buyer_email,
-        checkout_payload_hash
+        checkout_payload_hash,
+        shipping_quote_snapshot,
+        environment
       ) VALUES (
         ${input.orderId},
         ${input.publicTokenHash.toLowerCase()},
@@ -264,21 +271,23 @@ export async function createReservedOrder(
         ${input.shippingCents},
         ${validated.totalCents},
         ${input.buyerEmail},
-        ${validated.payloadHash}
+        ${validated.payloadHash},
+        ${input.shippingSnapshot ? transaction.json(JSON.parse(JSON.stringify(input.shippingSnapshot))) : null},
+        ${input.environment ?? "test"}
       )
     `;
 
     await transaction`
       INSERT INTO order_delivery (
         order_id, delivery_type, buyer_name, recipient_name, recipient_phone,
-        street_name, street_number, floor, apartment, city, province_code, postal_code
+        street_name, street_number, floor, apartment, city, province_code, postal_code, recipient_document
       ) VALUES (
         ${input.orderId}, ${validated.delivery.type}, ${validated.delivery.buyerName},
         ${validated.delivery.recipientName}, ${validated.delivery.phone},
         ${validated.delivery.streetName}, ${validated.delivery.streetNumber},
         ${validated.delivery.floor}, ${validated.delivery.apartment},
         ${validated.delivery.city}, ${validated.delivery.provinceCode},
-        ${validated.delivery.postalCode}
+        ${validated.delivery.postalCode}, ${validated.delivery.recipientDocument ?? null}
       )
     `;
 

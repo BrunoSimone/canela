@@ -21,6 +21,7 @@ describe("readCheckoutConfig", () => {
       mode: "test",
       signingSecret: "a".repeat(64),
       shippingCents: 400_000,
+      shippingProvider: "controlled_test",
       siteUrl: "http://localhost:3000",
       mercadoPagoAccessToken: "APP_USR-test-token",
     });

@@ -1,3 +1,4 @@
+import type { CourierQuoteSnapshot } from "../../shipping/domain/courier-quote";
 import type { PaymentOrder } from "../../payments/domain/payment-order";
 import type { DeliverySnapshot } from "./delivery";
 
@@ -9,6 +10,7 @@ export type CheckoutItem = {
 };
 
 export type ReserveCheckoutInput = {
+  environment?: "test" | "production";
   orderId: string;
   publicTokenHash: string;
   idempotencyKey: string;
@@ -16,6 +18,7 @@ export type ReserveCheckoutInput = {
   delivery: DeliverySnapshot;
   currency: "ARS";
   shippingCents: number;
+  shippingSnapshot?: CourierQuoteSnapshot;
   items: CheckoutItem[];
 };
 

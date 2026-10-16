@@ -12,6 +12,7 @@ const environment = {
 describe("readMercadoPagoPaymentConfig", () => {
   it("reads only the server-side identity required to query payments", () => {
     expect(readMercadoPagoPaymentConfig(environment)).toEqual({
+      environment: "test",
       accessToken: "test-access-token",
       sellerUserId: "123456789",
       applicationId: "987654321",

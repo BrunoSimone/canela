@@ -41,6 +41,7 @@ export async function resolveCheckoutItems(
 
   return requestedItems.map((item) => {
     const product = productsById.get(item.productId)!;
+    if (product.maxQuantity !== undefined && item.quantity > product.maxQuantity) throw new InvalidCheckoutItemsError("Quantity exceeds product limit");
     const unitPriceCents = product.priceArs * 100;
 
     if (!Number.isSafeInteger(unitPriceCents) || unitPriceCents < 0) {

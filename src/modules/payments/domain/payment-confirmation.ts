@@ -1,6 +1,7 @@
 import type { PaymentOrderState } from "./payment-order";
 
 export type PaymentConfirmationTarget = {
+  environment?: "test" | "production";
   orderId: string;
   providerOrderId: string;
   totalCents: number;

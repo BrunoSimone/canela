@@ -16,6 +16,10 @@ export type ShippingProfile = ParcelDimensions & {
   productId: string;
   version: number;
   shipSeparately: boolean;
+  revision?: string;
+  canRotate?: boolean;
+  canStack?: boolean;
+  classificationId?: string;
 };
 
 export type ParcelGroupingRule = {
@@ -23,6 +27,7 @@ export type ParcelGroupingRule = {
   version: number;
   items: ShippingLine[];
   parcel: ParcelDimensions;
+  classificationId?: string;
 };
 
 export type ParcelConstraints = {
@@ -35,8 +40,10 @@ export type ParcelConstraints = {
 };
 
 export type PlannedParcel = ParcelDimensions & {
+  packing?: import("./shared-box-plan").PackingInstructions;
   items: ShippingLine[];
   groupingRule: { id: string; version: number } | null;
+  classificationId?: string;
 };
 
 export type ParcelPlan = {
@@ -121,6 +128,7 @@ export function buildParcelPlan(input: BuildParcelPlanInput): ParcelPlan {
       lengthCm: rule.parcel.lengthCm,
       items,
       groupingRule: { id: rule.id, version: rule.version },
+      ...(rule.classificationId ? { classificationId: rule.classificationId } : {}),
     }];
   } else {
     parcels = items.flatMap((item) => {
@@ -132,6 +140,7 @@ export function buildParcelPlan(input: BuildParcelPlanInput): ParcelPlan {
         lengthCm: profile.lengthCm,
         items: [{ productId: item.productId, quantity: 1 }],
         groupingRule: null,
+        ...(profile.classificationId ? { classificationId: profile.classificationId } : {}),
       }));
     });
   }
@@ -160,6 +169,7 @@ export function buildParcelPlan(input: BuildParcelPlanInput): ParcelPlan {
       widthCm: profile.widthCm,
       lengthCm: profile.lengthCm,
       shipSeparately: profile.shipSeparately,
+      ...(profile.classificationId ? { classificationId: profile.classificationId } : {}),
     };
   });
   const fingerprint = createHash("sha256")

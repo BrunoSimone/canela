@@ -16,6 +16,7 @@ export function proxy(request: NextRequest) {
     pathname === "/admin" || pathname.startsWith("/admin/") ||
     pathname === "/api/admin" || pathname.startsWith("/api/admin/") ||
     pathname === "/api/webhooks/mercado-pago" ||
+    pathname === "/api/internal/notifications" ||
     pathname === "/api/revalidate" ||
     pathname === "/robots.txt"
   ) return NextResponse.next();

@@ -1,80 +1,72 @@
+import { provinceName, type ProvinceCode } from "../../checkout/domain/delivery";
 import type { PlannedParcel, ShippingLine } from "./parcel-plan";
 
-export type ParcelRate = {
-  deliveryType: "home" | "branch";
-  serviceCode: string;
+export const COURIER_QUOTE_TTL_MS = 10 * 60 * 1000;
+
+export type ShippingDestination = { city: string; provinceCode: ProvinceCode; postalCode: string };
+export type DispatchType = "carrier_dropoff" | "carrier_pickup";
+export type CourierRate = {
+  carrierId: number;
+  carrierName: string;
+  serviceCode: "standard_delivery";
   serviceName: string;
+  dispatchType: DispatchType;
   amountCents: number;
+  sellerAmountCents: number;
 };
-
-export type ParcelRateResult = {
-  validTo: Date;
-  rates: ParcelRate[];
+export type ShipmentQuoteInput = {
+  destination: ShippingDestination;
+  declaredValueCents: number;
+  parcels: PlannedParcel[];
 };
-
-export interface ParcelRateGateway {
-  quoteParcel(input: {
-    deliveryType: "home";
-    originPostalCode: string;
-    destinationPostalCode: string;
-    parcel: PlannedParcel;
-  }): Promise<ParcelRateResult>;
+export interface ShipmentRateGateway {
+  quoteShipment(input: ShipmentQuoteInput): Promise<CourierRate[]>;
 }
-
-export type CourierQuoteSnapshot = {
-  provider: "correo_argentino";
-  environment: "qa" | "production";
-  deliveryType: "home";
-  originPostalCode: string;
-  destinationPostalCode: string;
+export type CourierQuoteSnapshot = CourierRate & {
+  version: 3;
+  provider: "zipnova";
+  accountMode: "operational" | "sandbox";
+  contextFingerprint: string;
+  destination: ShippingDestination;
   items: ShippingLine[];
+  cartFingerprint: string;
   planFingerprint: string;
-  parcelCount: number;
-  serviceCode: string;
-  serviceName: string;
-  amountCents: number;
-  expiresAt: Date;
+  parcels: PlannedParcel[];
+  merchandiseCents: number;
+  issuedAt: string;
+  expiresAt: string;
 };
-
-export type IssuedCourierQuote = CourierQuoteSnapshot & {
-  token: string;
-};
-
+export type IssuedCourierQuote = CourierQuoteSnapshot & { token: string };
 export interface CourierQuoteIssuer {
   issue(snapshot: CourierQuoteSnapshot): IssuedCourierQuote;
+  authenticate(token: string, now?: Date): CourierQuoteSnapshot;
 }
+export class InvalidCourierQuoteInputError extends Error {}
+export class UnavailableCourierRateError extends Error {}
+export class InvalidCourierRateError extends Error {}
+export class CourierProviderUnavailableError extends Error {}
+export class CourierQuoteMismatchError extends Error {}
+export class CourierRateChangedError extends Error {}
+export class ShippingRateLimitedError extends Error {}
 
-export class InvalidCourierQuoteInputError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "InvalidCourierQuoteInputError";
+export function normalizeShippingDestination(value: unknown): ShippingDestination {
+  if (!value || typeof value !== "object") throw new InvalidCourierQuoteInputError();
+  const d = value as Record<string, unknown>;
+  if (typeof d.city !== "string" || typeof d.provinceCode !== "string" ||
+      !provinceName(d.provinceCode) || typeof d.postalCode !== "string") {
+    throw new InvalidCourierQuoteInputError();
   }
+  const city = d.city.normalize("NFC").trim().replace(/\s+/g, " ");
+  const postalCode = d.postalCode.trim();
+  if (city.length < 2 || city.length > 100 || /[\p{Cc}\p{Cf}]/u.test(city) || !/^[1-9]\d{3}$/.test(postalCode)) {
+    throw new InvalidCourierQuoteInputError();
+  }
+  return { city, provinceCode: d.provinceCode as ProvinceCode, postalCode };
 }
-
-export class UnavailableCourierRateError extends Error {
-  constructor() {
-    super("The configured courier service is unavailable for a parcel");
-    this.name = "UnavailableCourierRateError";
-  }
+export function sameDestination(a: ShippingDestination, b: ShippingDestination): boolean {
+  return a.city.toLocaleLowerCase("es-AR") === b.city.toLocaleLowerCase("es-AR") &&
+    a.provinceCode === b.provinceCode && a.postalCode === b.postalCode;
 }
-
-export class InvalidCourierRateError extends Error {
-  constructor() {
-    super("The courier returned an invalid rate");
-    this.name = "InvalidCourierRateError";
-  }
-}
-
-export class InsufficientCourierRateValidityError extends Error {
-  constructor() {
-    super("The courier rate does not cover the checkout window");
-    this.name = "InsufficientCourierRateValidityError";
-  }
-}
-
-export class CourierQuoteMismatchError extends Error {
-  constructor() {
-    super("The courier quote does not match the cart or destination");
-    this.name = "CourierQuoteMismatchError";
-  }
+export function rateKey(rate: CourierRate): string {
+  return `${rate.carrierId}:${rate.serviceCode}:${rate.dispatchType}`;
 }

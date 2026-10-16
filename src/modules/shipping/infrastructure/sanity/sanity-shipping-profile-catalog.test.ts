@@ -3,6 +3,17 @@ import { describe, expect, it, vi } from "vitest";
 import { SanityShippingProfileCatalog } from "./sanity-shipping-profile-catalog";
 
 describe("SanityShippingProfileCatalog", () => {
+  it("accepts measurements added to an existing product without hidden technical fields", async () => {
+    const catalog = new SanityShippingProfileCatalog({ fetch: vi.fn().mockResolvedValue([{
+      id: "plate", tone: "stock", _rev: "measured-revision", shippingProfile: {
+        weightGrams: 900, heightCm: 12, widthCm: 24, lengthCm: 24, classificationId: "1",
+      },
+    }]) });
+    const [product] = await catalog.findByIds(["plate"]);
+    expect(product.profile).toMatchObject({ version: 1, revision: "measured-revision", shipSeparately: false });
+    expect(product.profile?.canStack).not.toBe(true);
+    expect(product.profile?.canRotate).not.toBe(true);
+  });
   it("reads only published profiles from the origin catalog", async () => {
     const fetch = vi.fn().mockResolvedValue([
       {

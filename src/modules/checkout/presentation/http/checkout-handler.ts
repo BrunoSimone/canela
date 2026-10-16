@@ -1,3 +1,5 @@
+import { InvalidDeliveryError } from "../../domain/delivery";
+import { shippingErrorResponse } from "../../../shipping/presentation/http/shipping-errors";
 import { CheckoutStartUncertainError } from "../../application/begin-checkout";
 import {
   InvalidCheckoutItemsError,
@@ -22,7 +24,7 @@ import {
   type ParsedCheckoutRequest,
 } from "./checkout-request";
 
-const MAX_BODY_BYTES = 16 * 1024;
+const MAX_BODY_BYTES = 48 * 1024;
 
 type CheckoutHandlerDependencies = {
   enabled: boolean;
@@ -56,11 +58,13 @@ export async function handleCheckoutRequest(
     );
   } catch (error) {
     if (
-      error instanceof CheckoutRequestValidationError ||
+      error instanceof CheckoutRequestValidationError || error instanceof InvalidDeliveryError ||
       error instanceof InvalidCheckoutItemsError
     ) {
       return json({ code: "INVALID_CHECKOUT" }, 422);
     }
+    const shippingError = shippingErrorResponse(error);
+    if (shippingError) return shippingError;
     if (error instanceof InvalidShippingQuoteError) {
       return json({ code: "SHIPPING_QUOTE_INVALID" }, 422);
     }

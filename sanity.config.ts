@@ -27,6 +27,7 @@ export default defineConfig({
               context,
             }),
             S.divider(),
+            S.documentTypeListItem("shippingBox").title("Cajas de envío"),
             ...CATEGORY_OPTIONS.map((category) =>
               orderableDocumentListDeskItem({
                 type: "producto",

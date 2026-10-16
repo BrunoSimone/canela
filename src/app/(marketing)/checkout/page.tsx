@@ -3,6 +3,7 @@ import { ArrowLeft, MessageCircle } from "lucide-react";
 
 import { CheckoutConfirmation } from "@/modules/checkout/presentation/components/checkout-confirmation";
 import { readCheckoutConfig } from "@/modules/checkout/infrastructure/server/checkout-config";
+import { readShippingConfig } from "@/modules/shipping/infrastructure/server/shipping-config";
 import { SignedShippingQuoteService } from "@/modules/shipping/infrastructure/signed-shipping-quote";
 
 export const dynamic = "force-dynamic";
@@ -12,11 +13,7 @@ export default function CheckoutPage() {
   if (!checkout) return <CheckoutUnavailable />;
 
   return (
-    <CheckoutConfirmation
-      shippingQuoteToken={checkout.shippingQuoteToken}
-      shippingCents={checkout.shippingCents}
-      quoteExpiresAt={checkout.quoteExpiresAt}
-    />
+    <CheckoutConfirmation shipping={checkout} />
   );
 }
 
@@ -25,11 +22,16 @@ function getControlledCheckoutPageData() {
     const config = readCheckoutConfig();
     if (config.mode === "disabled") return null;
 
+    if (config.shippingProvider === "zipnova") {
+      readShippingConfig();
+      return { kind: "zipnova" as const };
+    }
     const quote = new SignedShippingQuoteService(
       config.signingSecret,
     ).issueControlled(config.shippingCents);
 
     return {
+      kind: "controlled_test" as const,
       shippingQuoteToken: quote.token,
       shippingCents: quote.amountCents,
       quoteExpiresAt: quote.expiresAt.toISOString(),
