@@ -32,5 +32,3 @@ dist/
 
 # Artefactos temporales de investigación y renderizado
 /tmp/
-.vercel
-.env*

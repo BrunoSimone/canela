@@ -26,8 +26,10 @@
 
 ## Evidencia de QA
 
-- Suite unitaria/HTTP/render: ver recuento final de esta publicación abajo.
-- PostgreSQL 17 aislado: 61 pruebas aprobadas (puerto 55435, datos descartables).
+- Suite unitaria/HTTP/render: 421 pruebas aprobadas; 68 opt-in omitidas en esa
+  ejecución. Se ejecutaron aparte las suites SQL y los dos contratos Zipnova;
+  la suite externa MP no se volvió a ejecutar en esta iteración.
+- PostgreSQL 17 aislado: 62 pruebas aprobadas (puerto 55435, datos descartables).
   Incluye compra controlada con dos unidades en una caja, callback, stock,
   preparación, etiqueta, despacho y ambos avisos, en entornos test/live simulados.
 - Zipnova externo: cotización autenticada aprobada; búsqueda y PDF del envío
@@ -65,4 +67,27 @@ hasta resolver esos puntos. [Guía de carga](../runbooks/carga-cliente.md).
 
 ## Publicación
 
-La revisión y las verificaciones HTTP se registran al finalizar el despliegue.
+Código publicado: `d335c73` (incluye `4e3a6b1`). Vercel confirmó Ready para
+`dpl_Dwd9TvPjYFTtWELiiSLJoYjrEqNz`, alias https://www.canela-store.com.
+TypeScript, ESLint y build de Vercel aprobados.
+
+Verificación pública: portada, checkout, API de checkout y cotización devolvieron
+503 por mantenimiento; login 200; inventario sin sesión redirigió al login; API de
+inventario y worker sin secreto devolvieron 401. Solicitud de email de acceso de
+prueba a Bruno devolvió 202 y conservó enlace válido (no fue revocado por un error
+del mailer). No se envió un correo de prueba a la dueña ni se usó su identidad.
+
+El worker se ejecutó correctamente desde GitHub Actions:
+[ejecución 38946973028](https://github.com/BrunoSimone/canela/actions/runs/38946973028).
+Respuesta: processed=0, review=0, overdue=0. Registro de salud persistido en
+producción el 16/10 a las 18:23:40 UTC. La cola productiva estaba vacía.
+
+Lectura del inventario productivo: 27 productos de catálogo, 0 ofrecidos, 0 filas
+de stock y 0 pedidos. Preflight confirmó 12 migraciones y worker saludable; marcó
+como pendientes las cajas, el inventario y los gates de pagos/envíos/correo, tal
+como corresponde al despliegue cerrado. No se tomaron credenciales MP de prueba
+locales como evidencia de callbacks productivos configurados.
+
+En Sanity se comprobó en Members que el correo indicado por Bruno corresponde
+a Mariela, con rol Administrator y acceso ya existente. Studio publicado y guía
+listos para su carga, sin alterar productos durante la prueba visual.
