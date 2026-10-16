@@ -65,6 +65,6 @@ function StockCard({ row, onSaved }: { row: InventoryRow; onSaved: (row: Invento
       <label>Motivo del ajuste<input required minLength={3} maxLength={300} value={reason} placeholder="Carga inicial, reposición, rotura…" onChange={e => { setReason(e.target.value); dirty(); }} /></label>
       <button type="submit">{busy ? "Guardando…" : "Guardar stock"}</button></fieldset></form>
     {message && <p role="status">{message}</p>}<button className={styles.historyButton} type="button" onClick={showHistory}>Ver últimos ajustes</button>
-    {history && <ul>{history.length ? history.map((h, i) => <li key={i}>{new Date(h.at).toLocaleString("es-AR")} · {h.before.stockOnHand} → {h.after.stockOnHand} · {h.reason} · {h.actor}</li>) : <li>Sin ajustes manuales registrados.</li>}</ul>}
+    {history && <ul>{history.length ? history.map((h, i) => <li key={i}>{new Date(h.at).toLocaleString("es-AR", { timeZone: "America/Argentina/Buenos_Aires", hour12: false })} · {h.before.stockOnHand} → {h.after.stockOnHand} · {h.reason} · {h.actor}</li>) : <li>Sin ajustes manuales registrados.</li>}</ul>}
   </article>;
 }
