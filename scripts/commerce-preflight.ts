@@ -36,7 +36,7 @@ async function main(){
     const [health]=await sql`SELECT finished_at > now()-interval '15 minutes' AND review_count=0 AND overdue_count=0 AS healthy FROM background_job_health WHERE name='order_notifications'`;
     checks.push({check:"periodic_worker_recent_and_healthy",status:health?.healthy===true?"ok":"blocked"});
    }
-   const inventory=await sql<{product_id:string;stock_on_hand:number;stock_reserved:number;enabled:boolean}[]>`SELECT product_id,stock_on_hand,stock_reserved,enabled FROM inventory_item`;
+   const inventory=await sql<{product_id:string;stock_on_hand:number;stock_reserved:number;enabled:boolean}[]>`SELECT product_id,stock_on_hand,reserved AS stock_reserved,is_sellable AS enabled FROM inventory_item`;
    const products=await readInventoryCatalog();
    const profiles=await new SanityShippingProfileCatalog().findByIds(products.map(p=>p.id));
    const boxes=await new SanityShippingBoxes().list();

@@ -6,6 +6,7 @@ const map = (r: Row): Stock => ({ stockOnHand: r.stock_on_hand, reserved: r.rese
 export class StockRepository {
   constructor(private readonly sql: Sql) {}
   async list(products: InventoryProduct[]) {
+    if (products.length === 0) return [];
     const rows = await this.sql<(Row & { product_id: string })[]>`SELECT product_id,stock_on_hand,reserved,is_sellable,version FROM inventory_item WHERE product_id IN ${this.sql(products.map(p => p.id))}`;
     return products.map(p => { const row = rows.find(r => r.product_id === p.id); return { ...p, ...(row ? map(row) : { stockOnHand: 0, reserved: 0, enabled: false, version: 0 }) }; });
   }

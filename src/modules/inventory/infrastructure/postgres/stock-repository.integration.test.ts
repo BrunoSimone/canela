@@ -14,6 +14,9 @@ if (url && !["localhost", "127.0.0.1"].includes(new URL(url).hostname)) throw Er
   beforeAll(async () => { sql = createDatabaseClient(url!); await sql`SET client_min_messages TO warning`; await runMigrations(sql); repo = new StockRepository(sql); });
   beforeEach(async () => { await sql`TRUNCATE inventory_item CASCADE`; });
   afterAll(async () => { await sql?.end(); });
+  it("returns an empty inventory when the published catalog is empty", async () => {
+    expect(await repo.list([])).toEqual([]);
+  });
   it("creates stock and audits who changed it", async () => {
     expect(await repo.save(product, edit(), "owner@example.com")).toMatchObject({ stockOnHand: 4, reserved: 0, version: 1, enabled: true });
     expect(await repo.history(product.id)).toMatchObject([{ actor: "owner@example.com", reason: "Carga inicial" }]);
