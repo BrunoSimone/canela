@@ -30,7 +30,7 @@ export function InventoryClient({ request, productId }: { request: InventoryFetc
     return () => controller.abort();
   }, [request]);
   return <main className={styles.main}>
-    <div className={styles.heading}><div><h1>Stock</h1><p>Registrá las unidades aún no vendidas. Incluí las reservas de pagos pendientes; excluí los pedidos ya pagados, aunque todavía estén en el taller.</p></div><button onClick={load} disabled={loading}>Actualizar lista</button></div>
+    <div className={styles.heading}><div><h1>Stock</h1><p>Registrá las unidades aún no vendidas. Incluí las reservas de pagos pendientes; excluí los pedidos ya pagados, aunque todavía estén en el taller.</p></div><button onClick={load} disabled={loading}>Actualizar stock</button></div>
     {!productId && <label className={styles.search}>Buscar producto<input value={query} onChange={e => setQuery(e.target.value)} placeholder="Nombre de la pieza" /></label>}
     {error && <p role="alert">{error}</p>}
     {notice && <p role="status">{notice}</p>}
