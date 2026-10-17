@@ -1,3 +1,7 @@
+import { inventoryFixture } from "@/modules/inventory/testing/memory-documents";
+const fi = inventoryFixture();
+vi.mock("@/modules/inventory/infrastructure/sanity-documents", () => ({ inventoryStore: () => fi.inventory }));
+import { vi } from "vitest";
 import { createHash, randomUUID } from "node:crypto";
 import type { Sql } from "postgres";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
@@ -64,7 +68,7 @@ describeWithDatabase("PostgresCheckoutRepository", () => {
     repository = new PostgresCheckoutRepository(sql);
   });
 
-  beforeEach(async () => {
+  beforeEach(async () => { fi.documents.data.clear();
     await sql`
       TRUNCATE TABLE
         processed_webhook,
@@ -76,10 +80,7 @@ describeWithDatabase("PostgresCheckoutRepository", () => {
         inventory_item
       RESTART IDENTITY CASCADE
     `;
-    await sql`
-      INSERT INTO inventory_item (product_id, stock_on_hand)
-      VALUES ('unique-piece', 1)
-    `;
+    fi.documents.seed("unique-piece", 1);
   });
 
   afterAll(async () => {
@@ -147,9 +148,7 @@ describeWithDatabase("PostgresCheckoutRepository", () => {
     await repository.releaseForDefinitiveProviderFailure(input.orderId);
     await repository.releaseForDefinitiveProviderFailure(input.orderId);
 
-    const [inventory] = await sql<{ reserved: number }[]>`
-      SELECT reserved FROM inventory_item WHERE product_id = 'unique-piece'
-    `;
+    const [inventory] = [await fi.stock("unique-piece")];
     const [reservation] = await sql<{ status: string }[]>`
       SELECT status FROM stock_reservation WHERE order_id = ${input.orderId}
     `;
@@ -168,9 +167,7 @@ describeWithDatabase("PostgresCheckoutRepository", () => {
 
     await repository.markProviderCreationUncertain(input.orderId);
 
-    const [inventory] = await sql<{ reserved: number }[]>`
-      SELECT reserved FROM inventory_item WHERE product_id = 'unique-piece'
-    `;
+    const [inventory] = [await fi.stock("unique-piece")];
     const [reservation] = await sql<{ status: string }[]>`
       SELECT status FROM stock_reservation WHERE order_id = ${input.orderId}
     `;
@@ -192,9 +189,7 @@ describeWithDatabase("PostgresCheckoutRepository", () => {
       repository.releaseForDefinitiveProviderFailure(input.orderId),
     ).rejects.toThrow("cannot be released");
 
-    const [inventory] = await sql<{ reserved: number }[]>`
-      SELECT reserved FROM inventory_item WHERE product_id = 'unique-piece'
-    `;
+    const [inventory] = [await fi.stock("unique-piece")];
     const [reservation] = await sql<{ status: string }[]>`
       SELECT status FROM stock_reservation WHERE order_id = ${input.orderId}
     `;

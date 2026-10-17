@@ -1,8 +1,8 @@
 import { parseStockEdit, StockEditError, type InventoryProduct } from "../domain/stock-edit";
 import { isSameOriginAdminRequest } from "@/modules/admin/infrastructure/admin-origin";
-import type { StockRepository } from "./postgres/stock-repository";
+import type { InventoryStore } from "../domain/inventory-store";
 const json = (body: unknown, status = 200) => Response.json(body, { status, headers: { "Cache-Control": "private, no-store", "X-Robots-Tag": "noindex" } });
-type Dependencies = { session(): Promise<{ email: string } | null>; catalog(): Promise<InventoryProduct[]>; repository(): StockRepository };
+type Dependencies = { session(): Promise<{ email: string } | null>; catalog(): Promise<InventoryProduct[]>; repository(): InventoryStore; acceptsOrigin?: (request: Request) => boolean };
 export function inventoryHandlers(deps: Dependencies) {
   return {
     async get(request: Request) {
@@ -16,7 +16,7 @@ export function inventoryHandlers(deps: Dependencies) {
     async post(request: Request) {
       const session = await deps.session();
       if (!session) return json({ code: "UNAUTHORIZED" }, 401);
-      if (!isSameOriginAdminRequest(request)) return json({ code: "INVALID_ORIGIN" }, 403);
+      if (!(deps.acceptsOrigin ?? isSameOriginAdminRequest)(request)) return json({ code: "INVALID_ORIGIN" }, 403);
       if (new URL(request.url).searchParams.get("demo") === "1") return json({ code: "DEMO_READONLY" }, 403);
       try {
         if (!request.headers.get("Content-Type")?.startsWith("application/json")) throw new StockEditError("INVALID_STOCK_EDIT", 422);

@@ -1,3 +1,6 @@
+import { inventoryFixture } from "@/modules/inventory/testing/memory-documents";
+const fi = inventoryFixture();
+vi.mock("@/modules/inventory/infrastructure/sanity-documents", () => ({ inventoryStore: () => fi.inventory }));
 import { randomUUID } from "node:crypto";
 import { beforeAll,beforeEach,afterAll,describe,it,expect,vi } from "vitest";
 import type {Sql} from "postgres";
@@ -26,7 +29,7 @@ if(url&&!["localhost","127.0.0.1"].includes(new URL(url).hostname))throw Error("
 (url?describe:describe.skip)("OPS-09 purchase through dispatch and durable mail (controlled external gateways)",()=>{
  let sql:Sql;
  beforeAll(async()=>{sql=createDatabaseClient(url!);await sql`SET client_min_messages TO warning`;await runMigrations(sql);});
- beforeEach(async()=>{await sql`TRUNCATE orders,inventory_item,processed_webhook RESTART IDENTITY CASCADE`;await sql`INSERT INTO inventory_item(product_id,stock_on_hand) VALUES('piece',2)`;});
+ beforeEach(async()=>{ fi.documents.data.clear();await sql`TRUNCATE orders,inventory_item,processed_webhook RESTART IDENTITY CASCADE`;fi.documents.seed("piece", 2);});
  afterAll(async()=>{await sql?.end();});
  async function fixture(environment:"test"|"production"="test"){
   const base=dependencies();
@@ -47,7 +50,7 @@ if(url&&!["localhost","127.0.0.1"].includes(new URL(url).hostname))throw Error("
   expect(order.environment).toBe(environment);
   expect(f.snapshot.parcels).toHaveLength(1);expect(f.snapshot.parcels[0].packing?.placements).toHaveLength(2);expect(Number(order.total_cents)).toBe(3000000+rate.amountCents);
   expect(f.payments.createOrder.mock.calls[0][0].items.at(-1)).toMatchObject({externalCode:"shipping",unitPriceCents:rate.amountCents});
-  expect(await sql`SELECT stock_on_hand,reserved FROM inventory_item`).toMatchObject([{stock_on_hand:2,reserved:2}]);
+  expect([(await fi.stock("piece"))].map(s => ({stock_on_hand:s.stockOnHand,reserved:s.reserved}))).toMatchObject([{stock_on_hand:2,reserved:2}]);
   expect(await sql`SELECT * FROM order_notification`).toHaveLength(0);
   const confirmation={repository:new PostgresPaymentConfirmationRepository(sql),payments:f.payments,expectedProvider:{sellerUserId:"seller",applicationId:"app",environment}};
   await confirmPaymentNotification(confirmation,{deliveryId:"paid-first",providerOrderId:"MP-PIPELINE"});
@@ -60,8 +63,8 @@ if(url&&!["localhost","127.0.0.1"].includes(new URL(url).hostname))throw Error("
   await Promise.all([dispatch.confirm(id,42,"owner@example.com"),dispatch.confirm(id,42,"owner@example.com")]);
   await confirmPaymentNotification(confirmation,{deliveryId:"paid-late",providerOrderId:"MP-PIPELINE"});
   expect(await sql`SELECT status FROM orders`).toMatchObject([{status:"shipped"}]);
-  expect(await sql`SELECT stock_on_hand,reserved FROM inventory_item`).toMatchObject([{stock_on_hand:0,reserved:0}]);
-  expect(await sql`SELECT * FROM inventory_adjustment`).toHaveLength(1);
+  expect([(await fi.stock("piece"))].map(s => ({stock_on_hand:s.stockOnHand,reserved:s.reserved}))).toMatchObject([{stock_on_hand:0,reserved:0}]);
+  expect([...fi.documents.data.values()].filter(d => d._type === "canelaReservation" && d.state === "consumed")).toHaveLength(1);
   const accepted=new Map<string,OutboundEmail>();let loseResponse=true;
   const send=vi.fn(async(payload:OutboundEmail,key:string)=>{
    if(accepted.has(key))expect(payload).toEqual(accepted.get(key));else accepted.set(key,payload);
@@ -82,7 +85,7 @@ if(url&&!["localhost","127.0.0.1"].includes(new URL(url).hostname))throw Error("
  it("blocks a changed rate before payment or inventory reservation",async()=>{
   const f=await fixture();f.deps.rates.quoteShipment.mockResolvedValue([{...rate,amountCents:rate.amountCents+1}]);
   await expect(beginCheckout(f.beginDeps,f.input)).rejects.toThrow();expect(f.payments.createOrder).not.toHaveBeenCalled();
-  expect(await sql`SELECT * FROM orders`).toHaveLength(0);expect(await sql`SELECT reserved FROM inventory_item`).toMatchObject([{reserved:0}]);
+  expect(await sql`SELECT * FROM orders`).toHaveLength(0);expect([await fi.stock("piece")]).toMatchObject([{reserved:0}]);
  });
  it("blocks a live quote in a test checkout before contacting payment",async()=>{
   const f=await fixture("production");await expect(beginCheckout({...f.beginDeps,environment:"test"},f.input)).rejects.toThrow();

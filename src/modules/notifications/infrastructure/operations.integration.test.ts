@@ -1,3 +1,7 @@
+import { inventoryFixture } from "@/modules/inventory/testing/memory-documents";
+const fi = inventoryFixture();
+vi.mock("@/modules/inventory/infrastructure/sanity-documents", () => ({ inventoryStore: () => fi.inventory }));
+import { vi } from "vitest";
 import { createHash, randomUUID } from "node:crypto";
 import type { Sql } from "postgres";
 import { beforeAll, beforeEach, afterAll, describe, expect, it } from "vitest";
@@ -19,10 +23,10 @@ if(url&&!["localhost","127.0.0.1"].includes(new URL(url).hostname)) throw Error(
   let sql:Sql;
   beforeAll(async()=>{sql=createDatabaseClient(url!);await sql`SET client_min_messages TO warning`;await runMigrations(sql);});
   afterAll(async()=>{await sql?.end();});
-  beforeEach(async()=>{await sql`TRUNCATE orders,inventory_item,processed_webhook RESTART IDENTITY CASCADE`;});
+  beforeEach(async()=>{ fi.documents.data.clear();await sql`TRUNCATE orders,inventory_item,processed_webhook RESTART IDENTITY CASCADE`;});
   async function seed(paid=true,label=true){
     const f=await fulfillmentFixture(); const id=f.order.id;
-    await sql`INSERT INTO inventory_item(product_id,stock_on_hand) VALUES('piece',1)`;
+    fi.documents.seed("piece", 1);
     await createReservedOrder(sql,{orderId:id,publicTokenHash:createHash("sha256").update(id).digest("hex"),idempotencyKey:randomUUID(),currency:"ARS",buyerEmail:f.order.buyerEmail,delivery:f.order.delivery!,shippingCents:f.order.shippingCents,shippingSnapshot:f.order.quote!,items:[{productId:"piece",name:"Pieza",quantity:1,unitPriceCents:f.order.subtotalCents}]});
     await sql`UPDATE payment_attempt SET status='payment_pending',provider_order_id='MP-OPS',checkout_url='https://www.mercadopago.com.ar/checkout/test' WHERE order_id=${id}`;
     const payment=new PostgresPaymentConfirmationRepository(sql);
@@ -40,7 +44,7 @@ if(url&&!["localhost","127.0.0.1"].includes(new URL(url).hostname)) throw Error(
     const f=await seed(false,false);
     await Promise.all([f.payment.apply(f.approval),f.payment.apply({...f.approval,webhookDeliveryId:"another"})]);
     expect(await sql`SELECT kind,state,environment FROM order_notification`).toMatchObject([{kind:"owner_paid",state:"pending",environment:"test"}]);
-    expect(await sql`SELECT stock_on_hand,reserved FROM inventory_item`).toMatchObject([{stock_on_hand:0,reserved:0}]);
+    expect([(await fi.stock("piece"))].map(s => ({stock_on_hand:s.stockOnHand,reserved:s.reserved}))).toMatchObject([{stock_on_hand:0,reserved:0}]);
   });
   it.each(["processing","rejected","review_required"] as const)("OPS-03: %s does not notify a sale",async state=>{
     const f=await seed(false,false);await f.payment.apply({...f.approval,state});
@@ -54,7 +58,7 @@ if(url&&!["localhost","127.0.0.1"].includes(new URL(url).hostname)) throw Error(
     expect(await sql`SELECT kind FROM order_notification ORDER BY kind`).toMatchObject([{kind:"buyer_shipped"},{kind:"owner_paid"}]);
     await f.payment.apply({...f.approval,webhookDeliveryId:"late"});
     expect(await sql`SELECT status FROM orders`).toMatchObject([{status:"shipped"}]);
-    expect(await sql`SELECT * FROM inventory_adjustment`).toHaveLength(1);
+    expect([...fi.documents.data.values()].filter(d => d._type === "canelaReservation" && d.state === "consumed")).toHaveLength(1);
   });
   it.each(["unpaid","no_label","wrong_id","context","tracking"])("OPS-01: blocks %s before dispatch or buyer notice",async kind=>{
     const f=await seed(kind!=="unpaid",kind!=="unpaid"&&kind!=="no_label");
@@ -70,9 +74,12 @@ if(url&&!["localhost","127.0.0.1"].includes(new URL(url).hostname)) throw Error(
     await sql`CREATE TRIGGER fail_notice BEFORE INSERT ON order_notification FOR EACH ROW EXECUTE FUNCTION fail_notice()`;
     try {
       await expect(f.payment.apply(f.approval)).rejects.toThrow();
-      expect(await sql`SELECT stock_on_hand,reserved FROM inventory_item`).toMatchObject([{stock_on_hand:1,reserved:1}]);
+      expect([(await fi.stock("piece"))].map(s => ({stock_on_hand:s.stockOnHand,reserved:s.reserved}))).toMatchObject([{stock_on_hand:0,reserved:0}]);
       expect(await sql`SELECT * FROM processed_webhook`).toHaveLength(0);
     } finally {await sql`DROP TRIGGER fail_notice ON order_notification`;await sql`DROP FUNCTION fail_notice()`;}
+    await f.payment.apply(f.approval);
+    expect(await sql`SELECT * FROM order_notification`).toHaveLength(1);
+    expect(await fi.stock("piece")).toMatchObject({stockOnHand:0,reserved:0});
   });
   it("OPS-05: exclusive claims, lease recovery and stale acknowledgement",async()=>{
     await seed();const repo=new PostgresNotificationRepository(sql);

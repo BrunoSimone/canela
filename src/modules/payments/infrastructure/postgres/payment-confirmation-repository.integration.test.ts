@@ -1,3 +1,7 @@
+import { inventoryFixture } from "@/modules/inventory/testing/memory-documents";
+const fi = inventoryFixture();
+vi.mock("@/modules/inventory/infrastructure/sanity-documents", () => ({ inventoryStore: () => fi.inventory }));
+import { vi } from "vitest";
 import { createHash, randomUUID } from "node:crypto";
 import type { Sql } from "postgres";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
@@ -27,7 +31,7 @@ describeWithDatabase("PostgresPaymentConfirmationRepository", () => {
     repository = new PostgresPaymentConfirmationRepository(sql);
   });
 
-  beforeEach(async () => {
+  beforeEach(async () => { fi.documents.data.clear();
     await sql`
       TRUNCATE TABLE
         processed_webhook,
@@ -39,10 +43,7 @@ describeWithDatabase("PostgresPaymentConfirmationRepository", () => {
         inventory_item
       RESTART IDENTITY CASCADE
     `;
-    await sql`
-      INSERT INTO inventory_item (product_id, stock_on_hand)
-      VALUES ('unique-piece', 1)
-    `;
+    fi.documents.seed("unique-piece", 1);
   });
 
   afterAll(async () => {
@@ -257,7 +258,7 @@ describeWithDatabase("PostgresPaymentConfirmationRepository", () => {
     });
   });
 
-  it("rolls back deduplication and stock when persistence fails", async () => {
+  it("retries SQL after Sanity consumed stock without decrementing it twice", async () => {
     const orderId = await createCheckout(sql);
     const event = confirmation(orderId, "delivery-retry", "approved");
 
@@ -378,18 +379,10 @@ async function readState(sql: Sql, orderId: string) {
       orders.status AS order_status,
       payment_attempt.status AS payment_status,
       stock_reservation.status AS reservation_status,
-      inventory_item.stock_on_hand,
-      inventory_item.reserved,
-      (
-        SELECT count(*)::text
-        FROM inventory_adjustment
-        WHERE product_id = inventory_item.product_id
-      ) AS adjustments
+      stock_reservation.product_id
     FROM orders
     JOIN payment_attempt ON payment_attempt.order_id = orders.id
     JOIN stock_reservation ON stock_reservation.order_id = orders.id
-    JOIN inventory_item
-      ON inventory_item.product_id = stock_reservation.product_id
     WHERE orders.id = ${orderId}
   `;
 
@@ -397,8 +390,8 @@ async function readState(sql: Sql, orderId: string) {
     orderStatus: row.order_status,
     paymentStatus: row.payment_status,
     reservationStatus: row.reservation_status,
-    stockOnHand: row.stock_on_hand,
-    reserved: row.reserved,
-    adjustments: Number(row.adjustments),
+    stockOnHand: (await fi.stock("unique-piece")).stockOnHand,
+    reserved: (await fi.stock("unique-piece")).reserved,
+    adjustments: [...fi.documents.data.values()].filter(d => d._type === "canelaReservation" && d.state === "consumed").length,
   };
 }

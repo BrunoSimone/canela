@@ -1,4 +1,6 @@
 import type { Sql } from "postgres";
+import type { InventoryStore } from "@/modules/inventory/domain/inventory-store";
+import { inventoryStore } from "@/modules/inventory/infrastructure/sanity-documents";
 
 import {
   ClosedCheckoutAttemptError,
@@ -50,7 +52,7 @@ type CheckoutItemRow = {
 };
 
 export class PostgresCheckoutRepository implements CheckoutRepository {
-  constructor(private readonly sql: Sql) {}
+  constructor(private readonly sql: Sql, private readonly inventory: InventoryStore = inventoryStore()) {}
 
   async reserve(input: ReserveCheckoutInput): Promise<ReservedCheckout> {
     let reserved;
@@ -58,6 +60,7 @@ export class PostgresCheckoutRepository implements CheckoutRepository {
       reserved = await createReservedOrder(
         this.sql,
         toCreateReservedOrderInput(input),
+        this.inventory,
       );
     } catch (error) {
       if (error instanceof InventoryUnavailableError) {
@@ -144,27 +147,7 @@ export class PostgresCheckoutRepository implements CheckoutRepository {
         throw new Error("A checkout with a provider order cannot be released");
       }
 
-      const activeReservations = await transaction<{
-        product_id: string;
-        quantity: number;
-      }[]>`
-        SELECT product_id, quantity
-        FROM stock_reservation
-        WHERE order_id = ${orderId}
-          AND status = 'active'
-        ORDER BY product_id
-        FOR UPDATE
-      `;
-
-      for (const reservation of activeReservations) {
-        await transaction`
-          UPDATE inventory_item
-          SET
-            reserved = reserved - ${reservation.quantity},
-            updated_at = now()
-          WHERE product_id = ${reservation.product_id}
-        `;
-      }
+      if (!await this.inventory.settle(orderId, "released")) throw Error("INVENTORY_RELEASE_CONFLICT");
 
       await transaction`
         UPDATE stock_reservation

@@ -25,7 +25,7 @@ export function AdminShell({
             <span className={styles.brandSection}>Pedidos</span>
           </Link>
           <div className={styles.headerActions}>
-            {email && <nav aria-label="Administración" style={{ display: "flex", gap: 16 }}><Link href="/admin">Pedidos</Link><Link href="/admin/inventario">Inventario</Link><a href="https://canela-artesanal.sanity.studio" target="_blank" rel="noopener noreferrer">Catálogo</a></nav>}
+            {email && <nav aria-label="Administración" style={{ display: "flex", gap: 16 }}><Link href="/admin">Pedidos</Link><a href="https://canela-artesanal.sanity.studio" target="_blank" rel="noopener noreferrer">Catálogo y stock</a></nav>}
             {demo && <span className={styles.demoPill}>Vista de demostración</span>}
             <details className={styles.help}>
               <summary><CircleHelp size={17} /> Ayuda</summary>

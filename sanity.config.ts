@@ -5,6 +5,7 @@ import { esESLocale } from "@sanity/locale-es-es";
 
 import { schema, CATEGORY_OPTIONS } from "./src/sanity/schema";
 import { dataset, projectId } from "./src/sanity/env";
+import { ProductStockView } from "./src/sanity/product-stock-view";
 
 export default defineConfig({
   name: "default",
@@ -12,9 +13,13 @@ export default defineConfig({
   projectId,
   dataset,
   schema,
+  auth: { loginMethod: "token" },
   plugins: [
     esESLocale(),
     structureTool({
+      defaultDocumentNode: (S, { schemaType }) => schemaType === "producto"
+        ? S.document().views([S.view.form().title("Producto"), S.view.component(ProductStockView).title("Stock")])
+        : S.document(),
       structure: (S, context) =>
         S.list()
           .title("Contenido")

@@ -7,12 +7,12 @@ import { ComoComprar } from "@/components/home/como-comprar";
 import { CATEGORIES } from "@/content/catalog";
 import { getHeroSlides, getProducts, groupByCategory } from "@/lib/api";
 import { filterCatalogByAvailability } from "@/modules/inventory/domain/catalog-visibility";
-import { PostgresProductAvailabilityRepository } from "@/modules/inventory/infrastructure/postgres/product-availability-repository";
+import { inventoryStore } from "@/modules/inventory/infrastructure/sanity-documents";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const availability = new PostgresProductAvailabilityRepository();
+  const availability = inventoryStore();
   const [products, heroSlides, availableProductIds] = await Promise.all([
     getProducts(),
     getHeroSlides(),

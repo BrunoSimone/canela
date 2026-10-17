@@ -11,35 +11,36 @@ const messages: Record<string, string> = {
   INVALID_STOCK_EDIT: "Revisá la cantidad y escribí un motivo de al menos tres caracteres.",
 };
 type History = { at: string; actor: string; reason: string; before: { stockOnHand: number }; after: { stockOnHand: number } };
-export function InventoryClient() {
+export type InventoryFetch = (path: string, options?: RequestInit) => Promise<Response>;
+export function InventoryClient({ request, productId }: { request: InventoryFetch; productId?: string }) {
   const [rows, setRows] = useState<InventoryRow[]>([]), [query, setQuery] = useState(""), [error, setError] = useState(""), [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState("");
   async function load() {
     setLoading(true); setError("");
-    try { const r = await fetch("/api/admin/inventory", { cache: "no-store" }); if (!r.ok) throw new Error(); setRows((await r.json()).products); }
+    try { const r = await request("", { cache: "no-store" }); if (!r.ok) throw new Error(); setRows((await r.json()).products); }
     catch { setError("No pudimos cargar el inventario. Verificá tu sesión y volvé a intentar."); }
     finally { setLoading(false); }
   }
   useEffect(() => {
     const controller = new AbortController();
-    fetch("/api/admin/inventory", { cache: "no-store", signal: controller.signal })
+    request("", { cache: "no-store", signal: controller.signal })
       .then(async response => { if (!response.ok) throw new Error(); const data = await response.json(); setRows(data.products); })
       .catch(() => { if (!controller.signal.aborted) setError("No pudimos cargar el inventario. Verificá tu sesión."); })
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, []);
+  }, [request]);
   return <main className={styles.main}>
-    <div className={styles.heading}><div><h1>Inventario</h1><p>Registrá las unidades físicas del taller. Las reservas se descuentan de la disponibilidad.</p></div><button onClick={load} disabled={loading}>Actualizar lista</button></div>
-    <label className={styles.search}>Buscar producto<input value={query} onChange={e => setQuery(e.target.value)} placeholder="Nombre de la pieza" /></label>
+    <div className={styles.heading}><div><h1>Stock</h1><p>Registrá las unidades aún no vendidas. Incluí las reservas de pagos pendientes; excluí los pedidos ya pagados, aunque todavía estén en el taller.</p></div><button onClick={load} disabled={loading}>Actualizar lista</button></div>
+    {!productId && <label className={styles.search}>Buscar producto<input value={query} onChange={e => setQuery(e.target.value)} placeholder="Nombre de la pieza" /></label>}
     {error && <p role="alert">{error}</p>}
     {notice && <p role="status">{notice}</p>}
     {loading ? <p role="status">Cargando inventario…</p> : <div className={styles.grid}>
-      {rows.filter(r => r.name.toLocaleLowerCase().includes(query.toLocaleLowerCase())).map(row => <StockCard key={`${row.id}-${row.version}-${row.stockOnHand}-${row.reserved}`} row={row} onSaved={saved => { setRows(current => current.map(r => r.id === row.id ? { ...r, ...saved } : r)); setNotice(`Stock guardado: ${row.name}.`); }} />)}
-      {!rows.length && <p>Publicá los productos en Sanity para comenzar.</p>}
+      {rows.filter(r => (!productId || r.id === productId)).filter(r => r.name.toLocaleLowerCase().includes(query.toLocaleLowerCase())).map(row => <StockCard request={request} key={`${row.id}-${row.version}-${row.stockOnHand}-${row.reserved}`} row={row} onSaved={saved => { setRows(current => current.map(r => r.id === row.id ? { ...r, ...saved } : r)); setNotice(`Stock guardado: ${row.name}.`); }} />)}
+      {!rows.some(r => !productId || r.id === productId) && <p>Publicá los productos en Sanity para comenzar.</p>}
     </div>}
   </main>;
 }
-function StockCard({ row, onSaved }: { row: InventoryRow; onSaved: (row: InventoryRow) => void }) {
+function StockCard({ row, onSaved, request }: { request: InventoryFetch; row: InventoryRow; onSaved: (row: InventoryRow) => void }) {
   const [quantity, setQuantity] = useState(String(row.stockOnHand)), [enabled, setEnabled] = useState(row.enabled), [reason, setReason] = useState(""), [busy, setBusy] = useState(false), [message, setMessage] = useState(""), [history, setHistory] = useState<History[] | null>(null);
   const [mutationId, setMutationId] = useState<string | null>(null);
   const dirty = () => setMutationId(null);
@@ -47,7 +48,7 @@ function StockCard({ row, onSaved }: { row: InventoryRow; onSaved: (row: Invento
     e.preventDefault(); if (busy) return; setBusy(true); setMessage("");
     const id = mutationId ?? crypto.randomUUID(); setMutationId(id);
     try {
-      const r = await fetch("/api/admin/inventory", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ productId: row.id, mutationId: id, expectedVersion: row.version, expectedStock: row.stockOnHand, expectedReserved: row.reserved, stockOnHand: Number(quantity), enabled, reason }) });
+      const r = await request("", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ productId: row.id, mutationId: id, expectedVersion: row.version, expectedStock: row.stockOnHand, expectedReserved: row.reserved, stockOnHand: Number(quantity), enabled, reason }) });
       const body = await r.json();
       if (!r.ok) { setMessage(messages[body.code] ?? "No se pudo guardar. Actualizá la lista para revisar el estado."); return; }
       onSaved({ ...row, ...body }); setMessage("Stock guardado."); setReason(""); setMutationId(null);
@@ -55,12 +56,12 @@ function StockCard({ row, onSaved }: { row: InventoryRow; onSaved: (row: Invento
     finally { setBusy(false); }
   }
   async function showHistory() {
-    try { const r = await fetch(`/api/admin/inventory?productId=${encodeURIComponent(row.id)}`, { cache: "no-store" }); if (!r.ok) throw new Error(); setHistory((await r.json()).history); }
+    try { const r = await request(`?productId=${encodeURIComponent(row.id)}`, { cache: "no-store" }); if (!r.ok) throw new Error(); setHistory((await r.json()).history); }
     catch { setMessage("No pudimos consultar el historial."); }
   }
   return <article className={styles.card}><h2>{row.name}</h2><p>{row.tone === "unica" ? "Pieza única" : row.tone === "encargo" ? "Por encargo" : "Venta por unidades"}</p>
-    <dl className={styles.counts}><div><dt>Existencias</dt><dd>{row.stockOnHand}</dd></div><div><dt>Reservadas</dt><dd>{row.reserved}</dd></div><div><dt>Disponibles</dt><dd>{row.enabled && row.tone !== "encargo" ? row.stockOnHand - row.reserved : 0}</dd></div></dl>
-    <form onSubmit={save}><fieldset disabled={busy}><label>Unidades físicas<input type="number" min={row.reserved} max={row.tone === "unica" ? 1 : 1000000} step="1" required value={quantity} onChange={e => { setQuantity(e.target.value); dirty(); }} /></label>
+    <dl className={styles.counts}><div><dt>Sin vender</dt><dd>{row.stockOnHand}</dd></div><div><dt>Reservadas</dt><dd>{row.reserved}</dd></div><div><dt>Disponibles</dt><dd>{row.enabled && row.tone !== "encargo" ? row.stockOnHand - row.reserved : 0}</dd></div></dl>
+    <form onSubmit={save}><fieldset disabled={busy}><label>Unidades aún no vendidas<input type="number" min={row.reserved} max={row.tone === "unica" ? 1 : 1000000} step="1" required value={quantity} onChange={e => { setQuantity(e.target.value); dirty(); }} /></label>
       <label className={styles.check}><input type="checkbox" checked={enabled} disabled={row.tone === "encargo"} onChange={e => { setEnabled(e.target.checked); dirty(); }} />Habilitar venta</label>
       <label>Motivo del ajuste<input required minLength={3} maxLength={300} value={reason} placeholder="Carga inicial, reposición, rotura…" onChange={e => { setReason(e.target.value); dirty(); }} /></label>
       <button type="submit">{busy ? "Guardando…" : "Guardar stock"}</button></fieldset></form>

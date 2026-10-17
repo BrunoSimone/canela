@@ -29,13 +29,22 @@ No introducir valores aproximados para desbloquear el checkout. El sistema
 selecciona una caja y calcula posiciones, peso y dimensiones para cotizar. Si no
 encuentra una combinación segura, impide iniciar el pago.
 
-## Inventario
+## Stock: en la misma ficha de Sanity
 
-En https://www.canela-store.com/admin/inventario, ingresar con el correo autorizado.
-Cada producto muestra existencias físicas, reservas y unidades disponibles.
-Registrar cantidades reales con un motivo. Las reservas no se pueden eliminar
-mediante un ajuste; una pieza única no admite existencias mayores a una.
-Los cambios quedan auditados. Sanity no es la fuente de cantidades de stock.
+1. Abrir el producto y seleccionar la pestaña **Stock**, junto a **Producto**.
+2. Cargar **Unidades aún no vendidas**: incluir las que están reservadas por un
+   pago pendiente y excluir las de pedidos ya pagados, aunque sigan en el taller.
+3. Activar **Habilitar venta** cuando corresponda, escribir un motivo y pulsar
+   **Guardar stock**. El cambio es inmediato; no requiere publicar el producto.
+4. La ficha muestra **Sin vender**, **Reservadas** y **Disponibles**. Una compra
+   reserva unidades; un pago aprobado las descuenta y uno rechazado las libera.
+5. Si aparece un conflicto, **Actualizar lista** antes de corregir nuevamente.
+   Las reservas no se pueden eliminar mediante un ajuste; pieza única admite una.
+6. **Ver últimos ajustes** muestra quién cambió el stock y por qué.
+
+Sanity almacena las cantidades y reservas. Publicar un borrador de fotos, precio
+u otros datos del producto no modifica el stock. El panel de Canela se usa para
+pedidos, preparación y despacho. La antigua ruta de inventario redirige a Sanity.
 
 La pantalla administrativa y Sanity siguen accesibles mientras la tienda está en
 mantenimiento. Completar datos no abre ventas automáticamente.

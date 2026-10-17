@@ -1,3 +1,7 @@
+import { inventoryFixture } from "@/modules/inventory/testing/memory-documents";
+const fi = inventoryFixture();
+vi.mock("@/modules/inventory/infrastructure/sanity-documents", () => ({ inventoryStore: () => fi.inventory }));
+import { vi } from "vitest";
 import { preparedParcels, preparedQuoteFingerprint } from "../domain/fulfillment";
 import {randomUUID,createHash} from "node:crypto";
 import type {Sql} from "postgres";
@@ -17,9 +21,9 @@ if(url&&!["localhost","127.0.0.1"].includes(new URL(url).hostname))throw new Err
   let sql:Sql;
   beforeAll(async()=>{sql=createDatabaseClient(url!);await runMigrations(sql);});
   afterAll(async()=>{await sql?.end();});
-  beforeEach(async()=>{await sql`TRUNCATE orders,inventory_item RESTART IDENTITY CASCADE`;});
+  beforeEach(async()=>{ fi.documents.data.clear();await sql`TRUNCATE orders,inventory_item RESTART IDENTITY CASCADE`;});
   async function seed(){
-    const f=await fulfillmentFixture();await sql`INSERT INTO inventory_item(product_id,stock_on_hand) VALUES('piece',1)`;
+    const f=await fulfillmentFixture();fi.documents.seed("piece", 1);
     await createReservedOrder(sql,{orderId:f.order.id,publicTokenHash:createHash("sha256").update(f.order.id).digest("hex"),idempotencyKey:randomUUID(),currency:"ARS",buyerEmail:f.order.buyerEmail,delivery:f.order.delivery!,shippingCents:f.order.shippingCents,shippingSnapshot:f.order.quote!,items:[{productId:"piece",name:"Pieza",quantity:1,unitPriceCents:f.order.subtotalCents}]});
     await sql`UPDATE orders SET status='paid' WHERE id=${f.order.id}`;
     await new PostgresOrderPreparationRepository(sql).save(f.order.id,"owner@example.com",{expectedVersion:0,parcels:f.order.preparation!.parcels,note:null});
@@ -65,7 +69,7 @@ if(url&&!["localhost","127.0.0.1"].includes(new URL(url).hostname))throw new Err
     expect(order).toMatchObject({status:"label_ready",shipment:{state:"label_ready",sandbox:true}});
     expect(JSON.stringify(order)).not.toContain('"recipientDocument"');
     expect(JSON.stringify(order)).not.toContain('"recipient_document"');
-    const [stock]=await sql`SELECT stock_on_hand,reserved FROM inventory_item`;expect(stock).toMatchObject({stock_on_hand:1,reserved:1});
+    const [stock]=[(await fi.stock("piece"))].map(s => ({stock_on_hand:s.stockOnHand,reserved:s.reserved}));expect(stock).toMatchObject({stock_on_hand:1,reserved:1});
   });
   it("requires review after a remote price difference without changing payment",async()=>{
     const f=await seed();await f.repo.claim(f.request,"owner@example.com",f.context);

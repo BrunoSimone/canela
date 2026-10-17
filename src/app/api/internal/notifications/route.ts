@@ -1,10 +1,13 @@
 import { getDatabase } from "@/db/client";
 import { processOrderNotifications } from "@/modules/notifications/infrastructure/notification-service";
 import { handleNotificationWorker } from "@/modules/notifications/presentation/http/worker-handler";
+import { recoverReservationIntents } from "@/modules/inventory/infrastructure/recover-reservation-intents";
+import { inventoryStore } from "@/modules/inventory/infrastructure/sanity-documents";
 export const runtime="nodejs";
 export const maxDuration = 60;
 export async function POST(request: Request) {
   return handleNotificationWorker(request, process.env.NOTIFICATION_WORKER_SECRET, async () => {
+    await recoverReservationIntents(getDatabase(), inventoryStore(), 1);
     const processed = await processOrderNotifications(undefined, 5);
     const sql = getDatabase();
     const [health] = await sql`SELECT count(*) FILTER (WHERE state='review') AS review,

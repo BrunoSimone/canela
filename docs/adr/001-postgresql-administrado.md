@@ -1,5 +1,11 @@
 # ADR-001: PostgreSQL administrado para órdenes e inventario
 
+> Actualización 2026-10-17: [spec 100](../specs/100-inventario-sanity.md) y
+> [ADR-006](../adr/006-stock-autoritativo-sanity.md) sustituyen la autoridad SQL
+> de stock y la pantalla separada. Sanity almacena y administra cantidades,
+> reservas y ajustes; PostgreSQL conserva pedidos y pagos.
+
+
 ## Estado
 
 Aceptado por Bruno el 2026-09-09.

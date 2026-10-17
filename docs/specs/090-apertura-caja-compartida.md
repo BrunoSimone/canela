@@ -1,5 +1,11 @@
 # Preparación técnica de apertura — caja compartida e inventario
 
+> Actualización 2026-10-17: [spec 100](../specs/100-inventario-sanity.md) y
+> [ADR-006](../adr/006-stock-autoritativo-sanity.md) sustituyen la autoridad SQL
+> de stock y la pantalla separada. Sanity almacena y administra cantidades,
+> reservas y ajustes; PostgreSQL conserva pedidos y pagos.
+
+
 2026-10-16. Bruno autoriza completar pendientes técnicos y publicar Sanity para
 la carga del cliente. Objetivo comercial: domingo 18/10. La apertura de cobros
 requiere datos reales y cuenta logística operativa; no se inventan esas aprobaciones.

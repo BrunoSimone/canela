@@ -1,6 +1,9 @@
 import type { CourierQuoteSnapshot } from "../modules/shipping/domain/courier-quote";
 import { createHash, randomUUID } from "node:crypto";
 import type { Sql } from "postgres";
+import type { InventoryStore } from "@/modules/inventory/domain/inventory-store";
+import { InventoryShortage, ReservationClosed } from "@/modules/inventory/domain/inventory-store";
+import { inventoryStore } from "@/modules/inventory/infrastructure/sanity-documents";
 
 import { checkoutExpiresAt } from "../modules/checkout/domain/checkout-expiration";
 import { InvalidDeliveryError, parseDeliverySnapshot, type DeliverySnapshot } from "../modules/checkout/domain/delivery";
@@ -177,10 +180,11 @@ export function validateReservedOrderInput(
 export async function createReservedOrder(
   sql: Sql,
   input: CreateReservedOrderInput,
+  inventory: InventoryStore = inventoryStore(),
 ): Promise<ReservedOrder> {
   const validated = validateReservedOrderInput(input);
 
-  return sql.begin(async (transaction) => {
+  const staged = await sql.begin(async (transaction) => {
     // Serializes retries of the same browser attempt without blocking other carts.
     await transaction`
       SELECT pg_advisory_xact_lock(hashtextextended(${input.idempotencyKey}, 0))
@@ -217,38 +221,6 @@ export async function createReservedOrder(
       };
     }
 
-    const productIds = validated.sortedItems.map((item) => item.productId);
-    const inventoryRows = await transaction<{
-      product_id: string;
-      stock_on_hand: number;
-      reserved: number;
-      is_sellable: boolean;
-    }[]>`
-      SELECT product_id, stock_on_hand, reserved, is_sellable
-      FROM inventory_item
-      WHERE product_id IN ${transaction(productIds)}
-      ORDER BY product_id
-      FOR UPDATE
-    `;
-
-    const inventoryByProduct = new Map(
-      inventoryRows.map((row) => [row.product_id, row]),
-    );
-    const unavailableProductIds = validated.sortedItems
-      .filter((item) => {
-        const inventory = inventoryByProduct.get(item.productId);
-        return (
-          !inventory ||
-          !inventory.is_sellable ||
-          inventory.stock_on_hand - inventory.reserved < item.quantity
-        );
-      })
-      .map((item) => item.productId);
-
-    if (unavailableProductIds.length) {
-      throw new InventoryUnavailableError(unavailableProductIds);
-    }
-
     await transaction`
       INSERT INTO orders (
         id,
@@ -261,7 +233,7 @@ export async function createReservedOrder(
         buyer_email,
         checkout_payload_hash,
         shipping_quote_snapshot,
-        environment
+        environment, inventory_state, inventory_expires_at
       ) VALUES (
         ${input.orderId},
         ${input.publicTokenHash.toLowerCase()},
@@ -273,7 +245,7 @@ export async function createReservedOrder(
         ${input.buyerEmail},
         ${validated.payloadHash},
         ${input.shippingSnapshot ? transaction.json(JSON.parse(JSON.stringify(input.shippingSnapshot))) : null},
-        ${input.environment ?? "test"}
+        ${input.environment ?? "test"}, 'pending', ${validated.expiresAt}
       )
     `;
 
@@ -317,12 +289,6 @@ export async function createReservedOrder(
 
     for (const item of validated.sortedItems) {
       await transaction`
-        UPDATE inventory_item
-        SET reserved = reserved + ${item.quantity}, updated_at = now()
-        WHERE product_id = ${item.productId}
-      `;
-
-      await transaction`
         INSERT INTO stock_reservation (
           id,
           order_id,
@@ -345,4 +311,20 @@ export async function createReservedOrder(
       reused: false,
     };
   });
+  // The durable intent survives remote timeouts and SQL rollback after reservation.
+  try {
+    await sql.begin(async tx => {
+      const [order] = await tx`SELECT inventory_state FROM orders WHERE id=${staged.orderId} FOR UPDATE`;
+      if (order.inventory_state === "ready") return;
+      if (order.inventory_state !== "pending") throw new ClosedCheckoutAttemptError();
+      if (staged.expiresAt.getTime() <= Date.now()) throw new ClosedCheckoutAttemptError();
+      await inventory.reserve(staged.orderId, validated.payloadHash, validated.sortedItems);
+      await tx`UPDATE orders SET inventory_state='ready', updated_at=now() WHERE id=${staged.orderId}`;
+    });
+  } catch (error) {
+    if (error instanceof InventoryShortage) throw new InventoryUnavailableError(error.productIds);
+    if (error instanceof ReservationClosed) throw new ClosedCheckoutAttemptError();
+    throw error;
+  }
+  return staged;
 }

@@ -1,4 +1,5 @@
 /** Read-only checks. No migrations, network mutations, emails or carrier orders. */
+import {inventoryStore} from "../src/modules/inventory/infrastructure/sanity-documents";
 import {createHash} from "node:crypto";
 import {readdir,readFile} from "node:fs/promises";
 import {createDatabaseClient} from "../src/db/client";
@@ -36,8 +37,9 @@ async function main(){
     const [health]=await sql`SELECT finished_at > now()-interval '15 minutes' AND review_count=0 AND overdue_count=0 AS healthy FROM background_job_health WHERE name='order_notifications'`;
     checks.push({check:"periodic_worker_recent_and_healthy",status:health?.healthy===true?"ok":"blocked"});
    }
-   const inventory=await sql<{product_id:string;stock_on_hand:number;stock_reserved:number;enabled:boolean}[]>`SELECT product_id,stock_on_hand,reserved AS stock_reserved,is_sellable AS enabled FROM inventory_item`;
    const products=await readInventoryCatalog();
+   const inventory=(await inventoryStore().list(products)).map(i=>({product_id:i.id,stock_on_hand:i.stockOnHand,stock_reserved:i.reserved,enabled:i.enabled}));
+   checks.push({check:"sanity_authoritative_stock",status:"ok"});
    const profiles=await new SanityShippingProfileCatalog().findByIds(products.map(p=>p.id));
    const boxes=await new SanityShippingBoxes().list();
    checks.push({check:"active_shipping_boxes",status:boxes.length>0?"ok":"blocked"});

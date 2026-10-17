@@ -29,7 +29,7 @@ describe("storefront maintenance", () => {
     expect(proxy(new NextRequest("https://canela.test/checkout", { method: "POST" })).status).toBe(503);
   });
 
-  it.each(["/admin", "/admin/ingresar", "/admin/acceso", "/admin/pedidos/example", "/api/admin/auth/verify", "/api/admin/auth/logout", "/api/admin/orders/example/preparation", "/api/webhooks/mercado-pago", "/api/revalidate", "/api/internal/notifications", "/robots.txt"])("preserves existing authentication and handlers for %s", (path) => {
+  it.each(["/admin", "/admin/ingresar", "/admin/acceso", "/admin/pedidos/example", "/api/admin/auth/verify", "/api/admin/auth/logout", "/api/admin/orders/example/preparation", "/api/webhooks/mercado-pago", "/api/revalidate", "/api/internal/notifications", "/api/studio/inventory", "/robots.txt"])("preserves existing authentication and handlers for %s", (path) => {
     vi.stubEnv("SITE_MAINTENANCE_MODE", "1");
     const response = proxy(new NextRequest(`https://canela.test${path}`));
     expect(response.headers.get("x-middleware-next")).toBe("1");

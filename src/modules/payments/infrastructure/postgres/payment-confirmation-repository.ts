@@ -1,5 +1,6 @@
-import { randomUUID } from "node:crypto";
 import type { Sql, TransactionSql } from "postgres";
+import type { InventoryStore } from "@/modules/inventory/domain/inventory-store";
+import { inventoryStore } from "@/modules/inventory/infrastructure/sanity-documents";
 import { enqueueOrderNotice } from "@/modules/notifications/infrastructure/enqueue";
 
 import type {
@@ -20,12 +21,6 @@ type ReservationRow = {
   status: string;
 };
 
-type InventoryRow = {
-  product_id: string;
-  stock_on_hand: number;
-  reserved: number;
-};
-
 const PAID_ORDER_STATES = new Set([
   "paid",
   "fulfillment_pending",
@@ -39,7 +34,7 @@ const FAILED_ORDER_STATES = new Set(["rejected", "expired"]);
 export class PostgresPaymentConfirmationRepository
   implements PaymentConfirmationRepository
 {
-  constructor(private readonly sql: Sql) {}
+  constructor(private readonly sql: Sql, private readonly inventory: InventoryStore = inventoryStore()) {}
 
   async findByProviderOrderId(
     providerOrderId: string,
@@ -130,7 +125,7 @@ export class PostgresPaymentConfirmationRepository
           await markReview(transaction, input);
           return { kind: "applied" };
         }
-        return applyApproved(transaction, input);
+        return applyApproved(transaction, input, this.inventory);
       }
 
       if (
@@ -141,7 +136,7 @@ export class PostgresPaymentConfirmationRepository
         if (FAILED_ORDER_STATES.has(current.order_status)) {
           return { kind: "unchanged" };
         }
-        return applyFailure(transaction, input);
+        return applyFailure(transaction, input, this.inventory);
       }
 
       if (input.state === "review_required") {
@@ -188,38 +183,12 @@ export class PostgresPaymentConfirmationRepository
 async function applyApproved(
   transaction: TransactionSql,
   input: ApplyPaymentConfirmationInput,
+  inventory: InventoryStore,
 ): Promise<ApplyPaymentConfirmationResult> {
   const reservations = await lockReservations(transaction, input.orderId);
-  const inventory = await lockInventory(transaction, reservations);
-
-  if (
-    reservations.length === 0 ||
-    reservations.some((reservation) => reservation.status !== "active") ||
-    !canApplyInventory(reservations, inventory)
-  ) {
+  if (reservations.length === 0 || reservations.some(r => r.status !== "active") || !await inventory.settle(input.orderId, "consumed")) {
     await markReview(transaction, input);
     return { kind: "applied" };
-  }
-
-  for (const reservation of reservations) {
-    await transaction`
-      UPDATE inventory_item
-      SET
-        stock_on_hand = stock_on_hand - ${reservation.quantity},
-        reserved = reserved - ${reservation.quantity},
-        updated_at = now()
-      WHERE product_id = ${reservation.product_id}
-    `;
-    await transaction`
-      INSERT INTO inventory_adjustment (id, product_id, delta, reason, actor)
-      VALUES (
-        ${randomUUID()},
-        ${reservation.product_id},
-        ${-reservation.quantity},
-        'payment_confirmed',
-        ${`mercado_pago:${input.orderId}`}
-      )
-    `;
   }
 
   await transaction`
@@ -249,27 +218,12 @@ async function applyApproved(
 async function applyFailure(
   transaction: TransactionSql,
   input: ApplyPaymentConfirmationInput,
+  inventory: InventoryStore,
 ): Promise<ApplyPaymentConfirmationResult> {
   const reservations = await lockReservations(transaction, input.orderId);
-  const inventory = await lockInventory(transaction, reservations);
-
-  if (
-    reservations.some((reservation) => reservation.status === "consumed") ||
-    !canReleaseInventory(reservations, inventory)
-  ) {
+  if (reservations.some(r => r.status === "consumed") || !await inventory.settle(input.orderId, "released")) {
     await markReview(transaction, input);
     return { kind: "applied" };
-  }
-
-  for (const reservation of reservations) {
-    if (reservation.status !== "active") {
-      continue;
-    }
-    await transaction`
-      UPDATE inventory_item
-      SET reserved = reserved - ${reservation.quantity}, updated_at = now()
-      WHERE product_id = ${reservation.product_id}
-    `;
   }
 
   await transaction`
@@ -343,52 +297,6 @@ async function lockReservations(
     ORDER BY product_id
     FOR UPDATE
   `;
-}
-
-async function lockInventory(
-  transaction: TransactionSql,
-  reservations: ReservationRow[],
-): Promise<Map<string, InventoryRow>> {
-  const rows: InventoryRow[] = [];
-  for (const reservation of reservations) {
-    const [inventory] = await transaction<InventoryRow[]>`
-      SELECT product_id, stock_on_hand, reserved
-      FROM inventory_item
-      WHERE product_id = ${reservation.product_id}
-      FOR UPDATE
-    `;
-    if (inventory) {
-      rows.push(inventory);
-    }
-  }
-  return new Map(rows.map((row) => [row.product_id, row]));
-}
-
-function canApplyInventory(
-  reservations: ReservationRow[],
-  inventory: Map<string, InventoryRow>,
-): boolean {
-  return reservations.every((reservation) => {
-    const item = inventory.get(reservation.product_id);
-    return (
-      item !== undefined &&
-      item.stock_on_hand >= reservation.quantity &&
-      item.reserved >= reservation.quantity
-    );
-  });
-}
-
-function canReleaseInventory(
-  reservations: ReservationRow[],
-  inventory: Map<string, InventoryRow>,
-): boolean {
-  return reservations.every((reservation) => {
-    if (reservation.status !== "active") {
-      return true;
-    }
-    const item = inventory.get(reservation.product_id);
-    return item !== undefined && item.reserved >= reservation.quantity;
-  });
 }
 
 function toSafeInteger(value: string): number {

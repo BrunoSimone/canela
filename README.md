@@ -1,5 +1,10 @@
 # Canela — Artisan Ecommerce
 
+Inventario vigente: Sanity es la fuente única de cantidades/reservas y se gestiona
+con **Producto → Stock** en Studio. Ver [spec 100](docs/specs/100-inventario-sanity.md)
+y [guía del cliente](docs/runbooks/carga-cliente.md).
+
+
 An ecommerce for **Canela**, a studio that makes handcrafted glass, ceramics,
 mirrors and framed art. Customers browse the Sanity-managed catalog, build a
 cart and pay through Mercado Pago Checkout Pro. Neon PostgreSQL is authoritative
