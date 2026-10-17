@@ -38,7 +38,7 @@ encuentra una combinación segura, impide iniciar el pago.
    **Guardar stock**. El cambio es inmediato; no requiere publicar el producto.
 4. La ficha muestra **Sin vender**, **Reservadas** y **Disponibles**. Una compra
    reserva unidades; un pago aprobado las descuenta y uno rechazado las libera.
-5. Si aparece un conflicto, **Actualizar lista** antes de corregir nuevamente.
+5. Si aparece un conflicto, **Actualizar stock** antes de corregir nuevamente.
    Las reservas no se pueden eliminar mediante un ajuste; pieza única admite una.
 6. **Ver últimos ajustes** muestra quién cambió el stock y por qué.
 
