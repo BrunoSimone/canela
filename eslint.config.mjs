@@ -14,6 +14,10 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Sanity Studio build output (regenerated on every `studio:deploy`).
     "dist/**",
+    // Generated artifacts and private local acceptance scripts.
+    "tmp/**",
+    "output/**",
+    ".vercel/**",
   ]),
 ]);
 

@@ -49,7 +49,7 @@ export function Footer() {
           ))}
         </div>
       </div>
-      <div className="border-t border-[rgba(234,223,202,.15)] px-[22px] py-5 text-center text-[13px] text-[#a88f6a]">
+      <div className="border-t border-[rgba(234,223,202,.15)] px-[22px] py-5 text-center text-[13px] text-[#bca57f]">
         © 2026 {siteConfig.name} · Diseño artesanal
       </div>
     </footer>

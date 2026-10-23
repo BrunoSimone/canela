@@ -40,7 +40,7 @@
   --card-foreground: #4a3527;
   --popover: #fbf7ee;
   --popover-foreground: #4a3527;
-  --primary: #b8842a;
+  --primary: #8a621d;
   --primary-foreground: #fbf7ee;
   --secondary: #efe4ce;
   --secondary-foreground: #4a3527;
@@ -54,7 +54,7 @@
   --ring: rgba(184, 132, 42, 0.5);
   --radius: 0.75rem;
 
-  --canela-ochre: #b8842a;
+  --canela-ochre: #8a621d;
   --canela-ochre-dark: #8a621d;
   --canela-brown: #4a3527;
   --canela-cream: #f6efe1;
@@ -69,6 +69,14 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  :focus-visible {
+    outline: 3px solid #4d7151;
+    outline-offset: 3px;
+  }
+  input:focus-visible, select:focus-visible, textarea:focus-visible {
+    outline: 3px solid #4d7151;
+    outline-offset: 2px;
   }
   html {
     @apply font-sans;
@@ -97,6 +105,9 @@
   }
 }
 
+.skip-link { position: fixed; top: 8px; left: 8px; z-index: 300; transform: translateY(-180%); padding: 12px 18px; background: #4a3527; color: #fbf7ee; border-radius: 6px; }
+.skip-link:focus { transform: translateY(0); }
+
 @layer utilities {
   .anchor-offset {
     scroll-margin-top: 5rem;
@@ -119,6 +130,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
   html {
     scroll-behavior: auto;
   }

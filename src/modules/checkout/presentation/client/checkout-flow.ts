@@ -84,7 +84,7 @@ export function presentCheckoutResult(
       return {
         title: "Pago confirmado",
         description:
-          "Recibimos tu pedido. Canela va a preparar las piezas y te avisará cuando estén listas para despachar.",
+          "Recibimos tu pedido. Canela va a preparar las piezas. Te enviaremos el seguimiento por email cuando despachemos tu pedido.",
         label: "Pedido recibido",
         tone: "success",
         allowNewAttempt: false,

@@ -4,14 +4,15 @@ import { orderableDocumentListDeskItem } from "@sanity/orderable-document-list";
 import { esESLocale } from "@sanity/locale-es-es";
 
 import { schema, CATEGORY_OPTIONS } from "./src/sanity/schema";
-import { dataset, projectId } from "./src/sanity/env";
+import { projectId } from "./src/sanity/env";
+import { resolveCatalogDataset } from "./src/sanity/catalog-dataset";
 import { ProductStockView } from "./src/sanity/product-stock-view";
 
 export default defineConfig({
   name: "default",
   title: "Canela — Productos",
   projectId,
-  dataset,
+  dataset: resolveCatalogDataset(process.env.SANITY_STUDIO_DATASET),
   schema,
   auth: { loginMethod: "token" },
   plugins: [

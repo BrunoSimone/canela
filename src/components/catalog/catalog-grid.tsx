@@ -51,6 +51,7 @@ export function CatalogGrid({
           return (
             <button
               key={label}
+              aria-pressed={isActive}
               onClick={() => selectFilter(label)}
               className="flex flex-none items-center gap-2 whitespace-nowrap rounded-full px-[18px] py-2.5 text-sm transition-colors"
               style={
@@ -103,7 +104,7 @@ export function CatalogGrid({
                 onClick={() => changePage(page - 1)}
                 disabled={page === 0}
                 aria-label="Página anterior"
-                className="flex size-9 items-center justify-center rounded-lg border border-[rgba(184,132,42,.5)] text-[#6E4E38] transition-colors hover:bg-[rgba(184,132,42,.1)] disabled:pointer-events-none disabled:opacity-40"
+                className="flex size-11 items-center justify-center rounded-lg border border-[rgba(184,132,42,.5)] text-[#6E4E38] transition-colors hover:bg-[rgba(184,132,42,.1)] disabled:pointer-events-none disabled:opacity-40"
               >
                 <ChevronLeft className="size-4" />
               </button>
@@ -115,7 +116,7 @@ export function CatalogGrid({
                   onClick={() => changePage(i)}
                   aria-current={i === page ? "page" : undefined}
                   className={cn(
-                    "flex size-9 items-center justify-center rounded-lg text-sm font-bold transition-colors",
+                    "flex size-11 items-center justify-center rounded-lg text-sm font-bold transition-colors",
                     i === page
                       ? "bg-[var(--canela-ochre)] text-[var(--canela-cream-card)]"
                       : "border border-[rgba(184,132,42,.5)] text-[#6E4E38] hover:bg-[rgba(184,132,42,.1)]",
@@ -130,7 +131,7 @@ export function CatalogGrid({
                 onClick={() => changePage(page + 1)}
                 disabled={page === pageCount - 1}
                 aria-label="Página siguiente"
-                className="flex size-9 items-center justify-center rounded-lg border border-[rgba(184,132,42,.5)] text-[#6E4E38] transition-colors hover:bg-[rgba(184,132,42,.1)] disabled:pointer-events-none disabled:opacity-40"
+                className="flex size-11 items-center justify-center rounded-lg border border-[rgba(184,132,42,.5)] text-[#6E4E38] transition-colors hover:bg-[rgba(184,132,42,.1)] disabled:pointer-events-none disabled:opacity-40"
               >
                 <ChevronRight className="size-4" />
               </button>

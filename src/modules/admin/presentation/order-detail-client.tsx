@@ -16,6 +16,7 @@ export function OrderDetailClient({ id, demo, backHref }: { id: string; demo: bo
   const [order, setOrder] = useState<AdminOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [retry, setRetry] = useState(0);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -25,14 +26,14 @@ export function OrderDetailClient({ id, demo, backHref }: { id: string; demo: bo
         if (!response.ok) throw new Error("Order unavailable");
         return response.json() as Promise<AdminOrder>;
       })
-      .then(setOrder)
+      .then((result) => { if (!controller.signal.aborted) setOrder(result); })
       .catch((caught) => { if ((caught as Error).name !== "AbortError") setError(true); })
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, [id, demo]);
+  }, [id, demo, retry]);
 
   if (loading) return <main className={styles.detailMain}><p>Cargando pedido…</p></main>;
-  if (error || !order) return <main className={styles.detailMain}><Link href={backHref} className={styles.backLink}><ArrowLeft size={18} /> Volver a pedidos</Link><div className={styles.empty}><strong>No pudimos abrir este pedido.</strong><span>Volvé a la bandeja e intentá otra vez.</span></div></main>;
+  if (error || !order) return <main className={styles.detailMain}><Link href={backHref} className={styles.backLink}><ArrowLeft size={18} /> Volver a pedidos</Link><div className={styles.empty} role="alert"><strong>No pudimos abrir este pedido.</strong><button type="button" className={styles.primaryLink} onClick={() => { setError(false); setLoading(true); setRetry(value => value + 1); }}>Reintentar</button><Link href="/admin/ingresar" className={styles.textButton}>Volver a ingresar si tu sesión terminó</Link></div></main>;
 
   return (
     <main className={styles.detailMain}>
@@ -67,9 +68,9 @@ export function OrderDetailClient({ id, demo, backHref }: { id: string; demo: bo
               <div><dt>Código postal</dt><dd>{order.destination?.postalCode ?? "Aún no disponible"}</dd></div>
               <div><dt>Recibe</dt><dd>{order.recipientName ?? order.buyer.name ?? "Aún no disponible"}</dd></div>
               <div><dt>Dirección</dt><dd className={!order.shippingAddress ? styles.pending : undefined}>{order.shippingAddress ?? "Aún no disponible"}</dd></div>
-              <div><dt>Número de seguimiento</dt><dd>{order.trackingNumber ?? "Aún no disponible"}</dd></div>
+              <div><dt>Seguimiento</dt><dd>{order.trackingNumber ?? (order.shipment?.trackingUrl ? "Disponible en el transporte" : "Aún no disponible")}{order.shipment?.trackingUrl && <><br /><a className={styles.textButton} href={order.shipment.trackingUrl} target="_blank" rel="noopener noreferrer">Consultar seguimiento</a></>}</dd></div>
             </dl>
-            {!demo && <p className={styles.integrationNote}>El seguimiento se mostrará cuando el transporte confirme el envío. Los pedidos anteriores a la captura de domicilio pueden no tener dirección guardada.</p>}
+            {!demo && !order.shipment?.trackingUrl && !order.trackingNumber && <p className={styles.integrationNote}>El seguimiento aparecerá cuando el transporte lo informe.</p>}
           </section>
         </div>
         <div className={styles.detailColumn}>
@@ -77,8 +78,6 @@ export function OrderDetailClient({ id, demo, backHref }: { id: string; demo: bo
             <h2>Próximo paso</h2>
             <div className={styles.actionBox}><StatusBadge order={order} /><p>{order.nextAction}</p></div>
           </section>
-          <ShipmentActions order={order} onChanged={setOrder} />
-          <OrderOperations order={order} onChanged={setOrder} />
           {order.packingPlan?.map((parcel, i) => <section className={styles.detailCard} key={i}>
             <h2>Caja y acomodo cotizados</h2>
             <p>{parcel.packing?.boxName ?? "Embalaje del pedido"} · {parcel.widthCm} × {parcel.lengthCm} × {parcel.heightCm} cm · {parcel.weightGrams} g totales.</p>
@@ -94,6 +93,8 @@ export function OrderDetailClient({ id, demo, backHref }: { id: string; demo: bo
             statusLabel: "Listo para crear envío",
             nextAction: "Confirmar el embalaje para generar la etiqueta.",
           } : current)} />
+          <ShipmentActions key={order.preparation?.version ?? 0} order={order} onChanged={setOrder} />
+          <OrderOperations order={order} onChanged={setOrder} />
           <section className={styles.detailCard}>
             <h2>Comprador</h2>
             <dl className={styles.detailFacts}>

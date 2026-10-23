@@ -1,142 +1,59 @@
 "use client";
 
+import { useRef } from "react";
 import Link from "next/link";
 import { CreditCard, Minus, Plus, ShoppingBag, X } from "lucide-react";
-
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { formatPrice } from "@/lib/product-status";
 import { useCart } from "@/modules/cart/presentation/hooks/use-cart";
 
 export function FloatingCart({ checkoutEnabled }: { checkoutEnabled: boolean }) {
-  const {
-    items,
-    count,
-    panelOpen,
-    inc,
-    dec,
-    remove,
-    togglePanel,
-    closePanel,
-  } = useCart();
-
+  const { items, count, panelOpen, inc, dec, remove, togglePanel, closePanel } = useCart();
+  const trigger = useRef<HTMLButtonElement>(null);
+  const close = useRef<HTMLButtonElement>(null);
   const hasItems = items.length > 0;
-  const canStartCheckout =
-    hasItems && items.every((item) => item.checkoutEligible);
+  const canStartCheckout = hasItems && items.every(item => item.checkoutEligible);
+  const subtotal = items.reduce((sum, item) => sum + Math.round(item.price * 100) * item.qty, 0) / 100;
+  const quantityClass = "flex size-11 shrink-0 items-center justify-center rounded-lg border border-[rgba(184,132,42,.5)] text-[#6E4E38]";
 
-  return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[120] h-0">
-      <div className="pointer-events-auto absolute bottom-5 right-5 flex flex-col items-end gap-3.5">
-        {panelOpen && (
-          <div className="flex max-h-[62vh] w-[322px] max-w-[80vw] flex-col overflow-hidden rounded-2xl border border-[rgba(184,132,42,.3)] bg-[var(--canela-cream-card)] shadow-[0_22px_54px_rgba(74,53,39,.3)]">
-            <div className="flex items-center justify-between border-b border-[rgba(184,132,42,.18)] bg-[#F3E8D2] px-4 py-3.5">
-              <span className="font-heading text-2xl leading-none text-[var(--canela-brown)]">
-                Mi carrito
-              </span>
-              <button
-                onClick={togglePanel}
-                aria-label="Cerrar"
-                className="p-1 text-[#8a7048]"
-              >
-                <X className="size-4" />
-              </button>
+  return <>
+    <button ref={trigger} type="button" onClick={togglePanel} aria-label={`Mi carrito${count ? `, ${count} ${count === 1 ? "pieza" : "piezas"}` : ""}`} aria-haspopup="dialog" aria-expanded={panelOpen}
+      className="fixed bottom-5 right-5 z-[120] flex size-14 items-center justify-center rounded-full bg-[var(--canela-brown)] text-[var(--canela-cream)] shadow-[0_10px_26px_rgba(74,53,39,.35)]">
+      <ShoppingBag className="size-6" strokeWidth={1.7} />
+      {count > 0 && <span className="absolute -right-1 -top-1 flex h-[22px] min-w-[22px] items-center justify-center rounded-full bg-[var(--canela-ochre)] px-1.5 text-xs font-extrabold text-[var(--canela-cream-card)]">{count}</span>}
+    </button>
+    <Dialog open={panelOpen} onOpenChange={open => { if (!open) closePanel(); }}>
+      <DialogContent showCloseButton={false} initialFocus={close} finalFocus={trigger}
+        className="flex max-h-[85dvh] w-[calc(100%-2rem)] max-w-[420px] flex-col gap-0 overflow-hidden rounded-2xl bg-[var(--canela-cream-card)] p-0 sm:max-w-[420px]">
+        <div className="flex items-center justify-between border-b border-[rgba(184,132,42,.18)] bg-[#F3E8D2] px-5 py-3">
+          <DialogTitle className="font-heading text-3xl">Mi carrito</DialogTitle>
+          <button ref={close} type="button" onClick={closePanel} aria-label="Cerrar carrito" className="flex size-11 items-center justify-center text-[#6E4E38]"><X className="size-5" /></button>
+        </div>
+        <DialogDescription className="sr-only">Revisá las piezas y sus cantidades antes de continuar al checkout.</DialogDescription>
+        <div className="min-h-0 overflow-y-auto px-5">
+          {hasItems ? items.map(item => <div key={item.id} className="border-b border-[rgba(184,132,42,.16)] py-4 last:border-0">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0"><p className="break-words font-bold">{item.name}</p><p className="mt-1 text-sm text-[#6E4E38]">{formatPrice(item.price)} por unidad</p></div>
+              <button type="button" onClick={() => { remove(item.id); close.current?.focus(); }} aria-label={`Quitar ${item.name} del carrito`} className="flex size-11 shrink-0 items-center justify-center text-[#7e4b3a]"><X className="size-5" /></button>
             </div>
-
-            <div className="flex flex-col gap-0.5 overflow-y-auto p-2.5">
-              {hasItems ? (
-                items.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center gap-2.5 border-b border-[rgba(184,132,42,.1)] px-2 py-2.5 last:border-0"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-bold text-[var(--canela-brown)]">
-                        {item.name}
-                      </div>
-                      <div className="text-[13px] font-bold text-[var(--canela-ochre-dark)]">
-                        {formatPrice(item.price)}
-                      </div>
-                    </div>
-                    <div className="flex flex-none items-center gap-1.5">
-                      <button
-                        onClick={() => dec(item.id)}
-                        aria-label="Quitar uno"
-                        className="flex size-6 items-center justify-center rounded-lg border border-[rgba(184,132,42,.5)] text-[#6E4E38]"
-                      >
-                        <Minus className="size-3.5" />
-                      </button>
-                      <span className="min-w-4 text-center text-sm font-bold text-[var(--canela-brown)]">
-                        {item.qty}
-                      </span>
-                      <button
-                        onClick={() => inc(item.id)}
-                        aria-label="Agregar uno"
-                        className="flex size-6 items-center justify-center rounded-lg border border-[rgba(184,132,42,.5)] text-[#6E4E38]"
-                      >
-                        <Plus className="size-3.5" />
-                      </button>
-                    </div>
-                    <button
-                      onClick={() => remove(item.id)}
-                      aria-label="Quitar del carrito"
-                      className="flex size-6 flex-none items-center justify-center rounded-lg text-[#b06a52]"
-                    >
-                      <X className="size-3.5" />
-                    </button>
-                  </div>
-                ))
-              ) : (
-                <div className="px-4 py-7 text-center text-sm leading-relaxed text-[#9a8158]">
-                  Todavía no agregaste piezas.
-                  <br />
-                  Tocá{" "}
-                  <b className="text-[var(--canela-ochre-dark)]">
-                    “Agregar al carrito”
-                  </b>{" "}
-                  en las que te gusten.
-                </div>
-              )}
-            </div>
-
-            {hasItems && (
-              <div className="border-t border-[rgba(184,132,42,.18)] p-3">
-                {checkoutEnabled && canStartCheckout && (
-                  <Link
-                    href="/checkout"
-                    onClick={closePanel}
-                    className="flex items-center justify-center gap-2 rounded-xl bg-[var(--canela-ochre)] px-4 py-3 text-sm font-extrabold text-[var(--canela-cream-card)] transition-colors hover:bg-[var(--canela-ochre-dark)]"
-                  >
-                    <CreditCard className="size-4" />
-                    Comprar y pagar online
-                  </Link>
-                )}
-                {checkoutEnabled && !canStartCheckout && (
-                  <p className="border-l-2 border-[var(--canela-ochre)] pl-3 text-xs leading-relaxed text-[#6E4E38]">
-                    Las piezas por encargo no participan del pago online. Quitalas
-                    del carrito para pagar las piezas disponibles.
-                  </p>
-                )}
-                {!checkoutEnabled && (
-                  <p className="text-center text-xs leading-relaxed text-[#6E4E38]">
-                    La compra online estará disponible cuando terminemos de conectar el envío.
-                  </p>
-                )}
+            <div className="mt-3 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <button type="button" onClick={() => { dec(item.id); if (item.qty === 1) close.current?.focus(); }} aria-label={`Quitar uno de ${item.name}`} className={quantityClass}><Minus className="size-4" /></button>
+                <span aria-label={`Cantidad de ${item.name}`} className="min-w-5 text-center font-bold tabular-nums">{item.qty}</span>
+                <button type="button" onClick={() => inc(item.id)} aria-label={`Agregar uno de ${item.name}`} className={quantityClass}><Plus className="size-4" /></button>
               </div>
-            )}
-          </div>
-        )}
-
-        <button
-          onClick={togglePanel}
-          aria-label="Mi carrito"
-          className="relative flex size-14 items-center justify-center rounded-full bg-[var(--canela-brown)] text-[var(--canela-cream)] shadow-[0_10px_26px_rgba(74,53,39,.35)]"
-        >
-          <ShoppingBag className="size-6" strokeWidth={1.7} />
-          {count > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-[22px] min-w-[22px] items-center justify-center rounded-full bg-[var(--canela-ochre)] px-1.5 text-xs font-extrabold text-[var(--canela-cream-card)]">
-              {count}
-            </span>
-          )}
-        </button>
-      </div>
-    </div>
-  );
+              <strong className="text-[var(--canela-ochre-dark)]">{formatPrice(item.price * item.qty)}</strong>
+            </div>
+          </div>) : <p className="py-8 text-center text-sm leading-relaxed text-[#6E4E38]">Todavía no agregaste piezas. Elegí tus favoritas del catálogo para comenzar.</p>}
+        </div>
+        <div className="shrink-0 border-t border-[rgba(184,132,42,.18)] p-5">
+          {hasItems && <><div className="flex justify-between gap-3 font-bold"><span>Subtotal de productos</span><span aria-live="polite">{formatPrice(subtotal)}</span></div><p className="mb-4 mt-2 text-sm text-[#6E4E38]">Calculamos el envío con tu dirección en el siguiente paso.</p></>}
+          {checkoutEnabled && canStartCheckout && <Link href="/checkout" onClick={closePanel} className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[var(--canela-ochre)] px-4 py-3 text-sm font-extrabold text-[var(--canela-cream-card)]"><CreditCard className="size-4" /> Continuar con la compra</Link>}
+          {checkoutEnabled && hasItems && !canStartCheckout && <p className="text-sm leading-relaxed text-[#6E4E38]">Quitá las piezas por encargo para pagar las piezas disponibles.</p>}
+          {!checkoutEnabled && hasItems && <p className="text-sm leading-relaxed text-[#6E4E38]">La compra online está pausada. Tu carrito queda guardado para cuando retomemos las ventas.</p>}
+          <button type="button" onClick={closePanel} className="mt-3 min-h-11 w-full font-bold text-[#6E4E38]">Seguir eligiendo</button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  </>;
 }

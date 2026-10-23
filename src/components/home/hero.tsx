@@ -64,14 +64,15 @@ const item: Variants = {
 
 export function Hero({ slides }: { slides: HeroSlideView[] }) {
   const [slide, setSlide] = useState(0);
+  const [paused, setPaused] = useState(false);
   const reduce = useReducedMotion() ?? false;
   const count = slides.length;
 
   useEffect(() => {
-    if (reduce || count <= 1) return;
+    if (reduce || paused || count <= 1) return;
     const id = setInterval(() => setSlide((s) => (s + 1) % count), 4200);
     return () => clearInterval(id);
-  }, [reduce, count]);
+  }, [reduce, paused, count]);
 
   const active = slides[slide] ?? slides[0];
 
@@ -146,16 +147,19 @@ export function Hero({ slides }: { slides: HeroSlideView[] }) {
 
             <div
               className="canela-float relative flex aspect-square w-[min(340px,82%)] items-center justify-center"
-              style={reduce ? undefined : { animation: "canela-float 6s ease-in-out infinite" }}
+              style={reduce || paused || count <= 1 ? undefined : { animation: "canela-float 6s ease-in-out infinite" }}
             >
-              <SpinningRing reduce={reduce} />
+              <SpinningRing reduce={reduce || paused || count <= 1} />
               <a
                 href={active.href}
+                onFocus={() => setPaused(true)}
+                aria-label={`Ver ${active.name}`}
                 className="relative z-[1] flex aspect-square w-full items-center justify-center overflow-hidden rounded-full border-[6px] border-[var(--canela-cream-card)] shadow-[0_16px_42px_rgba(74,53,39,.24)]"
               >
                 {slides.map((s, i) => (
                   <div
                     key={i}
+                    aria-hidden={i !== slide}
                     className="absolute inset-0 flex items-end justify-center p-4 transition-all duration-[900ms]"
                     style={{
                       background: s.imageUrl ? undefined : s.tint,
@@ -173,7 +177,7 @@ export function Hero({ slides }: { slides: HeroSlideView[] }) {
                         priority={i === 0}
                       />
                     ) : (
-                      <span className="rounded-lg bg-[rgba(251,247,238,.85)] px-2.5 py-1.5 font-mono text-[12.5px] text-[#9a8158]">
+                      <span className="rounded-lg bg-[rgba(251,247,238,.85)] px-2.5 py-1.5 font-mono text-[12.5px] text-[#79613e]">
                         {s.label}
                       </span>
                     )}
@@ -183,19 +187,17 @@ export function Hero({ slides }: { slides: HeroSlideView[] }) {
             </div>
 
             {count > 1 && (
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center justify-center gap-1">
                 {slides.map((_, i) => (
                   <button
                     key={i}
-                    onClick={() => setSlide(i)}
+                    onClick={() => { setSlide(i); setPaused(true); }}
                     aria-label={`Ver pieza ${i + 1}`}
-                    className="h-2 rounded-full transition-all duration-300"
-                    style={{
-                      width: i === slide ? 22 : 8,
-                      background: i === slide ? "var(--canela-ochre)" : "rgba(184,132,42,.4)",
-                    }}
-                  />
+                    aria-pressed={i === slide}
+                    className="flex size-11 items-center justify-center"
+                  ><span className="h-2 rounded-full" style={{width: i === slide ? 22 : 8, background: i === slide ? "var(--canela-ochre)" : "rgba(184,132,42,.4)"}} /></button>
                 ))}
+                {!reduce && <button type="button" onClick={() => setPaused(value => !value)} className="min-h-11 px-3 text-sm font-bold text-[#6E4E38]">{paused ? "Reanudar carrusel" : "Pausar carrusel"}</button>}
               </div>
             )}
           </motion.div>

@@ -13,7 +13,7 @@ export default function CheckoutPage() {
   if (!checkout) return <CheckoutUnavailable />;
 
   return (
-    <CheckoutConfirmation shipping={checkout} />
+    <CheckoutConfirmation shipping={checkout} environment={checkout.environment} />
   );
 }
 
@@ -24,7 +24,7 @@ function getControlledCheckoutPageData() {
 
     if (config.shippingProvider === "zipnova") {
       readShippingConfig();
-      return { kind: "zipnova" as const };
+      return { kind: "zipnova" as const, environment: config.mode };
     }
     const quote = new SignedShippingQuoteService(
       config.signingSecret,
@@ -32,6 +32,7 @@ function getControlledCheckoutPageData() {
 
     return {
       kind: "controlled_test" as const,
+      environment: config.mode,
       shippingQuoteToken: quote.token,
       shippingCents: quote.amountCents,
       quoteExpiresAt: quote.expiresAt.toISOString(),
@@ -47,11 +48,11 @@ function CheckoutUnavailable() {
       <div className="mx-auto max-w-2xl border-y border-[rgba(184,132,42,.25)] py-14 text-center">
         <MessageCircle className="mx-auto size-10 text-[var(--canela-green)]" />
         <h1 className="mt-6 font-heading text-5xl text-[var(--canela-brown)]">
-          Compra online en preparación
+          Compra online pausada
         </h1>
         <p className="mx-auto mt-4 max-w-lg leading-relaxed text-[#6E4E38]">
-          Estamos terminando de conectar el envío. Podés guardar tus piezas en
-          el carrito y volver cuando habilitemos la compra online.
+          Por el momento no estamos recibiendo nuevas compras. Tu carrito queda
+          guardado para cuando retomemos las ventas.
         </p>
         <Link
           href="/#catalogo"

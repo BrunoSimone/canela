@@ -32,3 +32,6 @@ dist/
 
 # Artefactos temporales de investigación y renderizado
 /tmp/
+
+# Entregables generados para el cliente (conservar localmente, no desplegar)
+/output/

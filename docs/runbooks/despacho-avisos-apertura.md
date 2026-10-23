@@ -1,13 +1,20 @@
 # Despacho, correos y apertura
 
-Actualizado el 2026-10-16: migraciones aplicadas y preparación de despliegue cerrado.
+Actualizado el 2026-10-23: cierre de regresión, revisión UX y despliegue cerrado.
 El estado verificado de publicación figura en [OPEN-01](../evidence/OPEN-01.md). Contrato:
 [spec 080](../specs/080-despacho-avisos-apertura.md). Evidencia:
 [OPS-01](../evidence/OPS-01.md).
 
 ## Preparar un entorno de prueba
 
-1. Usar PostgreSQL independiente. Migraciones `0001` a `0012` necesarias. Antes de
+Para probar sin cargar datos ficticios en el catálogo real, configurar
+`NEXT_PUBLIC_SANITY_DATASET=inventory_test` y
+`SANITY_INVENTORY_DATASET=inventory_test`. Productos, perfiles, cajas y stock de
+prueba deben existir en ese dataset. El Studio publicado del cliente conserva
+`production`; un Studio local de QA puede usar `SANITY_STUDIO_DATASET=inventory_test`.
+Ver [preparación del 23/10/2026](../evidence/ACEPTACION-sandbox-2026-10-23.md).
+
+1. Usar PostgreSQL independiente. Migraciones `0001` a `0013` necesarias. Antes de
    ejecutar `pnpm db:migrate`, comprobar **ambos** destinos `DATABASE_URL` y
    `DATABASE_URL_UNPOOLED`: el segundo tiene prioridad. No mezclar la base de
    desarrollo con pedidos, inventario o accesos productivos.
@@ -25,8 +32,15 @@ El estado verificado de publicación figura en [OPEN-01](../evidence/OPEN-01.md)
    `NEXT_PUBLIC_SITE_URL` con el origen real del entorno: el enlace del dueño
    apunta al panel y requiere su sesión, nunca contiene un token de acceso.
    `ORDER_OWNER_EMAIL` se necesita recién en producción.
-5. La migración no envía avisos históricos. Un nuevo pago verificado crea el aviso
-   al taller; no lo crea un retorno de navegador ni un pago pendiente/rechazado.
+5. Para probar callbacks por túnel HTTPS, configurar el origen en
+   `NEXT_PUBLIC_SITE_URL` y su hostname exacto en `CANELA_DEV_HOST` (solo desarrollo).
+   Actualizar las URLs de ambos modos en la aplicación del vendedor de prueba de
+   Mercado Pago; revisar las entregas bajo el filtro **Prueba**. La evidencia
+   histórica de modo productivo solo no garantiza el destino de una compra actual.
+   Conservar los secretos y comprobar la firma recibida antes de cambiar credenciales.
+6. La migración no envía avisos históricos. Un nuevo pago verificado crea el aviso
+   al taller. El retorno puede disparar una consulta autoritativa a MP; sus
+   parámetros por sí solos no confirman un pago ni crean avisos.
 
 ## Operación del taller
 
@@ -72,7 +86,7 @@ Tres mecanismos disponibles:
    hora. Responde 503 si hay avisos que requieren atención. Sigue disponible durante
    mantenimiento y autentica antes de procesar.
 
-El workflow `.github/workflows/order-notifications.yml` ejecuta ese POST cada
+El workflow `.github/workflows/order-notifications.yml` solicita ese POST cada
 cinco minutos desde `main`, y permite ejecución manual en GitHub Actions. El mismo
 secreto vive en Vercel y en el repositorio. Una respuesta 503 marca el job fallido;
 revisar las notificaciones de Actions y el panel. GitHub puede demorar ejecuciones,
@@ -101,6 +115,9 @@ Secuencia para abrir ventas (el despliegue cerrado no habilita cobros):
 4. Configurar `PAYMENT_ENVIRONMENT=production` y los cuatro secretos/identidades
    `MP_PRODUCTION_*`, webhook live correcto, HTTPS y secretos privados. No existe
    fallback a `MP_TEST_*`. Verificar el webhook por separado antes de abrir ventas.
+   Configuración y comprobaciones HTTPS realizadas el 22/10/2026:
+   [evidencia](../evidence/MP-produccion-2026-10-22.md). La aceptación con un pago
+   real sigue pendiente.
 5. Zipnova operativo/dropoff/un bulto; `ZIPNOVA_FULFILLMENT_MODE=production`.
    Emails con `ORDER_EMAIL_MODE=production`, remitente verificado, correo del dueño
    y worker programado. Los avisos de prueba siguen aislados por entorno persistido.
@@ -114,3 +131,36 @@ ya iniciados. Si se desea seguir procesando pedidos pagados, mantener sus gates 
 fulfillment/correos; no bajar la aprobación global por una simple pausa de ventas.
 No borrar colas ni revertir tablas para pausar. Reversión de código solo tras revisar
 compatibilidad con el esquema; las migraciones son aditivas, no destructivas.
+
+
+## Cadencia del worker: hallazgo de aceptación del 23/10
+
+Las ejecuciones programadas observadas fueron 00:46, 05:26, 10:19 y 15:11 UTC,
+aunque el cron publicado es `3-58/5 * * * *`. La invocación manual
+[39992011332](https://github.com/BrunoSimone/canela/actions/runs/39992011332)
+terminó correctamente a las 17:04 UTC. El endpoint está operativo; el disparador
+programado no está cumpliendo la frecuencia esperada. No ampliar el umbral del
+preflight para ocultar la falta de actividad.
+
+Antes de abrir ventas, conectar un scheduler con frecuencia comprobable al mismo
+`POST https://www.canela-store.com/api/internal/notifications`. Configurar el
+header privado `Authorization: Bearer <NOTIFICATION_WORKER_SECRET>` desde su
+configuración privada, cada cinco minutos y sin secreto en la URL. Validar
+varias ejecuciones consecutivas y alerta ante fallos/ausencias.
+El endpoint y la idempotencia ya permiten más de un disparador. No se contrató
+un servicio nuevo ni se cambió el plan de Vercel en esta iteración.
+
+Opción propuesta: cron-job.org, con método POST, cuerpo vacío y avisos de fallo,
+recuperación y desactivación. Su límite documentado es **30 segundos**, mientras
+la función tiene un máximo de 60: antes de adoptarlo comprobar la duración con
+cola real y recuperación de reservas, y ajustar el lote/presupuesto de ejecución
+si excede 30 segundos. No interpretar un timeout del disparador como garantía
+de que el servidor no procesó trabajos; consultar `background_job_health` y los
+IDs de Resend antes de reintentar. No desactivar GitHub hasta validar el reemplazo.
+La cuenta y el almacenamiento del secreto en ese proveedor requieren intervención
+del titular. [Límites y configuración de cron-job.org](https://cron-job.org/en/faq/).
+[Limitaciones del scheduler de GitHub](https://docs.github.com/en/actions/how-tos/troubleshoot-workflows).
+
+Los intentos inmediatos posteriores a webhook, retorno y despacho siguen
+funcionando. Los retrasos afectan la recuperación periódica de avisos/intenciones,
+por eso esta comprobación es un requisito operativo de apertura.

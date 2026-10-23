@@ -38,4 +38,11 @@ describe("admin logout", () => {
     expect((await POST(request("cross-site"))).status).toBe(403);
     expect(revokeSession).not.toHaveBeenCalled();
   });
+
+  it("keeps the public origin when logging out through the configured proxy", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://canela-tunnel.example");
+    const req = request("same-origin");
+    req.headers.set("X-Forwarded-Host", "canela-tunnel.example");
+    expect((await POST(req)).headers.get("Location")).toBe("https://canela-tunnel.example/admin/ingresar");
+  });
 });

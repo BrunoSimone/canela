@@ -33,12 +33,14 @@ import { InvalidCourierQuoteInputError, normalizeShippingDestination } from "@/m
 import { MosaicMark } from "./mosaic-mark";
 
 type CheckoutConfirmationProps = {
+  environment: "test" | "production";
   shipping: { kind: "zipnova" } | { kind: "controlled_test"; shippingQuoteToken: string; shippingCents: number; quoteExpiresAt: string };
 };
 
-export function CheckoutConfirmation({ shipping: shippingConfig }: CheckoutConfirmationProps) {
+export function CheckoutConfirmation({ shipping: shippingConfig, environment }: CheckoutConfirmationProps) {
   const router = useRouter();
   const items = useAppSelector(selectCartItems);
+  const unitCount = items.reduce((count, item) => count + item.qty, 0);
   const hydrated = useAppSelector(selectCartHydrated);
   const canStartCheckout = useAppSelector(selectCanStartCheckout);
   const [email, setEmail] = useState("");
@@ -216,12 +218,12 @@ export function CheckoutConfirmation({ shipping: shippingConfig }: CheckoutConfi
           <div className="mb-3 flex items-center justify-between gap-4">
             <h2
               id="order-heading"
-              className="text-xs font-extrabold uppercase tracking-[.18em] text-[#8A9256]"
+              className="text-xs font-extrabold uppercase tracking-[.18em] text-[#606839]"
             >
               Piezas seleccionadas
             </h2>
-            <span className="text-sm text-[#8a7048]">
-              {items.reduce((count, item) => count + item.qty, 0)} unidades
+            <span className="text-sm text-[#79613e]">
+              {unitCount} {unitCount === 1 ? "unidad" : "unidades"}
             </span>
           </div>
 
@@ -235,7 +237,7 @@ export function CheckoutConfirmation({ shipping: shippingConfig }: CheckoutConfi
                   <h3 className="font-bold text-[var(--canela-brown)]">
                     {item.name}
                   </h3>
-                  <p className="mt-1 text-sm text-[#8a7048]">
+                  <p className="mt-1 text-sm text-[#79613e]">
                     {formatPrice((quotedItems?.find(i => i.productId === item.id)?.unitPriceCents ?? item.price * 100) / 100)} × {item.qty}
                   </p>
                   {!item.checkoutEligible && (
@@ -279,7 +281,7 @@ export function CheckoutConfirmation({ shipping: shippingConfig }: CheckoutConfi
             <label className="text-sm font-bold text-[var(--canela-brown)]">Email para el pedido
               <input className={checkoutFieldClass} type="email" name="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} />
             </label>
-            <label className="text-sm font-bold text-[var(--canela-brown)] sm:col-span-2">Teléfono de contacto {!isRealQuote && <span className="font-normal text-[#8a7048]">(opcional)</span>}
+            <label className="text-sm font-bold text-[var(--canela-brown)] sm:col-span-2">Teléfono de contacto {!isRealQuote && <span className="font-normal text-[#79613e]">(opcional)</span>}
               <input className={checkoutFieldClass} type="tel" name="phone" autoComplete="tel" required={isRealQuote} maxLength={24} value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="Código de área y número" />
             </label>
           </div>
@@ -303,10 +305,10 @@ export function CheckoutConfirmation({ shipping: shippingConfig }: CheckoutConfi
             </label>
           </div>
           <div className="mt-5 grid gap-5 sm:grid-cols-2">
-            <label className="text-sm font-bold text-[var(--canela-brown)]">Piso <span className="font-normal text-[#8a7048]">(opcional)</span>
+            <label className="text-sm font-bold text-[var(--canela-brown)]">Piso <span className="font-normal text-[#79613e]">(opcional)</span>
               <input className={checkoutFieldClass} type="text" name="floor" maxLength={3} value={floor} onChange={(event) => setFloor(event.target.value)} />
             </label>
-            <label className="text-sm font-bold text-[var(--canela-brown)]">Departamento <span className="font-normal text-[#8a7048]">(opcional)</span>
+            <label className="text-sm font-bold text-[var(--canela-brown)]">Departamento <span className="font-normal text-[#79613e]">(opcional)</span>
               <input className={checkoutFieldClass} type="text" name="apartment" maxLength={3} value={apartment} onChange={(event) => setApartment(event.target.value)} />
             </label>
           </div>
@@ -324,7 +326,7 @@ export function CheckoutConfirmation({ shipping: shippingConfig }: CheckoutConfi
           <label className="mt-5 block max-w-48 text-sm font-bold text-[var(--canela-brown)]">Código postal
             <input className={checkoutFieldClass} type="text" name="postalCode" autoComplete="postal-code" inputMode="numeric" required minLength={4} maxLength={4} pattern="[1-9][0-9]{3}" value={postalCode} onChange={(event) => setPostalCode(event.target.value)} placeholder="Ej. 1425" />
           </label>
-          {!isRealQuote && <p className="mt-3 text-xs leading-relaxed text-[#8a7048]">Compra de prueba con costo de envío de prueba.</p>}
+          {!isRealQuote && <p className="mt-3 text-xs leading-relaxed text-[#79613e]">Compra de prueba con costo de envío de prueba.</p>}
           {isRealQuote && <section aria-labelledby="shipping-heading" className="mt-8 border-t border-[rgba(184,132,42,.26)] pt-6">
             <h2 id="shipping-heading" className="text-xl font-extrabold text-[var(--canela-brown)]">Elegí tu envío</h2>
             <p className="mt-2 text-sm text-[#6E4E38]">Completá localidad, provincia y código postal para conocer las opciones.</p>
@@ -336,7 +338,7 @@ export function CheckoutConfirmation({ shipping: shippingConfig }: CheckoutConfi
             <div aria-live="polite" className="mt-4 space-y-3">
               {currentQuote?.options.map(option => <label key={option.quoteToken} className="flex cursor-pointer items-start gap-3 border border-[rgba(184,132,42,.3)] bg-white/60 p-4">
                 <input type="radio" name="shippingOption" value={option.quoteToken} checked={selectedToken === option.quoteToken} onChange={() => setSelectedToken(option.quoteToken)} disabled={isLoading || Date.parse(option.expiresAt) <= clock} className="mt-1" />
-                <span className="flex-1"><strong>{option.carrierName}</strong><span className="mt-1 block text-sm text-[#6E4E38]">{option.serviceName} · {option.parcelCount} {option.parcelCount === 1 ? "bulto" : "bultos"}</span></span>
+                <span className="min-w-0 flex-1"><strong>{option.carrierName}</strong><span className="mt-1 block text-sm text-[#6E4E38]">{option.serviceName} · {option.parcelCount} {option.parcelCount === 1 ? "bulto" : "bultos"}</span></span>
                 <strong>{formatPrice(option.shippingCents / 100)}</strong>
               </label>)}
               {quoted && !currentQuote && <p className="text-sm text-[#6E4E38]">El pedido o el destino cambió. Volvé a calcular el envío.</p>}
@@ -350,11 +352,11 @@ export function CheckoutConfirmation({ shipping: shippingConfig }: CheckoutConfi
           <div
             className="border-t-4 border-[var(--canela-ochre)] bg-[var(--canela-cream-card)] px-6 py-7 shadow-[0_20px_50px_rgba(74,53,39,.13)] sm:px-7"
           >
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-xl font-extrabold text-[var(--canela-brown)]">
                 Resumen
               </h2>
-              <span className="rounded-full bg-[#E8F0E2] px-3 py-1 text-xs font-extrabold text-[#4f783f]">
+              <span className="rounded-full bg-[#E8F0E2] px-3 py-1 text-xs font-extrabold text-[#4a703b]">
                 Entrega a domicilio
               </span>
             </div>
@@ -372,7 +374,7 @@ export function CheckoutConfirmation({ shipping: shippingConfig }: CheckoutConfi
               </div>
               <div className="flex items-end justify-between gap-4 border-t border-[rgba(184,132,42,.22)] pt-4">
                 <dt className="font-bold text-[var(--canela-brown)]">Total</dt>
-                <dd className="text-2xl font-extrabold text-[var(--canela-ochre-dark)]">
+                <dd className="min-w-0 text-right text-xl font-extrabold text-[var(--canela-ochre-dark)] sm:text-2xl">
                   {shipping === null ? "Pendiente de envío" : formatPrice(subtotal + shipping)}
                 </dd>
               </div>
@@ -413,8 +415,8 @@ export function CheckoutConfirmation({ shipping: shippingConfig }: CheckoutConfi
               )}
             </button>
 
-            <p className="mt-4 text-center text-[11px] leading-relaxed text-[#8a7048]">
-              Pago en entorno de prueba{quoteExpiresAt && <> · cotización válida hasta {new Intl.DateTimeFormat("es-AR", { hour: "2-digit", minute: "2-digit" }).format(new Date(quoteExpiresAt))}</>}
+            <p className="mt-4 text-center text-[11px] leading-relaxed text-[#79613e]">
+              {environment === "test" ? "Pago en entorno de prueba" : "Pago seguro con Mercado Pago"}{quoteExpiresAt && <> · cotización válida hasta {new Intl.DateTimeFormat("es-AR", { hour: "2-digit", minute: "2-digit" }).format(new Date(quoteExpiresAt))}</>}
               {isRealQuote && <span className="mt-1 block">Confirmamos nuevamente el costo de envío antes de iniciar el pago.</span>}
             </p>
           </div>
@@ -424,7 +426,7 @@ export function CheckoutConfirmation({ shipping: shippingConfig }: CheckoutConfi
   );
 }
 
-const checkoutFieldClass = "mt-2 block w-full border border-[rgba(184,132,42,.42)] bg-white/70 px-3.5 py-3 text-[var(--canela-brown)] outline-none transition-shadow placeholder:text-[#ad9876] focus:ring-2 focus:ring-[rgba(184,132,42,.25)]";
+const checkoutFieldClass = "mt-2 block w-full min-w-0 border border-[rgba(184,132,42,.42)] bg-white/70 px-3.5 py-3 text-base text-[var(--canela-brown)] transition-shadow placeholder:text-[#79613e] focus:ring-2 focus:ring-[rgba(184,132,42,.25)]";
 
 function CheckoutShell({ children }: { children: React.ReactNode }) {
   return (

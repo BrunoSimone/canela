@@ -188,7 +188,7 @@ function mapOrder(row: OrderRow): AdminOrder {
     shippingAddress: address,
     packingPlan: row.shipping_quote_snapshot?.parcels,
     deliveryMethod: row.shipping_quote_snapshot
-      ? `${row.shipping_quote_snapshot.carrierName} · ${row.shipping_quote_snapshot.serviceName} · ${row.shipping_quote_snapshot.parcels.length} bulto(s)`
+      ? `${row.shipping_quote_snapshot.carrierName} · ${row.shipping_quote_snapshot.serviceName} · ${row.shipping_quote_snapshot.parcels.length} ${row.shipping_quote_snapshot.parcels.length === 1 ? "bulto" : "bultos"}`
       : row.buyer_name ? "A domicilio" : null,
     preparation: row.preparation_version !== null && row.preparation_updated_at && row.preparation_updated_by
       ? {

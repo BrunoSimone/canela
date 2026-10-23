@@ -46,7 +46,7 @@ export function CheckoutResult({ publicToken }: { publicToken: string }) {
     return <PollingCheckoutResult publicToken={publicToken} />;
   }
 
-  return <CheckoutResultView {...query} pollingEnabled={false} />;
+  return <CheckoutResultView {...query} pollingEnabled={false} onRetry={() => { void query.refetch(); }} />;
 }
 
 function PollingCheckoutResult({ publicToken }: { publicToken: string }) {
@@ -72,21 +72,25 @@ function PollingCheckoutResult({ publicToken }: { publicToken: string }) {
       document.removeEventListener("visibilitychange", updateVisibility);
   }, []);
 
-  return <CheckoutResultView {...query} pollingEnabled={pollingEnabled} />;
+  return <CheckoutResultView {...query} pollingEnabled={pollingEnabled} onRetry={() => { void query.refetch(); }} />;
 }
 
-function CheckoutResultView({
+export function CheckoutResultView({
   data,
   isLoading,
   isFetching,
   isError,
   pollingEnabled,
+  error,
+  onRetry,
 }: {
   data?: PublicOrderStatusResponse;
   isLoading: boolean;
   isFetching: boolean;
   isError: boolean;
   pollingEnabled: boolean;
+  error?: unknown;
+  onRetry: () => void;
 }) {
   if (isLoading) {
     return (
@@ -101,16 +105,17 @@ function CheckoutResultView({
   }
 
   if (isError || !data) {
+    const notFound = !!error && typeof error === "object" && "status" in error && error.status === 404;
     return (
       <ResultShell>
         <SearchX className="size-10 text-[#b06a52]" />
         <h1 className="mt-6 font-heading text-5xl text-[var(--canela-brown)]">
-          No encontramos el pedido
+          {notFound ? "No encontramos el pedido" : "No pudimos consultar tu pedido"}
         </h1>
         <p className="mt-3 max-w-lg leading-relaxed text-[#6E4E38]">
-          El enlace puede estar incompleto. Si ya realizaste un pago, conservá el
-          comprobante mientras verificamos el pedido.
+          {notFound ? "El enlace puede estar incompleto. Si ya realizaste un pago, conservá el comprobante mientras verificamos el pedido." : "La consulta falló temporalmente. Volvé a consultar el estado y conservá tu comprobante. No repitas el pago."}
         </p>
+        {!notFound && <button type="button" onClick={onRetry} disabled={isFetching} className="mt-6 min-h-11 rounded-lg bg-[var(--canela-brown)] px-5 py-3 font-bold text-white">{isFetching ? "Consultando…" : "Volver a consultar"}</button>}
         <ReturnToStore />
       </ResultShell>
     );
@@ -139,7 +144,7 @@ function CheckoutResultView({
       >
         {icon}
       </div>
-      <p className="mt-6 text-xs font-extrabold uppercase tracking-[.18em] text-[#8A9256]">
+      <p className="mt-6 text-xs font-extrabold uppercase tracking-[.18em] text-[#606839]">
         {presentation.label}
       </p>
       <h1 className="mt-3 font-heading text-5xl leading-none text-[var(--canela-brown)] sm:text-6xl">
@@ -160,6 +165,7 @@ function CheckoutResultView({
               : "Podés cerrar esta página. Canela seguirá recibiendo novedades de Mercado Pago."}
         </p>
       )}
+      {data.status === "verifying" && !pollingEnabled && <button type="button" onClick={onRetry} disabled={isFetching} className="mt-5 min-h-11 rounded-lg border border-[var(--canela-ochre)] px-5 font-bold">Volver a consultar</button>}
       {presentation.allowNewAttempt ? (
         <Link
           href="/checkout"

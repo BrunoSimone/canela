@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import { Images, Plus } from "lucide-react";
 
@@ -33,6 +33,7 @@ export function ProductCard({
 }) {
   const { add, qtyOf } = useCart();
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const imageButton = useRef<HTMLButtonElement>(null);
   const qty = qtyOf(product.id);
   const tone = toneStyle(product.tone);
   const label = statusLabel(product.tone, product.statusNote);
@@ -60,6 +61,7 @@ export function ProductCard({
         {cover ? (
           <>
             <button
+              ref={imageButton}
               type="button"
               onClick={() => setLightboxOpen(true)}
               aria-label={`Ampliar ${product.name}`}
@@ -81,6 +83,7 @@ export function ProductCard({
             )}
             <ImageLightbox
               open={lightboxOpen}
+              returnFocus={imageButton}
               onOpenChange={setLightboxOpen}
               images={product.imageUrls}
               id={product.id}
@@ -96,7 +99,7 @@ export function ProductCard({
             />
           </>
         ) : (
-          <span className="font-mono text-xs tracking-wide text-[#9a8158]">
+          <span className="font-mono text-xs tracking-wide text-[#79613e]">
             {`// ${product.imgLabel ?? "foto"}`}
           </span>
         )}

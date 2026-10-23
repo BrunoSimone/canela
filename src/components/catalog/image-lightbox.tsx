@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type RefObject } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, Minus, Plus, X } from "lucide-react";
 
@@ -13,6 +13,7 @@ import { describeProductPurchaseAction } from "@/modules/catalog/presentation/pr
 
 interface ImageLightboxProps {
   open: boolean;
+  returnFocus?: RefObject<HTMLButtonElement | null>;
   onOpenChange: (open: boolean) => void;
   images: string[];
   id: string;
@@ -28,10 +29,11 @@ interface ImageLightboxProps {
 }
 
 const arrowClass =
-  "absolute top-1/2 z-[2] flex size-10 -translate-y-1/2 items-center justify-center rounded-full border border-[rgba(184,132,42,.3)] bg-[rgba(251,247,238,.9)] text-[#6E4E38] shadow-[0_4px_14px_rgba(74,53,39,.16)] transition-colors hover:bg-[#FBF7EE]";
+  "absolute top-1/2 z-[2] flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-[rgba(184,132,42,.3)] bg-[rgba(251,247,238,.9)] text-[#6E4E38] shadow-[0_4px_14px_rgba(74,53,39,.16)] transition-colors hover:bg-[#FBF7EE]";
 
 export function ImageLightbox({
   open,
+  returnFocus,
   onOpenChange,
   images,
   id,
@@ -45,7 +47,7 @@ export function ImageLightbox({
   medidas,
   material,
 }: ImageLightboxProps) {
-  const { add, inc, dec, qtyOf } = useCart();
+  const { add, inc, dec, qtyOf, closePanel } = useCart();
   const [shot, setShot] = useState(0);
   const count = images.length;
   const qty = qtyOf(id);
@@ -74,6 +76,7 @@ export function ImageLightbox({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
+        finalFocus={returnFocus}
         showCloseButton={false}
         overlayClassName="bg-[rgba(58,41,29,.58)] supports-backdrop-filter:backdrop-blur-[7px]"
         className={cn(
@@ -90,6 +93,7 @@ export function ImageLightbox({
             {images.map((url, i) => (
               <div
                 key={url}
+                aria-hidden={i !== shot}
                 className="absolute inset-0 transition-opacity duration-[450ms]"
                 style={{ opacity: i === shot ? 1 : 0 }}
               >
@@ -127,13 +131,14 @@ export function ImageLightbox({
           </div>
 
           {count > 1 && (
-            <div className="flex shrink-0 justify-center gap-[9px] border-t border-[rgba(184,132,42,.14)] px-4 pb-4 pt-3.5">
+            <div className="flex shrink-0 justify-start gap-[9px] overflow-x-auto border-t border-[rgba(184,132,42,.14)] px-4 pb-4 pt-3.5">
               {images.map((url, i) => (
                 <button
                   key={url}
                   type="button"
                   onClick={() => setShot(i)}
                   aria-label={`Ver foto ${i + 1}`}
+                  aria-pressed={i === shot}
                   className={cn(
                     "relative size-[54px] shrink-0 overflow-hidden rounded-xl transition-opacity",
                     i === shot
@@ -151,7 +156,7 @@ export function ImageLightbox({
         {/* Info */}
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-8 pb-6 pt-[30px] max-[859px]:px-5 max-[859px]:pb-[18px] max-[859px]:pt-[22px]">
-            <div className="pr-11 text-[11.5px] font-bold uppercase tracking-[.2em] text-[#8A9256]">
+            <div className="pr-11 text-[11.5px] font-bold uppercase tracking-[.2em] text-[#606839]">
               {categoryLabel} · {sub}
             </div>
 
@@ -182,7 +187,7 @@ export function ImageLightbox({
               <div className="flex flex-col border-t border-[rgba(184,132,42,.2)]">
                 {medidas && medidas.trim() && (
                   <div className="flex items-baseline gap-3.5 border-b border-[rgba(184,132,42,.13)] py-[11px] last:border-0">
-                    <span className="w-24 shrink-0 text-[10.5px] font-bold uppercase tracking-[.14em] text-[#9a8158]">
+                    <span className="w-24 shrink-0 text-[10.5px] font-bold uppercase tracking-[.14em] text-[#79613e]">
                       Medidas
                     </span>
                     <span className="text-[14.5px] font-semibold text-[var(--canela-brown)]">
@@ -192,7 +197,7 @@ export function ImageLightbox({
                 )}
                 {material && material.trim() && (
                   <div className="flex items-baseline gap-3.5 border-b border-[rgba(184,132,42,.13)] py-[11px] last:border-0">
-                    <span className="w-24 shrink-0 text-[10.5px] font-bold uppercase tracking-[.14em] text-[#9a8158]">
+                    <span className="w-24 shrink-0 text-[10.5px] font-bold uppercase tracking-[.14em] text-[#79613e]">
                       Material
                     </span>
                     <span className="text-[14.5px] font-semibold text-[var(--canela-brown)]">
@@ -217,7 +222,7 @@ export function ImageLightbox({
                     type="button"
                     onClick={() => dec(id)}
                     aria-label="Quitar uno"
-                    className="flex size-9 items-center justify-center rounded-lg border border-[rgba(184,132,42,.5)] text-[#6E4E38] transition-colors hover:bg-[rgba(184,132,42,.12)]"
+                    className="flex size-11 items-center justify-center rounded-lg border border-[rgba(184,132,42,.5)] text-[#6E4E38] transition-colors hover:bg-[rgba(184,132,42,.12)]"
                   >
                     <Minus className="size-4" />
                   </button>
@@ -228,7 +233,7 @@ export function ImageLightbox({
                     type="button"
                     onClick={() => inc(id)}
                     aria-label="Agregar uno"
-                    className="flex size-9 items-center justify-center rounded-lg border border-[rgba(184,132,42,.5)] text-[#6E4E38] transition-colors hover:bg-[rgba(184,132,42,.12)]"
+                    className="flex size-11 items-center justify-center rounded-lg border border-[rgba(184,132,42,.5)] text-[#6E4E38] transition-colors hover:bg-[rgba(184,132,42,.12)]"
                   >
                     <Plus className="size-4" />
                   </button>
@@ -237,14 +242,15 @@ export function ImageLightbox({
             ) : (
               <button
                 type="button"
-                onClick={() =>
+                onClick={() => {
                   add({
                     id,
                     name: title,
                     price,
                     checkoutEligible: tone !== "encargo",
-                  })
-                }
+                  });
+                  closePanel();
+                }}
                 className="flex w-full items-center justify-center gap-2.5 rounded-[14px] border border-[var(--canela-ochre)] bg-[var(--canela-ochre)] px-4 py-[15px] text-[15px] font-extrabold text-[var(--canela-cream-card)] shadow-[0_8px_20px_rgba(184,132,42,.32)] transition-colors hover:bg-[var(--canela-ochre-dark)]"
               >
                 <Plus className="size-4" strokeWidth={2.4} />
@@ -258,7 +264,7 @@ export function ImageLightbox({
           type="button"
           onClick={() => onOpenChange(false)}
           aria-label="Cerrar"
-          className="absolute right-4 top-4 z-[3] flex size-10 items-center justify-center rounded-full border border-[rgba(184,132,42,.3)] bg-[rgba(251,247,238,.92)] text-[#6E4E38] shadow-[0_4px_14px_rgba(74,53,39,.16)] transition-colors hover:bg-[#FBF7EE] hover:text-[var(--canela-brown)]"
+          className="absolute right-4 top-4 z-[3] flex size-11 items-center justify-center rounded-full border border-[rgba(184,132,42,.3)] bg-[rgba(251,247,238,.92)] text-[#6E4E38] shadow-[0_4px_14px_rgba(74,53,39,.16)] transition-colors hover:bg-[#FBF7EE] hover:text-[var(--canela-brown)]"
         >
           <X className="size-[17px]" strokeWidth={2.2} />
         </button>

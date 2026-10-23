@@ -1,22 +1,38 @@
 # Producción de Canela
 
-## Estado de apertura — 16 de octubre de 2026
+## Estado vigente — 23 de octubre de 2026
 
-Studio publicado para cargar unidades protegidas y cajas; panel con inventario,
-preparación, aprobación del costo real, etiqueta y despacho. Migraciones `0001`
-a `0012` aplicadas sobre la rama productiva de Neon después de crear un respaldo.
-El correo del dueño está configurado junto con el acceso existente del desarrollador.
-El worker dispone de ejecución periódica en GitHub Actions y un secreto de servidor.
+La tienda permanece en mantenimiento y con checkout deshabilitado. Sanity es la
+única fuente de catálogo y cantidades; el panel administra pedidos, embalaje,
+etiquetas y despacho. La implementación incluye Resend y los templates React
+Email de acceso, compra pagada y despacho. El envío de avisos comerciales depende
+de sus gates de producción.
 
-La tienda continúa en mantenimiento, con checkout y operaciones comerciales
-cerrados. Los registros de stock deben cargarse desde `/admin/inventario` con
-cantidades reales; nunca se copia el inventario sintético local. Los templates
-transaccionales están implementados; su envío productivo queda sujeto a la
-habilitación comercial. Consultar [OPEN-01](../evidence/OPEN-01.md) para evidencia
-de publicación y pendientes, [la guía del cliente](carga-cliente.md) para la carga y
-[el runbook de apertura](despacho-avisos-apertura.md) para las flags.
+Migraciones `0001` a `0013` aplicadas. El dueño y el desarrollador tienen el acceso
+configurado; no se publican sus datos ni credenciales en este runbook.
+El Studio publicado permite cargar cantidades, unidades protegidas y cajas.
+**Nunca usar cantidades o medidas de los fixtures como valores reales.**
 
-Lo que sigue documenta la recuperación histórica del 10/10 y no reemplaza ese estado.
+La aceptación sandbox de pago, descuento de stock, etiqueta y despacho está en
+[la evidencia del 23/10](../evidence/ACEPTACION-sandbox-2026-10-23.md). El webhook
+automático reintentado ya tiene entrega 200. La revisión completa de tienda/panel,
+regresión y publicación cerrada se registra en [UX-110](../evidence/UX-110.md).
+
+El worker está configurado en GitHub Actions cada cinco minutos. Se observaron
+retrasos de varias horas el 23/10; no dar esa frecuencia por garantizada. La
+invocación manual comprobó que el endpoint funciona. Ver el runbook de
+[despacho, avisos y apertura](despacho-avisos-apertura.md) para recuperación y
+requisitos de un disparador externo fiable antes de abrir ventas.
+
+Guía del cliente: [carga en Sanity](carga-cliente.md). Configuración de cobros
+productivos: [MP producción](../evidence/MP-produccion-2026-10-22.md). La compra
+con dinero real sigue pendiente y necesita su propia autorización.
+
+## Registro histórico de recuperación — 10/10/2026
+
+Lo que sigue conserva el diagnóstico y la recuperación de esa fecha. Las
+referencias a inventario SQL, correos no implementados y migraciones `0001–0007`
+son históricas: no describen el estado vigente anterior.
 
 ## Entornos
 

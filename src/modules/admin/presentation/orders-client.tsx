@@ -26,7 +26,9 @@ export function OrdersClient({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loadedKey, setLoadedKey] = useState<string | null>(null);
   const [errorKey, setErrorKey] = useState<string | null>(null);
-  const requestKey = JSON.stringify([demo, query, sort, cursor]);
+  const [expiredSession, setExpiredSession] = useState(false);
+  const [retry, setRetry] = useState(0);
+  const requestKey = JSON.stringify([demo, query, sort, cursor, retry]);
   const loading = loadedKey !== requestKey && errorKey !== requestKey;
   const error = errorKey === requestKey;
   const visiblePage = loadedKey === requestKey ? page : null;
@@ -58,10 +60,13 @@ export function OrdersClient({
     if (cursor) url.searchParams.set("cursor", cursor);
     fetch(url, { cache: "no-store", signal: controller.signal })
       .then(async (response) => {
+        if (controller.signal.aborted) return null;
+        setExpiredSession(response.status === 401);
         if (!response.ok) throw new Error("Could not load orders");
         return response.json() as Promise<AdminOrderPage>;
       })
       .then((result) => {
+        if (!result || controller.signal.aborted) return;
         setPage(result);
         setLoadedKey(requestKey);
         setErrorKey(null);
@@ -90,7 +95,7 @@ export function OrdersClient({
           <h1>Pedidos</h1>
           <p>Encontrá lo que necesita atención y abrí cada pedido para revisar sus datos.</p>
         </div>
-        <span className={styles.readOnly}>Consulta de pedidos</span>
+        <button type="button" className={styles.textButton} disabled={loading} onClick={() => setRetry(value => value + 1)}>Actualizar pedidos</button>
       </div>
       {demo && <div className={styles.demoNotice}>Estos pedidos son ejemplos del backend para revisar la interfaz. Ninguno corresponde a una venta real.</div>}
 
@@ -134,20 +139,23 @@ export function OrdersClient({
           {loading ? (
             <div className={styles.empty}>Cargando pedidos…</div>
           ) : error ? (
-            <div className={styles.empty}><strong>No pudimos cargar los pedidos.</strong><span>Volvé a intentar en unos segundos.</span></div>
+            <div className={styles.empty} role="alert"><strong>{expiredSession ? "Tu sesión terminó" : "No pudimos cargar los pedidos."}</strong>
+              {expiredSession ? <Link className={styles.primaryLink} href="/admin/ingresar">Volver a ingresar</Link> : <button type="button" className={styles.primaryLink} onClick={() => setRetry(value => value + 1)}>Reintentar</button>}
+            </div>
           ) : !visiblePage?.orders.length ? (
             <div className={styles.empty}>
               <Package size={28} aria-hidden="true" />
               <strong>{query ? "No encontramos coincidencias" : "Todavía no hay pedidos"}</strong>
               <span>{query ? "Probá con otro ID, email o nombre de producto." : "Los nuevos pedidos aparecerán aquí."}</span>
+              {query && <button type="button" className={styles.textButton} onClick={() => setInput("")}>Limpiar búsqueda</button>}
             </div>
           ) : (
             <div className={styles.rows}>
               {visiblePage.orders.map((order) => {
                 const count = order.items.reduce((sum, item) => sum + item.quantity, 0);
                 return (
+                  <div key={order.id} className={styles.orderRowWrap}>
                   <button
-                    key={order.id}
                     type="button"
                     className={`${styles.orderRow} ${selectedId === order.id ? styles.selectedRow : ""}`}
                     onClick={() => setSelectedId(order.id)}
@@ -165,6 +173,8 @@ export function OrdersClient({
                     <span className={styles.rowStatus}><StatusBadge order={order} /><small>{destinationLabel(order)}</small></span>
                     <strong className={styles.rowTotal}>{formatMoney(order.totalCents, order.currency)}</strong>
                   </button>
+                  <Link className={styles.rowDetailLink} href={detailHref(order)} aria-label={`Abrir pedido ${order.reference}`}>Abrir <ChevronRight size={16} aria-hidden="true" /></Link>
+                  </div>
                 );
               })}
             </div>

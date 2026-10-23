@@ -41,7 +41,7 @@ export default async function HomePage() {
       <Hero slides={heroViews} />
 
       <div id="catalogo" className="anchor-offset px-[22px] pb-2 pt-6 text-center">
-        <span className="text-xs font-bold uppercase tracking-[0.24em] text-[#8A9256]">
+        <span className="text-xs font-bold uppercase tracking-[0.24em] text-[#606839]">
           Nuestro catálogo
         </span>
       </div>

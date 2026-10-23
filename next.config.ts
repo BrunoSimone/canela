@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Explicit opt-in for the current HTTPS tunnel used by payment callbacks.
+  allowedDevOrigins: process.env.NODE_ENV === "development" && process.env.CANELA_DEV_HOST
+    ? [process.env.CANELA_DEV_HOST]
+    : [],
   async headers() {
     return [{
       source: "/admin/:path*",

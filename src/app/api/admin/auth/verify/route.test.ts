@@ -40,6 +40,15 @@ describe("admin access confirmation", () => {
     expect(consumeLink).not.toHaveBeenCalled();
   });
 
+  it("redirects a proxied login to the configured public host", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://canela-tunnel.example");
+    consumeLink.mockResolvedValue({ session: "b".repeat(43), email: "owner@example.com" });
+    const req = request("same-origin");
+    req.headers.set("X-Forwarded-Host", "canela-tunnel.example");
+    const response = await POST(req);
+    expect(response.headers.get("Location")).toBe("https://canela-tunnel.example/admin");
+  });
+
   it("redirects expired or used links to request a new email", async () => {
     consumeLink.mockResolvedValue(null);
     const response = await POST(request("same-origin"));

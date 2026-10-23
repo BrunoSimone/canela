@@ -2,7 +2,7 @@
   "name": "canela",
   "version": "0.1.0",
   "private": true,
-  "description": "Ecommerce de artesan\u00edas Canela: vidrio, cer\u00e1mica, espejos y cuadros.",
+  "description": "Ecommerce de artesanías Canela: vidrio, cerámica, espejos y cuadros.",
   "engines": {
     "node": ">=22",
     "pnpm": ">=10"
@@ -49,11 +49,14 @@
   "devDependencies": {
     "@react-email/ui": "6.11.0",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.8",
     "@types/node": "^22.20.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
+    "jsdom": "^30.1.3",
     "tailwindcss": "^4",
     "tsx": "^4.23.13",
     "typescript": "^5",

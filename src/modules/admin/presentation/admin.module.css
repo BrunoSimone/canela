@@ -3,7 +3,7 @@
   --admin-soft: #746458;
   --admin-paper: #fbf8f1;
   --admin-line: #dfd4c1;
-  --admin-ochre: #a67525;
+  --admin-ochre: #8a621d;
   --admin-green: #4d7151;
   min-height: 100vh;
   background: #f3efe6;
@@ -84,7 +84,7 @@
 .searchWrap, .sortWrap { display: flex; align-items: center; gap: 8px; min-height: 43px; border: 1px solid #d9cfbf; border-radius: 6px; background: #fffdf9; color: #756a5e; }
 .searchWrap { padding: 0 12px; flex: 1; min-width: 0; }
 .searchWrap input { width: 100%; min-width: 0; background: transparent; font-size: 13px; outline: none; }
-.searchWrap input::placeholder { color: #887d70; opacity: 1; }
+.searchWrap input::placeholder { color: #746458; opacity: 1; }
 .sortWrap { padding: 0 9px; }
 .sortWrap select { max-width: 125px; background: transparent; font-size: 12px; font-weight: 750; cursor: pointer; outline: none; }
 .listHeading { display: grid; grid-template-columns: minmax(0, 1fr) 155px 105px; gap: 12px; padding: 10px 19px; color: var(--admin-soft); border-bottom: 1px solid var(--admin-line); font-size: 11px; font-weight: 800; }
@@ -92,6 +92,12 @@
 .rows { min-height: 160px; }
 .orderRow { display: grid; grid-template-columns: minmax(0, 1fr) 155px 105px; width: 100%; text-align: left; gap: 12px; align-items: center; padding: 15px 19px; border-bottom: 1px solid #e8dfd0; background: transparent; transition: background .15s ease; }
 .orderRow:hover { background: #f9f4e9; }
+.orderRowWrap { position: relative; padding-bottom: 35px; border-bottom: 1px solid var(--admin-line); }
+.orderRowWrap .orderRow { border-bottom: 0; }
+.rowDetailLink { position: absolute; bottom: 0; right: 12px; display: inline-flex; align-items: center; justify-content: center; min-height: 44px; gap: 4px; padding: 0 8px; font-size: 13px; font-weight: 750; text-decoration: underline; text-underline-offset: 3px; }
+.adminNav { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.adminNav a { display: inline-flex; align-items: center; min-height: 44px; font-size: 13px; font-weight: 750; }
+.searchWrap:focus-within, .sortWrap:focus-within { outline: 3px solid #4d7151; outline-offset: 2px; }
 .selectedRow, .selectedRow:hover { background: #f5ead3; box-shadow: inset 4px 0 0 var(--admin-ochre); }
 .rowMain { display: flex; align-items: center; min-width: 0; gap: 12px; }
 .productIcon { width: 45px; height: 45px; border: 1px solid #e5d7c1; background: #f0e6d5; display: inline-flex; flex: none; align-items: center; justify-content: center; color: #93672c; border-radius: 5px; }
@@ -197,7 +203,10 @@
 @media (max-width: 1050px) {
   .main, .detailMain { padding: 30px 22px 48px; }
   .headerInner { padding: 10px 22px; }
-  .workspace { grid-template-columns: minmax(0, 1.35fr) minmax(260px, .8fr); gap: 12px; }
+  .workspace { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .previewPanel { position: static; min-height: 0; }
+  .signedInAs, .logout span, .brandDivider, .brandSection { display: none; }
+  .headerActions { gap: 12px; }
   .listHeading, .orderRow { grid-template-columns: minmax(0, 1fr) 120px 91px; gap: 7px; padding-left: 12px; padding-right: 12px; }
   .rowStatus small { display: none; }
   .rowTotal { font-size: 11px; }
@@ -205,6 +214,8 @@
 }
 
 @media (max-width: 760px) {
+  .headerInner { flex-wrap: wrap; gap: 4px 12px; }
+  .headerActions { flex-wrap: wrap; }
   .signedInAs, .logout span, .readOnly, .brandDivider, .brandSection { display: none; }
   .headerInner { min-height: 63px; }
   .headerActions { gap: 12px; }
@@ -215,6 +226,10 @@
 }
 
 @media (max-width: 480px) {
+  .headerActions { width: 100%; justify-content: space-between; }
+  .pagination { flex-wrap: wrap; gap: 8px; }
+  .help { position: static; }
+  .helpPanel { left: 14px; right: 14px; top: 100%; width: auto; max-width: calc(100vw - 28px); }
   .main, .detailMain { padding: 25px 14px 40px; }
   .headerInner { padding: 8px 14px; }
   .brand > span:nth-child(2) { font-size: 28px; }
@@ -250,3 +265,6 @@
 .noticeList { padding: 0; list-style: none; margin: 20px 0; display: grid; gap: 12px; }
 .noticeList li { display: grid; gap: 4px; font-size: 13px; }
 .detailCard > .textButton { display: block; margin-top: 14px; min-height: 32px; }
+.textButton, .pagination button, .help summary, .logout { min-height: 44px; }
+.logout { min-width: 44px; justify-content: center; }
+.searchWrap input, .sortWrap select, .parcelFields input, .preparationNote textarea, .loginCard input[type="email"] { font-size: 16px; }

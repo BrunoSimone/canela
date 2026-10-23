@@ -12,7 +12,7 @@ export default function MarketingLayout({
   return (
     <StoreProvider>
       <Navbar />
-      <main className="flex-1">{children}</main>
+      <main id="contenido" tabIndex={-1} className="flex-1">{children}</main>
       <Footer />
       <FloatingCart checkoutEnabled={isCheckoutReady()} />
     </StoreProvider>
