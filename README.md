@@ -4,20 +4,27 @@ Inventario vigente: Sanity es la fuente única de cantidades/reservas y se gesti
 con **Producto → Stock** en Studio. Ver [spec 100](docs/specs/100-inventario-sanity.md)
 y [guía del cliente](docs/runbooks/carga-cliente.md).
 
+Estado al 23/10/2026: versión publicada con mantenimiento activo y checkout
+deshabilitado. Revisión de tienda/panel, pruebas y pendientes externos en
+[UX-110](docs/evidence/UX-110.md). La apertura requiere completar los gates del
+[runbook](docs/runbooks/despacho-avisos-apertura.md).
+
 
 An ecommerce for **Canela**, a studio that makes handcrafted glass, ceramics,
 mirrors and framed art. Customers browse the Sanity-managed catalog, build a
 cart and pay through Mercado Pago Checkout Pro. Neon PostgreSQL is authoritative
-for orders, inventory and temporary stock reservations.
+for orders, payment attempts, shipping records and the durable email outbox.
+Sanity is authoritative for physical stock and reservations; PostgreSQL keeps
+the order-side references and recovery intents.
 
 Direct-sale products use the online checkout. Made-to-order pieces may remain in
 the cart but cannot enter payment until removed; their separate flow is pending.
 Production checkout stays disabled until shipping is validated from quotation
 through fulfillment. Zipnova quotation and checkout selection are implemented
-locally. Shipment creation, recovery and private PDF labels are also implemented
+and deployed behind explicit gates. Shipment creation, recovery and private PDF labels are also implemented
 and validated against Zipnova sandbox after the owner confirms the packaged order.
 Explicit dispatch, durable order emails and guarded production configuration are now
-implemented locally. This iteration has not been deployed to production.
+deployed with the storefront closed. Test acceptance does not open real sales.
 
 > **Flow:** browse → inspect → add to cart → review products and shipping → pay
 > in Mercado Pago → confirm the result from Canela's server-side payment state.
@@ -34,11 +41,14 @@ implemented locally. This iteration has not been deployed to production.
 | Styling | **Tailwind CSS v4** (`@theme` tokens, no config file) |
 | Components | **shadcn** (`base-nova` style) on **Base UI** primitives |
 | CMS | **Sanity** (`next-sanity`), content lake + self-hosted Studio |
-| Transactional data | **Neon PostgreSQL** — orders, inventory and reservations |
+| Stock and reservations | **Sanity** — private operational documents, atomic version checks |
+| Transactional data | **Neon PostgreSQL** — orders, payments, shipping, email outbox and recovery intents |
+| Shipping | **Zipnova** — quotations, one shared parcel, private labels; account currently sandbox |
+| Email | **Resend + React Email** — access, paid-order and dispatch notices |
 | Payments | **Mercado Pago Checkout Pro** through Orders API |
 | Client state | **Redux Toolkit + RTK Query** |
 | Animation | **motion** (Framer Motion successor) |
-| Carousel | **embla-carousel-react** |
+| Carousel | **React state** — hero rotation and product photo navigation |
 | Icons | **lucide-react** |
 | Package manager | **pnpm** (Node ≥ 22) |
 
@@ -69,9 +79,9 @@ src/
 │  ├─ catalog/             # category-section, catalog-grid (filters), product-card, image-lightbox
 │  ├─ cart/                # floating cart for direct-sale products
 │  ├─ seo/json-ld          # Store structured data
-│  └─ ui/                  # button, dialog, carousel (Base UI + embla)
+│  └─ ui/                  # button and dialog (Base UI)
 ├─ content/catalog.ts      # canonical section metadata (copy, filter chips, nav links)
-├─ modules/                # cart, catalog, checkout, payments and shipping boundaries
+├─ modules/                # cart, catalog, checkout, payments, shipping, inventory, admin, notifications
 ├─ db/                     # PostgreSQL client, migrations and transactional operations
 ├─ store/                  # Redux store and browser persistence
 ├─ lib/                    # GROQ queries, config, types, product-status and utilities
@@ -80,12 +90,20 @@ src/
 
 ### Data model (Sanity)
 
-Two document types, both **drag-and-drop orderable** in the Studio (`@sanity/orderable-document-list`):
+The editorial product and hero documents are **drag-and-drop orderable** in the
+Studio (`@sanity/orderable-document-list`):
 
 - **`producto`** — `name`, `category` (`vidrio` / `ceramica` / `espejos`), `sub` (subcategory / filter chip), `price` (ARS), `tone` (status: unique / in-stock / made-to-order), optional `statusNote`, and `images[]` (min 1 — the first is the card cover, the rest feed the lightbox carousel).
 - **`heroSlide`** — `name`, `caption`, `category` (link target), `image`. Powers the rotating featured-piece carousel in the hero.
+- **Product shipping profile** — protected-unit weight/dimensions, classification,
+  rotation and stacking constraints; separate from display measurements.
+- **`shippingBox`** — inner/outer dimensions, tare, weight limit and availability.
+- **Private inventory documents** — quantities, reservations and audited operations.
+  Managed from the product's **Stock** tab; editorial publishing cannot reset a
+  quantity consumed by checkout. See [spec 100](docs/specs/100-inventario-sanity.md).
 
-The Studio (`sanity.config.ts`) presents a custom desk structure: a **Hero** list plus one orderable list **per category**, so the shop owner manages everything visually without touching code.
+The Studio (`sanity.config.ts`) presents a **Hero** list, products grouped by
+category, shipping boxes and the product stock view.
 
 Content is fetched in `src/lib/api.ts` via GROQ with a 60s revalidation window. Queries fail-soft: on a transient Sanity outage they return `[]` so the page still renders (empty sections show a friendly message) instead of erroring.
 
@@ -94,11 +112,13 @@ Content is fetched in `src/lib/api.ts` via GROQ with a 60s revalidation window. 
 ## Key features & engineering notes
 
 - **Filterable catalog** — three sections (Glass, Ceramics, Mirrors & Framed Art), each with subcategory filter chips. Filtering is client-side and in-memory (no refetch), chosen over separate pages for a smoother browse UX.
-- **Fullscreen image lightbox** — clicking a piece opens it centered with an embla carousel when it has multiple photos. Notable fix: embla mis-measures when mounted inside a dialog (it initializes at zero size), so the component calls `api.reInit()` once the dialog is open.
+- **Fullscreen image lightbox** — Base UI dialog with keyboard arrows, photo
+  thumbnails and quantity controls; focus returns to the product when closed.
 - **Persistent cart** — Redux Toolkit keeps the selection across navigation and
   reloads. RTK Query starts checkout without trusting client-side prices.
 - **Checkout Pro** — the backend rereads Sanity, reserves stock atomically in
-  PostgreSQL and creates a ten-minute Mercado Pago order. Signed Webhooks and an
+  Sanity and creates a ten-minute Mercado Pago order. PostgreSQL stores order
+  snapshots and recovery intents. Signed Webhooks and an
   authoritative provider query confirm payment independently from the browser.
 - **Made-to-order catalog** — pieces remain visible and may be kept in the cart,
   but are excluded from direct checkout until their separate flow is defined.
@@ -118,7 +138,7 @@ The visual language derives from the client's hand-painted watercolor logo: a wa
 | --- | --- | --- |
 | `--canela-cream` | `#f6efe1` | page background |
 | `--canela-cream-card` | `#fbf7ee` | cards / surfaces |
-| `--canela-ochre` | `#b8842a` | primary accent / CTAs |
+| `--canela-ochre` | `#8a621d` | primary accent / CTAs |
 | `--canela-ochre-dark` | `#8a621d` | prices, hover |
 | `--canela-brown` | `#4a3527` | headings |
 | `--canela-green` | `#5e8c4e` | success accent |
@@ -137,7 +157,7 @@ pnpm install
 
 pnpm dev            # site → http://localhost:3000
 pnpm studio         # Sanity Studio → http://localhost:3333
-pnpm build          # production build (SSG)
+pnpm build          # production build
 pnpm start          # serve the build
 pnpm lint
 pnpm test           # unit tests; DB integration tests skip without TEST_DATABASE_URL
@@ -155,13 +175,16 @@ Copy `.env.example` → `.env.local`:
 ```bash
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 CHECKOUT_MODE=disabled
+SITE_MAINTENANCE_MODE=1
 CHECKOUT_SIGNING_SECRET=
-CHECKOUT_TEST_SHIPPING_CENTS=
 ```
 
-Sanity `projectId` / `dataset` are **public** (public-read dataset) and live as constants in `src/sanity/env.ts` — not env vars — because the Studio bundle only inlines `SANITY_STUDIO_*` variables.
+Sanity identifiers are public. `NEXT_PUBLIC_SANITY_DATASET` selects the catalog,
+`SANITY_STUDIO_DATASET` selects Studio, both default to `production`. Vercel
+Production rejects an alternate catalog. Inventory credentials and its dataset
+selector are private; use `inventory_test` and a separate local database for QA.
 
-Orders and inventory use a private PostgreSQL database. The selected managed
+Orders and operational records use a private PostgreSQL database. The selected managed
 provider is Neon through Vercel; use its pooled connection string as
 `DATABASE_URL` and its direct connection string as `DATABASE_URL_UNPOOLED` for
 migrations. Integration tests require a separate disposable database through
@@ -193,15 +216,17 @@ explicit confirmation after the package is handed to the carrier. See the
 [dispatch/mail/launch runbook](docs/runbooks/despacho-avisos-apertura.md),
 [spec 080](docs/specs/080-despacho-avisos-apertura.md) and
 [OPS evidence](docs/evidence/OPS-01.md). The GitHub Actions workflow calls the authenticated
-worker every five minutes (best effort), with a manual dispatch option and failure
-signals for overdue/review jobs. See [opening evidence](docs/evidence/OPEN-01.md).
+worker on a five-minute schedule, with manual dispatch and failure signals for
+overdue/review jobs. Observed schedule delays on 23/10 require a reliable trigger
+before opening; see [UX-110](docs/evidence/UX-110.md).
 
 ### Content
 
 Products, protected-unit measurements, shipping boxes and hero slides are managed
 in [Sanity Studio](https://canela-artesanal.sanity.studio/) (`pnpm studio`).
-Physical stock is managed separately at `/admin/inventario`, with reservations,
-optimistic concurrency and an audit trail. Orders share one suitable box; packaging
+Physical stock is managed in the same Studio, under **Producto → Stock**, with
+reservations, optimistic concurrency and an audit trail. `/admin/inventario`
+redirects to Studio. Orders share one suitable box; packaging
 changes are quoted and approved by the operator before label creation.
 See the [client guide](docs/runbooks/carga-cliente.md) and [spec 090](docs/specs/090-apertura-caja-compartida.md). Images are uploaded there by the shop owner and served through Sanity's image CDN via `next/image`.
 
@@ -209,7 +234,9 @@ See the [client guide](docs/runbooks/carga-cliente.md) and [spec 090](docs/specs
 
 ## Deployment
 
-- **Site** — Vercel (Next.js SSG + on-demand revalidation).
+- **Site** — Vercel (Next.js server rendering + on-demand revalidation).
+- **CI** — GitHub Actions: lint, TypeScript, unit/HTTP/UI tests, isolated SQL tests
+  and production build. External contracts are opt-in and use test accounts only.
 - **Studio** — `pnpm studio:deploy` hosts it at `*.sanity.studio`, or it can be embedded in the app.
 
 ---
