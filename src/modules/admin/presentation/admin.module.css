@@ -192,6 +192,7 @@
 .loginCard p { color: var(--admin-soft); font-size: 14px; line-height: 1.5; margin: 10px 0 23px; }
 .loginCard label { font-size: 13px; font-weight: 800; margin-bottom: 7px; }
 .loginCard input[type="email"] { min-height: 46px; border: 1px solid #cdbfa9; border-radius: 5px; background: white; padding: 0 12px; margin-bottom: 18px; }
+.loginCard input::placeholder { color: #746458; opacity: 1; }
 .loginCard form { margin-top: 12px; }
 .loginCard form .primaryLink { width: 100%; }
 .loginCard > .primaryLink { width: 100%; }
