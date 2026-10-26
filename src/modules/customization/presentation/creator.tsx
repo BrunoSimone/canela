@@ -3,19 +3,20 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Cropper from "react-easy-crop";
-import { ArrowLeft, ImagePlus, RotateCcw, Printer, ImageIcon } from "lucide-react";
+import { ArrowLeft, ArrowRight, ImagePlus, RotateCcw, ImageIcon } from "lucide-react";
 import type { DesignTemplate } from "../application/catalog";
 import { cm, dimensions, materialCounts, recolorDesign, renderMosaic, resizeDesign, type Crop, type WorkshopConfig } from "../domain/design";
 import { loadLocalImage, type LocalImage } from "./local-image";
-import { openGuide } from "./open-guide";
+import { estimateFrame, formatArs, type PricingPolicy } from "../domain/estimate";
+import { FrameReview } from "./frame-review";
 import { MosaicSvg } from "./mosaic-svg";
 import { DemoNotice } from "./gallery";
 import styles from "./customization.module.css";
 
 type Source = { kind: "image"; image: LocalImage } | { kind: "template"; template: DesignTemplate };
-type Props = { config: WorkshopConfig; template: DesignTemplate | null; example: DesignTemplate | null; templateUnavailable: boolean };
+type Props = { config: WorkshopConfig; pricing: PricingPolicy; template: DesignTemplate | null; example: DesignTemplate | null; templateUnavailable: boolean };
 
-export function Creator({ config, template, example, templateUnavailable }: Props) {
+export function Creator({ config, pricing, template, example, templateUnavailable }: Props) {
   const [source, setSource] = useState<Source | null>(template ? { kind: "template", template } : null);
   const [size, setSize] = useState(template?.design.size ?? config.minCells);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -27,6 +28,14 @@ export function Creator({ config, template, example, templateUnavailable }: Prop
   const [view, setView] = useState<"mosaic" | "source">("mosaic");
   const resources = useRef<{ generation: number; url: string | null }>({ generation: 0, url: null });
   const input = useRef<HTMLInputElement>(null);
+  const [reviewing, setReviewing] = useState(false);
+  const reviewButton = useRef<HTMLButtonElement>(null);
+  const wasReviewing = useRef(false);
+
+  useEffect(() => {
+    if (wasReviewing.current && !reviewing) reviewButton.current?.focus();
+    wasReviewing.current = reviewing;
+  }, [reviewing]);
 
   useEffect(() => {
     const state = resources.current;
@@ -69,6 +78,9 @@ export function Creator({ config, template, example, templateUnavailable }: Prop
   const design = result?.design, measures = dimensions(config, size);
   const counts = design ? materialCounts(design) : [];
   const baseColors = result?.base ? materialCounts(result.base) : [];
+  const estimate = estimateFrame(config, size, pricing);
+
+  if (reviewing && design) return <FrameReview design={design} estimate={estimate} onEdit={() => setReviewing(false)} />;
 
   return <div className={styles.page}>
     <Link className={styles.backLink} href="/cuadros"><ArrowLeft size={16} aria-hidden="true" /> Explorar diseños</Link>
@@ -119,8 +131,12 @@ export function Creator({ config, template, example, templateUnavailable }: Prop
           </> : <div className={styles.emptyPreview}><ImageIcon size={42} strokeWidth={1} aria-hidden="true" /><h3>Empezá con una imagen</h3><p>Una foto o una idea sencilla.<br />La convertimos en un mosaico, pieza por pieza.</p><button className={styles.primaryButton} onClick={() => input.current?.click()}>Elegir imagen</button>{example && <button className={styles.textButton} onClick={useExample}>Probar con un ejemplo</button>}</div>}
         </div>
         <div className={styles.previewStats} aria-live="polite"><div><strong>{cm(measures.framedMm)} cm</strong><span>por lado, con marco</span></div><div><strong>{size ** 2}</strong><span>venecitas enteras</span></div><div><strong>{counts.length || "—"}</strong><span>colores utilizados</span></div></div>
-        {counts.length > 0 && <div className={styles.paletteLegend} aria-label="Piezas por color">{counts.map(c => <span key={c.id}><i className={styles.swatch} style={{ backgroundColor: c.hex }} aria-hidden="true" />{c.name} <strong>{c.count}</strong></span>)}</div>}
-        <div className={styles.guideAction}><div><h3>Del diseño a las piezas</h3><p>Revisá la cuadrícula numerada y la cantidad de cada color en una guía imprimible de prueba.</p></div><button className={styles.primaryButton} disabled={!design || loading} onClick={() => { if (design) openGuide(design); }}><Printer size={18} aria-hidden="true" /> Ver guía de prueba</button></div>
+        <section className={styles.estimateCard} aria-label="Cotización estimada">
+          <div><h3 className={styles.estimateLabel}>Estimación de prueba · ARS</h3><p className={styles.estimateAmount} aria-label="Precio estimado del cuadro">{formatArs(estimate.totalCents)}</p><p className={styles.shippingPending}>Cuadro con marco · Envío a cotizar</p></div>
+          <button ref={reviewButton} className={styles.primaryButton} disabled={!design || loading} onClick={() => setReviewing(true)}>Revisar mi cuadro <ArrowRight size={18} aria-hidden="true" /></button>
+          <p className={styles.estimateHint}>Incluye venecitas, armado, base y marco. Valores ilustrativos pendientes de confirmación del taller. Todavía no se puede comprar.</p>
+        </section>
+        {counts.length > 0 && <div className={styles.paletteLegend} aria-label="Colores del cuadro">{counts.map(c => <span key={c.id}><i className={styles.swatch} style={{ backgroundColor: c.hex }} aria-hidden="true" />{c.name}</span>)}</div>}
       </section>
     </div>
   </div>;

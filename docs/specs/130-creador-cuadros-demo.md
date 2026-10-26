@@ -1,5 +1,7 @@
 # PER-130 — Creador y galería de cuadros: primera versión
 
+**Actualización:** [PER-131](131-cuadros-paleta-cotizacion.md) sustituye la guía pública por un resumen de prueba, amplía la paleta a 32 colores y agrega estimación de precio. Las referencias a la guía de esta primera iteración son históricas.
+
 ## Alcance autorizado
 
 2026-10-26, rama `codex/creador-cuadros-personalizados`. Bruno autorizó construir

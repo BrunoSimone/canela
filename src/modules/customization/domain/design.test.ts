@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { dimensions, materialCounts, recolorDesign, renderMosaic, resizeDesign, validateWorkshop } from "./design";
 import { raster, testWorkshop as config } from "../testing/workshop";
-import { guideHtml } from "./guide";
 
 describe("PER-130: configurable manufacturing geometry", () => {
   it("derives dimensions without treating reported cm as another source of truth", () => {
@@ -54,7 +53,7 @@ describe("PER-130: image to physical mosaic", () => {
   });
 });
 
-describe("PER-130: gallery reuse and guide", () => {
+describe("PER-130: gallery reuse", () => {
   it("resizes and recolors a copy, preserving its source and full piece count", () => {
     const original = renderMosaic(raster(), config, 2);
     const copy = resizeDesign(original, config, 5);
@@ -76,18 +75,5 @@ describe("PER-130: gallery reuse and guide", () => {
     mutable.palette[2].hex = "#000000";
     expect(original.config.tileMm).toBe(20);
     expect(original.config.palette[2].hex).toBe("#ff0000");
-  });
-  it("exports exactly the selected design, without original image or executable user text", () => {
-    const unsafeLabel = { ...config, palette: config.palette.map(c => ({ ...c, name: '<img src=x onerror="alert(1)">' })) };
-    const result = renderMosaic(raster(), unsafeLabel, 3);
-    const html = guideHtml(result);
-    expect(html).toContain("No fabricar");
-    expect(html).toContain("3 × 3");
-    expect(html).toContain("9 venecitas");
-    expect(html.match(/data-cell=/g)).toHaveLength(9);
-    expect(html).toContain("&lt;img");
-    expect(html).not.toContain("<img");
-    expect(html).not.toContain("<script");
-    expect(html).not.toContain("https://");
   });
 });

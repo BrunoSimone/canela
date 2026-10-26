@@ -26,7 +26,7 @@ El comprador carga una imagen
 - **PER-DEC-005 — Calidad visual subjetiva:** el sistema no decidirá si una imagen es lo bastante reconocible o estética. Si el diseño es físicamente válido, el comprador decide si la previsualización le satisface.
 - **PER-DEC-006 — Sin aprobación manual previa:** no habrá revisión del artesano entre diseño y pago. La confirmación explícita de la previsualización por el comprador habilitará el checkout.
 - **PER-DEC-007 — Orden automática:** un pago aprobado y verificado creará la orden de producción con un snapshot inmutable del diseño.
-- **PER-DEC-008 — Precio postergado:** la fórmula de precio no se consulta todavía. Será una puerta obligatoria antes de implementar el checkout de personalizados.
+- **PER-DEC-008 — Precio postergado:** el precio comercial definitivo sigue pendiente. PER-131 autoriza una estimación de prueba con referencia de Mercado Libre y mano de obra/insumos supuestos; no habilita cobros. La aprobación del precio real sigue siendo obligatoria antes del checkout de personalizados.
 - **PER-DEC-009 — Plazo y capacidad iniciales (2026-10-26):** Mariela informó una semana de fabricación y capacidad para cinco cuadros simultáneos. Antes de prometer una fecha, confirmar si el plazo aplica a todos los tamaños y definir cómo se manejan los pedidos cuando esos cinco lugares están ocupados. No interpretar este dato como aceptación ilimitada ni como cinco cuadros terminados por semana garantizados.
 - **PER-DEC-010 — Diseño durante el uso del creador (2026-10-26):** el comprador selecciona su imagen y crea el cuadro en ese momento. No se guardan borradores entre sesiones ni se sincronizan entre dispositivos. La imagen original y el diseño en edición permanecen en memoria del navegador; no se suben a Sanity ni a un servicio de archivos y no se persisten en localStorage/IndexedDB. Recargar o cerrar el creador descarta ese trabajo. No se necesita contratar almacenamiento privado de imágenes.
 - **PER-DEC-011 — Especificación del pedido:** al integrar ventas, el backend validará y guardará en la base de pedidos la cuadrícula aceptada, códigos y valores de color, medidas y copia/versiones de la configuración y del algoritmo. Se conservará antes de redirigir al pago para permitir su recuperación por el webhook; la fabricación se habilitará únicamente con pago verificado. Esa especificación inmutable permitirá reconstruir la previsualización y la guía de fabricación sin conservar la foto original ni depender de la configuración actual de Sanity. No constituye un servicio de borradores recuperables.
@@ -199,3 +199,12 @@ Además de validar el spike, serán obligatorios:
 - **CA-PER-010:** La galería pública contiene únicamente diseños publicados, con pago verificado y autorización para exhibir/reutilizar. No expone datos del comprador, referencias privadas del pedido ni originales.
 - **CA-PER-011:** Crear uno similar abre una copia del mosaico publicado sin requerir la foto original. Editarla no modifica la plantilla ni el pedido fuente; comprarla exige validación y cotización vigentes.
 - **CA-PER-012:** Los ejemplos usados durante el desarrollo se identifican como demostración y no se presentan como compras reales. Un diseño oculto deja de aparecer en la galería pública.
+
+## Iteración de paleta y precio de prueba (2026-10-26)
+
+[PER-131](../specs/131-cuadros-paleta-cotizacion.md) amplía los colores de ejemplo a 32,
+retira la guía de fabricación del creador público y agrega una estimación de precio
+configurable y un resumen en memoria. Ningún importe de demostración puede cobrarse.
+La futura guía corresponde exclusivamente al taller autenticado y al diseño pagado.
+La previsualización pública no es una protección contra capturas/copias.
+Compra separada recomendada por plazos/capacidad/envíos; propuesta consultada a Bruno.

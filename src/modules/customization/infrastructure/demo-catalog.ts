@@ -1,10 +1,11 @@
 import type { DesignCatalog, DesignTemplate } from "../application/catalog";
 import type { MosaicDesign, WorkshopConfig } from "../domain/design";
+import type { PricingPolicy } from "../domain/estimate";
 
 // Server repository fixture. UI receives the same DTO contract a future Sanity
 // adapter will supply. These are synthetic examples, never customer orders.
 const config: WorkshopConfig = {
-  id: "canela-demo", version: "2026-10-26.1", provisional: true,
+  id: "canela-demo", version: "2026-10-26.2", provisional: true,
   tileMm: 20, groutMm: 1, frameMm: 10, minCells: 15, maxCells: 45, step: 1,
   backgroundColorId: "hueso",
   palette: [
@@ -18,6 +19,40 @@ const config: WorkshopConfig = {
     { id: "cielo", name: "Cielo", hex: "#a6c5c4" },
     { id: "mar", name: "Mar", hex: "#477c89" },
     { id: "tinta", name: "Tinta", hex: "#343b40" },
+    { id: "blanco", name: "Blanco", hex: "#faf9f6" },
+    { id: "negro", name: "Negro", hex: "#151414" },
+    { id: "gris-perla", name: "Gris perla", hex: "#dedede" },
+    { id: "gris-plata", name: "Gris plata", hex: "#bdbdbd" },
+    { id: "gris-medio", name: "Gris medio", hex: "#999999" },
+    { id: "gris-pizarra", name: "Gris pizarra", hex: "#767676" },
+    { id: "gris-grafito", name: "Gris grafito", hex: "#555555" },
+    { id: "gris-carbon", name: "Gris carbón", hex: "#2c2c2c" },
+    { id: "marfil", name: "Marfil", hex: "#f7e0cf" },
+    { id: "durazno", name: "Durazno", hex: "#edc5aa" },
+    { id: "beige-rosado", name: "Beige rosado", hex: "#d7af98" },
+    { id: "beige-calido", name: "Beige cálido", hex: "#c99b7a" },
+    { id: "camel", name: "Camel", hex: "#b98461" },
+    { id: "bronce", name: "Bronce", hex: "#a66e4a" },
+    { id: "siena", name: "Siena", hex: "#895438" },
+    { id: "chocolate", name: "Chocolate", hex: "#633e2c" },
+    { id: "cafe", name: "Café", hex: "#3b2821" },
+    { id: "rosa-viejo", name: "Rosa viejo", hex: "#d49a91" },
+    { id: "arcilla", name: "Arcilla", hex: "#9e7970" },
+    { id: "vison", name: "Visón", hex: "#bba59b" },
+    { id: "gris-calido", name: "Gris cálido", hex: "#8c8279" },
+    { id: "lino", name: "Lino", hex: "#d7cfba" },
+  ],
+};
+
+// PER-131: indexed Mercado Libre reference (225 tiles / ARS 13,917.50),
+// consulted 2026-10-26. Labor/supplies are UI assumptions, not workshop rates.
+const pricing: PricingPolicy = {
+  version: "demo-prices-2026-10-26.1", currency: "ARS", provisional: true,
+  tilePackCents: 1_391_750, tilePackQuantity: 225, roundToCents: 100_000,
+  sizes: [
+    { cells: 15, laborCents: 2_000_000, suppliesCents: 800_000 },
+    { cells: 30, laborCents: 6_000_000, suppliesCents: 1_600_000 },
+    { cells: 45, laborCents: 12_000_000, suppliesCents: 2_600_000 },
   ],
 };
 
@@ -64,4 +99,5 @@ function templates() {
 export const demoDesignCatalog: DesignCatalog = {
   configuration: async () => structuredClone(config),
   templates: async () => templates(),
+  pricing: async () => structuredClone(pricing),
 };

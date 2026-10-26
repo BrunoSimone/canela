@@ -3,9 +3,11 @@ import { loadCreator, loadGallery, type DesignCatalog } from "./catalog";
 import { renderMosaic } from "../domain/design";
 import { testWorkshop, raster } from "../testing/workshop";
 import { customizationEnabled } from "../infrastructure/availability";
+import { testPricing } from "../testing/pricing";
 
 const design = () => renderMosaic(raster(), testWorkshop, 3);
 const repository = (): DesignCatalog => ({
+  pricing: async () => structuredClone(testPricing),
   configuration: async () => structuredClone(testWorkshop),
   templates: async () => [
     { id: "public", title: "Público", description: "Ejemplo", published: true, demonstration: true, design: design() },
@@ -22,7 +24,7 @@ describe("PER-130: server supplied gallery and creator", () => {
   it("uses updated workshop dimensions in both routes without mutating the stored template", async () => {
     const stored = await repository().templates();
     const config = { ...testWorkshop, version: "confirmed", tileMm: 22, frameMm: 15 };
-    const repo = { configuration: async () => config, templates: async () => stored };
+    const repo = { ...repository(), configuration: async () => config, templates: async () => stored };
     const gallery = await loadGallery(repo);
     const creator = await loadCreator(repo, "public");
     expect(gallery.templates[0].design.config).toEqual(config);
@@ -48,5 +50,9 @@ describe("PER-130: server supplied gallery and creator", () => {
     expect(customizationEnabled({ NODE_ENV: "development" })).toBe(true);
     expect(customizationEnabled({ NODE_ENV: "development", CUADROS_PREVIEW_ENABLED: "0" })).toBe(false);
     expect(customizationEnabled({ NODE_ENV: "production", VERCEL_ENV: "preview", CUADROS_PREVIEW_ENABLED: "1" })).toBe(true);
+  });
+  it("PER-131: uses server pricing and rejects broken configuration before rendering", async () => {
+    expect((await loadCreator(repository())).pricing).toEqual(testPricing);
+    await expect(loadCreator({ ...repository(), pricing: async () => ({ ...testPricing, tilePackQuantity: 0 }) })).rejects.toThrow();
   });
 });
