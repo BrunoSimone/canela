@@ -177,6 +177,27 @@ pnpm notifications:process # bounded mail queue worker (loads .env.local)
 pnpm commerce:preflight    # read-only configuration/migration checks
 ```
 
+### Creador de cuadros — rama de desarrollo
+
+Primera versión en `codex/creador-cuadros-personalizados`:
+`/crear-cuadro` permite cargar/recortar una imagen local, ajustar tamaño y colores
+y abrir una guía imprimible; `/cuadros` ofrece ejemplos reutilizables.
+Ver [spec PER-130](docs/specs/130-creador-cuadros-demo.md) y
+[evidencia](docs/evidence/PER-130.md).
+
+```bash
+SITE_MAINTENANCE_MODE=0 CUADROS_PREVIEW_ENABLED=1 pnpm dev --port 3000
+pnpm exec vitest run src/modules/customization
+```
+
+Estas variables afectan solo ese proceso local. Las rutas están bloqueadas en
+Vercel Production. La configuración y los ejemplos vienen del repositorio de
+servidor `src/modules/customization/infrastructure/demo-catalog.ts`; medidas,
+límites y paleta son provisionales y se cambian allí, sin modificar el motor.
+Las fotos se procesan en memoria del navegador y se pierden al salir/recargar.
+No hay compra de cuadros, subida de originales ni persistencia de borradores.
+La publicación de diseños de compradores en Sanity pertenece a la etapa de venta.
+
 ### Environment
 
 Copy `.env.example` → `.env.local`:

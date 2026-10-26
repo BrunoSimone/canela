@@ -271,7 +271,7 @@ Orders API ofrece `capture_mode = automatic` para forzar aprobado/rechazado, per
 - **Next.js server:** cálculo confiable de totales, endpoints de checkout, webhooks, panel protegido y adaptadores externos.
 - **Mercado Pago:** experiencia y procesamiento del pago.
 - **Correo Argentino:** tarifa, sucursales, orden logística, rótulo y tracking según contrato confirmado.
-- **Storage privado de objetos:** originales y pruebas de personalización; no el dataset/CDN público actual de Sanity.
+- **Cuadros personalizados — decisión actualizada el 2026-10-26:** la imagen original se procesa en memoria del navegador, sin almacenamiento de archivos ni borradores entre sesiones. La base de pedidos conservará la especificación necesaria para reconstruir el diseño comprado y su guía. Esto reemplaza la propuesta de storage privado para esta familia; ver PER-DEC-010/011 en [el descubrimiento específico](002-cuadros-personalizados-preguntas-cliente.md).
 
 ### Entidades mínimas
 
@@ -282,9 +282,9 @@ Orders API ofrece `capture_mode = automatic` para forzar aprobado/rechazado, per
 - `payment_attempt`: provider id, preference id, estado verificado e idempotencia.
 - `shipping_quote`: tarifa, vencimiento, paquete y modalidad.
 - `shipment`: referencia externa, tracking, rótulo y estado de sincronización.
-- `customization_request`: especificación, archivos, prueba aprobada, revisiones y estado productivo.
+- `customization_request`: propuesta histórica para personalización asistida. Para el creador de cuadros, conservar la especificación inmutable asociada al pedido (cuadrícula, paleta, medidas y versiones), sin archivo original ni borradores remotos, según PER-DEC-010/011.
 
-No se propone todavía un proveedor de PostgreSQL ni de storage: es una decisión de costo, privacidad y operación pendiente.
+La elección de proveedores en esta propuesta era preliminar. El creador de cuadros usará la base de pedidos existente para su especificación y no requiere un proveedor de almacenamiento de imágenes (decisión del 2026-10-26).
 
 ## Personalización por familia de producto
 

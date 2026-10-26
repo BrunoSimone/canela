@@ -9,6 +9,10 @@ import { getHeroSlides, getProducts, groupByCategory } from "@/lib/api";
 import { buildStorefrontCatalog } from "@/modules/inventory/domain/catalog-visibility";
 import { CartAvailabilitySync } from "@/modules/cart/presentation/cart-availability-sync";
 import { inventoryStore } from "@/modules/inventory/infrastructure/sanity-documents";
+import { customizationEnabled } from "@/modules/customization/infrastructure/availability";
+import { demoDesignCatalog } from "@/modules/customization/infrastructure/demo-catalog";
+import { loadGallery } from "@/modules/customization/application/catalog";
+import { FeaturedDesigns } from "@/modules/customization/presentation/gallery";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +27,7 @@ export default async function HomePage() {
     await availability.list(products.map(p => ({ id: p._id, name: p.name, price: p.price }))),
   );
   const byCategory = groupByCategory(visibleProducts);
+  const designs = customizationEnabled() ? await loadGallery(demoDesignCatalog) : null;
 
   const heroViews: HeroSlideView[] = heroSlides.map((s) => ({
     name: s.name,
@@ -55,6 +60,7 @@ export default async function HomePage() {
         />
       ))}
 
+      {designs && <FeaturedDesigns templates={designs.templates} />}
       <Nosotros />
       <ComoComprar />
     </>
