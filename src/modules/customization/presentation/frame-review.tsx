@@ -31,7 +31,7 @@ export function FrameReview({ design, estimate, onEdit }: { design: MosaicDesign
         <p className={styles.estimateAmount} aria-label="Precio estimado del cuadro">{formatArs(estimate.totalCents)}</p>
         <p className={styles.shippingPending}>Envío a cotizar</p>
         <p className={styles.hint}>El precio final se confirmará con los materiales y las tarifas del taller.</p>
-        <div className={styles.nextSteps}><h3>Antes de comprar</h3><p>La fabricación lleva aproximadamente una semana, a confirmar según disponibilidad. El plazo de transporte se suma después.</p><p>La compra estará disponible cuando estén confirmados el precio, los materiales y el envío.</p></div>
+        <div className={styles.nextSteps}><h3>Antes de comprar</h3><p>Los cuadros personalizados se compran por separado, con su propio envío y plazo de fabricación.</p><p>La fabricación lleva aproximadamente una semana, a confirmar según disponibilidad. El plazo de transporte se suma después.</p><p>La compra estará disponible cuando estén confirmados el precio, los materiales y el envío.</p></div>
         <p className={styles.reviewNotice} role="status">No se creó un pedido ni se reservó un turno. Este resumen es de prueba y se pierde al salir o recargar.</p>
       </section>
     </div>

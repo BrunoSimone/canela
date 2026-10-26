@@ -29,8 +29,10 @@ una estimación con referencia de Mercado Libre y evaluar cómo comprar personal
    entre anclas. Referencias reemplazables; no tarifas aprobadas por Mariela.
 7. No incluir envío ni inventar peso/espesor embalado. Sin pagos, reservas,
    persistencia de imágenes/diseños ni cambios en stock o producción.
-8. Recorrido de compra separado recomendado; decisión consultada a Bruno. El
-   resumen previo puede funcionar en memoria, indicando que no crea un pedido.
+8. Recorrido de compra separado **confirmado por Bruno** el 26/10/2026: diseño →
+   resumen → envío → pago, con pedido y envío propios. No mezclar cuadros con
+   productos de stock ni modificar su carrito. El resumen previo funciona en
+   memoria, indicando que no crea un pedido.
    Confirmar diseño, precio final, plazo/cupo, paquete y envío antes de habilitar cobro.
 
 ## Criterios verificables
@@ -46,7 +48,7 @@ una estimación con referencia de Mercado Libre y evaluar cómo comprar personal
 | 131-07 | Las 9 conversiones se inspeccionan en navegador; se conserva comparación anterior y no se presenta una mejora subjetiva como porcentaje de calidad. |
 | 131-08 | Creador/resumen utilizables en escritorio y móvil, teclado, sin desborde; producción sigue bloqueada. |
 
-## Recorrido comercial recomendado
+## Recorrido comercial confirmado
 
 Diseño → revisar cuadro → cotización de envío → pago de este cuadro → fabricación
 → despacho. Antes del pago, guardar una especificación inmutable validada en servidor
@@ -54,8 +56,7 @@ Diseño → revisar cuadro → cotización de envío → pago de este cuadro →
 webhook de pago confirmado habilita fabricación una sola vez. La guía pertenece al
 panel autenticado del taller. No guardar el original ni borradores entre sesiones.
 
-Un carrito mixto requiere decidir si se retiene el stock una semana o se separan
-envíos con sus cargos/estados. El checkout actual solo resuelve IDs de productos
+Se descarta el carrito mixto para esta versión. El checkout actual solo resuelve IDs de productos
 Sanity y reservas de stock; un personalizado no debe fingir ser un SKU disponible.
 Reutilizar infraestructura de Mercado Pago/Zipnova y pedidos es posible, pero requiere
 un tipo de línea personalizada y un ciclo de fabricación explícito.

@@ -32,6 +32,7 @@ El comprador carga una imagen
 - **PER-DEC-011 — Especificación del pedido:** al integrar ventas, el backend validará y guardará en la base de pedidos la cuadrícula aceptada, códigos y valores de color, medidas y copia/versiones de la configuración y del algoritmo. Se conservará antes de redirigir al pago para permitir su recuperación por el webhook; la fabricación se habilitará únicamente con pago verificado. Esa especificación inmutable permitirá reconstruir la previsualización y la guía de fabricación sin conservar la foto original ni depender de la configuración actual de Sanity. No constituye un servicio de borradores recuperables.
 - **PER-DEC-012 — Configuración desacoplada (2026-10-26):** las medidas, límites y paleta son datos configurables del taller, independientes del motor. Bruno confirmó que se puede construir el creador con parámetros provisionales y ajustarlos después. La discrepancia física pendiente bloquea la aceptación para fabricación/venta, pero no el desarrollo ni las pruebas con configuraciones coherentes de ejemplo. Los centímetros se derivan de las piezas y juntas; no se fuerza una equivalencia con las medidas contradictorias informadas.
 - **PER-DEC-013 — Galería de diseños comprados (2026-10-26):** incorporar una sección de la tienda que muestre diseños de cuadros comprados para que otros visitantes puedan partir de ellos y crear uno similar. Se reutiliza la cuadrícula guardada, sin exigir conservar la fotografía original ni guardar borradores entre sesiones.
+- **PER-DEC-014 — Compra separada (2026-10-26):** Bruno confirmó el recorrido diseño → resumen → envío → pago para cuadros personalizados. Cada compra tiene su propio pedido, envío y plazo de fabricación; no se agrega al carrito de productos de stock ni modifica su contenido. Se reutilizarán las integraciones de pago/envío existentes con validación de diseño, precio y capacidad en servidor. La confirmación de esta modalidad no habilita cobros con datos de prueba.
 
 ## Galería de inspiración y reutilización
 
@@ -207,4 +208,4 @@ retira la guía de fabricación del creador público y agrega una estimación de
 configurable y un resumen en memoria. Ningún importe de demostración puede cobrarse.
 La futura guía corresponde exclusivamente al taller autenticado y al diseño pagado.
 La previsualización pública no es una protección contra capturas/copias.
-Compra separada recomendada por plazos/capacidad/envíos; propuesta consultada a Bruno.
+Compra separada confirmada por Bruno, registrada en PER-DEC-014.
