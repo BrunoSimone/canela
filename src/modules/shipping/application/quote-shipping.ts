@@ -2,7 +2,8 @@ import { createHash } from "node:crypto";
 import type { ProductCatalog } from "../../catalog/domain/product-catalog";
 import { resolveCheckoutItems } from "../../checkout/application/resolve-checkout-items";
 import type { CheckoutItem } from "../../checkout/domain/checkout";
-import { COURIER_QUOTE_TTL_MS, CourierQuoteMismatchError, CourierRateChangedError, InvalidCourierRateError, UnavailableCourierRateError, normalizeShippingDestination, rateKey, sameDestination, type CourierQuoteIssuer, type ShipmentRateGateway, type ShippingDestination } from "../domain/courier-quote";
+import { COURIER_QUOTE_TTL_MS, CourierProviderUnavailableError, CourierQuoteMismatchError, CourierRateChangedError, InvalidCourierRateError, ShippingRateLimitedError, UnavailableCourierRateError, normalizeShippingDestination, rateKey, sameDestination, type CourierQuoteIssuer, type CourierRate, type ShipmentRateGateway, type ShippingDestination } from "../domain/courier-quote";
+import { buildMarginParcels, marginPlanFingerprint, markQuoteMargin, type QuoteMarginPolicy, type QuoteMarginStatus } from "../domain/quote-margin";
 import { ParcelLimitExceededError, type ParcelConstraints, type ParcelGroupingRule, type ShippingLine } from "../domain/parcel-plan";
 import { ExpiredShippingQuoteError, InvalidShippingQuoteError, type ShippingQuote, type ShippingQuoteVerifier } from "../domain/shipping-quote";
 import { planShippingParcels, UnshippableProductError, type ShippingProfileCatalog } from "./plan-shipping-parcels";
@@ -18,6 +19,7 @@ export type QuoteShippingDependencies = {
   accountMode: "operational" | "sandbox";
   contextFingerprint: string;
   maxParcels?: number;
+  marginPolicy?: QuoteMarginPolicy;
   now?: () => Date;
 };
 export type QuoteShippingInput = { destination: ShippingDestination; items: ShippingLine[] };
@@ -28,15 +30,35 @@ export async function quoteShipping(deps: QuoteShippingDependencies, input: Quot
   const { plan, merchandiseCents, cartFingerprint } = await prepare(deps, items);
   const rates = await deps.rates.quoteShipment({ destination, declaredValueCents: merchandiseCents, parcels: plan.parcels });
   if (!rates.length) throw new UnavailableCourierRateError();
+  const padded = deps.marginPolicy ? buildMarginParcels(plan.parcels, deps.marginPolicy, deps.constraints) : null;
+  let paddedRates: CourierRate[] = [];
+  if (padded) {
+    try {
+      paddedRates = await deps.rates.quoteShipment({ destination, declaredValueCents: merchandiseCents, parcels: padded });
+    } catch (error) {
+      // The base is already a valid quote. An optional margin must not prevent checkout.
+      if (!(error instanceof UnavailableCourierRateError || error instanceof CourierProviderUnavailableError ||
+            error instanceof InvalidCourierRateError || error instanceof ShippingRateLimitedError)) throw error;
+    }
+  }
   const issuedAt = (deps.now ?? (() => new Date()))();
   const expiresAt = new Date(issuedAt.getTime() + COURIER_QUOTE_TTL_MS).toISOString();
   return {
     subtotalCents: merchandiseCents,
     items,
-    options: rates.map(rate => deps.issuer.issue({ ...rate, version: 3, provider: "zipnova", accountMode: deps.accountMode,
+    options: rates.map(rate => {
+      let parcels = plan.parcels;
+      if (deps.marginPolicy) {
+        const candidate = paddedRates.find(r => rateKey(r) === rateKey(rate));
+        const status: QuoteMarginStatus = !padded ? "limits" : !candidate ? "unavailable" :
+          candidate.amountCents === rate.amountCents && candidate.sellerAmountCents === rate.sellerAmountCents ? "applied" : "price_changed";
+        parcels = markQuoteMargin(plan.parcels, status === "applied" ? padded! : plan.parcels, status);
+      }
+      return deps.issuer.issue({ ...rate, version: 3, provider: "zipnova", accountMode: deps.accountMode,
       contextFingerprint: deps.contextFingerprint, destination, items: plan.items, cartFingerprint,
-      planFingerprint: plan.fingerprint, parcels: plan.parcels, merchandiseCents,
-      issuedAt: issuedAt.toISOString(), expiresAt })),
+      planFingerprint: marginPlanFingerprint(plan, deps.marginPolicy), parcels, merchandiseCents,
+      issuedAt: issuedAt.toISOString(), expiresAt });
+    }),
   };
 }
 
@@ -53,9 +75,18 @@ export class ZipnovaCheckoutQuotes implements ShippingQuoteVerifier {
     if (snapshot.contextFingerprint !== this.deps.contextFingerprint || snapshot.accountMode !== this.deps.accountMode ||
         !sameDestination(snapshot.destination, destination)) throw new CourierQuoteMismatchError();
     const { plan, merchandiseCents, cartFingerprint } = await prepare(this.deps, context.items);
-    if (snapshot.planFingerprint !== plan.fingerprint || snapshot.cartFingerprint !== cartFingerprint ||
+    if (snapshot.planFingerprint !== marginPlanFingerprint(plan, this.deps.marginPolicy) || snapshot.cartFingerprint !== cartFingerprint ||
         snapshot.merchandiseCents !== merchandiseCents) throw new CourierQuoteMismatchError();
-    const rates = await this.deps.rates.quoteShipment({ destination, declaredValueCents: merchandiseCents, parcels: plan.parcels });
+    let parcels = plan.parcels;
+    if (this.deps.marginPolicy) {
+      const status = snapshot.parcels[0].quoteMargin?.status;
+      if (!status) throw new CourierQuoteMismatchError();
+      const selected = status === "applied" ? buildMarginParcels(plan.parcels, this.deps.marginPolicy, this.deps.constraints) : plan.parcels;
+      if (!selected) throw new CourierQuoteMismatchError();
+      parcels = markQuoteMargin(plan.parcels, selected, status);
+    }
+    if (JSON.stringify(parcels) !== JSON.stringify(snapshot.parcels)) throw new CourierQuoteMismatchError();
+    const rates = await this.deps.rates.quoteShipment({ destination, declaredValueCents: merchandiseCents, parcels });
     const rate = rates.find(r => rateKey(r) === rateKey(snapshot));
     if (!rate) throw new UnavailableCourierRateError();
     if (rate.amountCents !== snapshot.amountCents || rate.sellerAmountCents !== snapshot.sellerAmountCents) throw new CourierRateChangedError();

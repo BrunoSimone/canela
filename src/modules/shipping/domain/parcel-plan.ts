@@ -41,6 +41,7 @@ export type ParcelConstraints = {
 
 export type PlannedParcel = ParcelDimensions & {
   packing?: import("./shared-box-plan").PackingInstructions;
+  quoteMargin?: import("./quote-margin").QuoteMargin;
   items: ShippingLine[];
   groupingRule: { id: string; version: number } | null;
   classificationId?: string;

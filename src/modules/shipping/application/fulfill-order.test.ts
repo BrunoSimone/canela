@@ -63,6 +63,21 @@ describe("fulfillment after paid preparation",()=>{
 });
 
 describe("prepared parcel cost approval", () => {
+  it("uses measured preparation for a paid buffered quote without padding again", async () => {
+    const f = await setup(), issuer = new SignedCourierQuoteService("q".repeat(32));
+    const original = f.order.quote!.parcels[0];
+    const base = { weightGrams: original.weightGrams, heightCm: original.heightCm, widthCm: original.widthCm, lengthCm: original.lengthCm };
+    f.order.quote!.parcels[0] = { ...original, weightGrams: original.weightGrams + 100, heightCm: original.heightCm + 1,
+      quoteMargin: { status: "applied", base } };
+    const service = new FulfillOrder(f.repo, f.gateway, f.context, issuer);
+    const approval = await service.preview(f.order.id, 1);
+    expect(f.gateway.quoteShipment).toHaveBeenCalledWith(expect.objectContaining({ parcels: [expect.objectContaining(base)] }));
+    expect(issuer.authenticate(approval.quoteToken).parcels[0].quoteMargin).toBeUndefined();
+    await service.confirm(f.order.id, 1, "owner", approval.quoteToken);
+    expect(f.repo.claim.mock.calls[0][0].quote.parcels[0]).toMatchObject(base);
+    expect(f.repo.claim.mock.calls[0][0].originalQuote!.parcels[0].quoteMargin?.status).toBe("applied");
+    expect(f.gateway.create).toHaveBeenCalledTimes(1);
+  });
   it("previews changed measures and creates only after approving the new cost", async () => {
     const f = await setup();
     const issuer = new SignedCourierQuoteService("q".repeat(32));

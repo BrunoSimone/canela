@@ -17,6 +17,6 @@ export function createShippingDependencies(signingSecret: string): QuoteShipping
     rates: withQuoteBudget(new ZipnovaClient(config), () => consumeShippingQuoteBudget(getDatabase())),
     issuer: new SignedCourierQuoteService(signingSecret),
     accountMode: config.accountMode, contextFingerprint: config.contextFingerprint,
-    maxParcels: config.maxParcels,
+    maxParcels: config.maxParcels, marginPolicy: config.marginPolicy,
   };
 }

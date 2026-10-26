@@ -11,6 +11,7 @@ import { PreparationEditor } from "./preparation-editor";
 import { OrderOperations } from "./order-operations";
 import { ShipmentActions } from "./shipment-actions";
 import { ReviewNotice } from "./review-notice";
+import { PackingPlan } from "./packing-plan";
 import styles from "./admin.module.css";
 
 export function OrderDetailClient({ id, demo, backHref }: { id: string; demo: boolean; backHref: string }) {
@@ -89,14 +90,7 @@ export function OrderDetailClient({ id, demo, backHref }: { id: string; demo: bo
             <h2>Próximo paso</h2>
             <div className={styles.actionBox}><StatusBadge order={order} /><p>{order.nextAction}</p></div>
           </section>}
-          {order.packingPlan?.map((parcel, i) => <section className={styles.detailCard} key={i}>
-            <h2>Caja y acomodo cotizados</h2>
-            <p>{parcel.packing?.boxName ?? "Embalaje del pedido"} · {parcel.widthCm} × {parcel.lengthCm} × {parcel.heightCm} cm · {parcel.weightGrams} g totales.</p>
-            {parcel.packing && <><p>Las posiciones indican distancia desde una esquina interior: ancho (X), largo (Y) y altura (Z), en cm. Conservá las protecciones individuales.</p><ul>
-              {parcel.packing.placements.map(p => <li key={`${p.productId}-${p.unit}`}>{order.items.find(i => i.productId === p.productId)?.name ?? "Pieza"}, unidad {p.unit}: X {p.x}, Y {p.y}, Z {p.z} · ocupa {p.widthCm} × {p.lengthCm} × {p.heightCm} cm.</li>)}
-            </ul></>}
-            <p>Comprobá el paquete armado y registrá abajo su peso y medidas reales antes de solicitar la etiqueta.</p>
-          </section>)}
+          {order.packingPlan?.map((parcel, i) => <PackingPlan key={i} parcel={parcel} items={order.items} />)}
           <PreparationEditor order={order} demo={demo} onSaved={(preparation) => setOrder((current) => current ? {
             ...current,
             preparation,

@@ -62,6 +62,13 @@ La cotización previa al pago usa **las medidas exteriores de la caja elegida** 
 No suma los largos de las piezas ni usa las medidas descriptivas de la tienda.
 Es una estimación basada en los embalajes medidos que cargó el taller.
 
+**No sumar un margen manual en Sanity.** La app prueba automáticamente una holgura
+de 5% en el peso total (máximo 200 g) y 1 cm en cada dimensión exterior. Solo la
+incluye si mantiene el mismo precio para el comprador y para Canela. Si cambia
+la tarifa, excede límites o no se pudo comprobar, conserva la estimación original.
+El panel del pedido informa si incluyó margen y distingue ambos juegos de medidas.
+Esta holgura no amplía el espacio interior de la caja ni garantiza cualquier variación.
+
 Después de la compra, pesar y medir el paquete cerrado real en **Panel de Canela →
 Pedido → Preparación del envío**. Consultar su costo antes de generar la etiqueta.
 Si difiere del envío cobrado, el panel muestra la diferencia para que el taller la

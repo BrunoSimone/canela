@@ -71,6 +71,22 @@ de Zipnova fue retirada y no se mantiene como bloqueo de apertura. Ver
 Los límites numéricos del adaptador son límites del esquema API, no condiciones
 comerciales de un transporte: se ofrecen solo sus opciones seleccionables.
 
+### Margen de embalaje
+
+[Spec 125](../specs/125-margen-embalaje.md): valores opcionales de servidor
+`SHIPPING_MARGIN_WEIGHT_PERCENT=5`, `SHIPPING_MARGIN_MAX_WEIGHT_GRAMS=200`,
+`SHIPPING_MARGIN_DIMENSION_CM=1`. Aplicados al paquete completo después de la tara.
+Se cotiza base y margen y se comparan ambos importes por transporte/servicio/despacho.
+Solo se elige margen si los dos importes coinciden. Puede haber hasta dos consultas
+iniciales (ambas consumen el límite de 60/min), y una revalidación al pagar.
+Si falla únicamente la consulta adicional se conserva la base; el panel muestra
+que no se pudo confirmar margen. La consulta base nunca tiene una tarifa inventada.
+
+Poner los tres valores en `0` desactiva el margen. Los cambios invalidan cotizaciones
+sin pagar; no cambian el contexto usado para despachar pedidos ya pagados. No se
+modifica Sanity ni se requiere migración SQL. Preparación/etiqueta siempre recotizan
+mediciones reales, sin agregar margen. El importe final sigue sujeto a confirmación.
+
 ## Pruebas
 
 ```sh

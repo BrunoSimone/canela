@@ -79,8 +79,9 @@ export interface ShipmentGateway extends ShipmentRateGateway {
 }
 
 export function preparedParcels(order: ShipmentOrder) {
-  const { packing: _packing, ...parcel } = order.quote!.parcels[0];
+  const { packing: _packing, quoteMargin: _margin, ...parcel } = order.quote!.parcels[0];
   void _packing;
+  void _margin;
   return [{ ...parcel, ...order.preparation!.parcels[0] }];
 }
 export function preparedQuoteFingerprint(order: ShipmentOrder): string {

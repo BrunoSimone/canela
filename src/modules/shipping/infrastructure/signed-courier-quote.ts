@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { COURIER_QUOTE_TTL_MS, normalizeShippingDestination, type CourierQuoteIssuer, type CourierQuoteSnapshot, type IssuedCourierQuote } from "../domain/courier-quote";
 import { ExpiredShippingQuoteError, InvalidShippingQuoteError } from "../domain/shipping-quote";
+import { validQuoteMargin } from "../domain/quote-margin";
 
 export const MAX_COURIER_TOKEN_LENGTH = 32768;
 
@@ -52,6 +53,6 @@ function validSnapshot(s: CourierQuoteSnapshot): boolean {
     return Number.isFinite(issuedAt) && Number.isFinite(expiresAt) && expiresAt > issuedAt &&
       expiresAt - issuedAt <= COURIER_QUOTE_TTL_MS &&
       s.items.every(i => typeof i.productId === "string" && i.productId.length > 0 && i.productId.length <= 200 && Number.isSafeInteger(i.quantity) && i.quantity > 0) &&
-      s.parcels.every(p => [p.weightGrams, p.heightCm, p.widthCm, p.lengthCm].every(v => Number.isSafeInteger(v) && v > 0) && typeof p.classificationId === "string" && p.classificationId.length > 0);
+      s.parcels.every(p => [p.weightGrams, p.heightCm, p.widthCm, p.lengthCm].every(v => Number.isSafeInteger(v) && v > 0) && typeof p.classificationId === "string" && p.classificationId.length > 0 && validQuoteMargin(p));
   } catch { return false; }
 }

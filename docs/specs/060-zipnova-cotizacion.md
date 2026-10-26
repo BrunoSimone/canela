@@ -25,7 +25,9 @@ iteración de cotización, no todas las capacidades posteriores.
 ## Comportamiento
 
 - **ZIP-01:** Cotizar todos los bultos en una llamada a `/v2/shipments/quote`.
-  El servidor relee precios y perfiles publicados. El valor declarado es el
+  Desde la [spec 125](125-margen-embalaje.md), el margen opcional agrega una segunda
+  consulta completa, sin aumentar el precio del servicio elegido. El servidor
+  relee precios y perfiles publicados. El valor declarado es el
   subtotal de productos; no incluye el porte. Falta de medidas o clasificación
   explícita impide cotizar. No se asume que las artesanías son mercadería General.
 - **ZIP-02:** El comprador aporta carrito, localidad, provincia y CP argentino

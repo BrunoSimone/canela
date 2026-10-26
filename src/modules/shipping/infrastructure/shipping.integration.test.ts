@@ -11,7 +11,9 @@ import { PostgresCheckoutRepository } from "../../checkout/infrastructure/postgr
 import { CheckoutAttemptChangedError, CheckoutInventoryUnavailableError } from "../../checkout/domain/checkout";
 import { testDelivery } from "../../checkout/domain/delivery.test-fixture";
 import { PostgresAdminOrderReader } from "../../admin/infrastructure/postgres-order-reader";
-import { quoteFixture, destination } from "../testing/fixtures";
+import { quoteFixture, destination, items } from "../testing/fixtures";
+import { quoteShipping } from "../application/quote-shipping";
+import { DEFAULT_QUOTE_MARGIN } from "../domain/quote-margin";
 import { consumeShippingQuoteBudget } from "./server/rate-limit";
 
 const url=process.env.TEST_DATABASE_URL;
@@ -37,6 +39,20 @@ if (url && !["localhost","127.0.0.1"].includes(new URL(url).hostname)) throw new
     await expect(new PostgresCheckoutRepository(sql).reserve(data)).rejects.toBeInstanceOf(CheckoutInventoryUnavailableError);
     const [row]=await sql`SELECT count(*)::int AS count FROM orders`;expect(row.count).toBe(1);
     expect(await sql`SELECT inventory_state FROM orders`).toMatchObject([{inventory_state:"pending"}]);
+  });
+  it("persists the selected margin and its physical base through the admin reader", async () => {
+    const { deps } = await quoteFixture(), data = await input();
+    const quoted = await quoteShipping({ ...deps, marginPolicy: DEFAULT_QUOTE_MARGIN }, { items, destination });
+    const { token, ...snapshot } = quoted.options[0];
+    void token;
+    data.shippingSnapshot = snapshot;
+    const repository = new PostgresCheckoutRepository(sql);
+    await repository.reserve(data);
+    expect((await repository.reserve(data)).reused).toBe(true);
+    const order = await new PostgresAdminOrderReader(sql).get(data.orderId);
+    expect(order?.packingPlan).toEqual(snapshot.parcels);
+    expect(order?.packingPlan?.[0].quoteMargin).toMatchObject({ status: "applied", base: { weightGrams: 1000 } });
+    expect(order?.shippingCents).toBe(snapshot.amountCents);
   });
   it("enforces a shared account budget under concurrent calls and resets the next minute",async()=>{
     const results=await Promise.allSettled(Array.from({length:65},()=>consumeShippingQuoteBudget(sql)));

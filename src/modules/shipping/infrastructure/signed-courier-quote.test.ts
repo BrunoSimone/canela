@@ -5,6 +5,13 @@ import { SignedShippingQuoteService } from "./signed-shipping-quote";
 import { SignedCourierQuoteService } from "./signed-courier-quote";
 
 describe("signed courier snapshots v3", () => {
+  it("rejects inconsistent margin metadata before issuing a token", async () => {
+    const { deps, snapshot } = await quoteFixture(), parcel = snapshot.parcels[0];
+    const base = { weightGrams: parcel.weightGrams, heightCm: parcel.heightCm, widthCm: parcel.widthCm, lengthCm: parcel.lengthCm };
+    expect(() => deps.issuer.issue({ ...snapshot, parcels: [{ ...parcel, quoteMargin: { status: "applied", base: { ...base, weightGrams: -1 } } }] })).toThrow();
+    expect(() => deps.issuer.issue({ ...snapshot, parcels: [{ ...parcel, quoteMargin: { status: "applied", base: { ...base, weightGrams: parcel.weightGrams + 1 } } }] })).toThrow();
+    expect(() => deps.issuer.issue({ ...snapshot, parcels: [{ ...parcel, quoteMargin: { status: "price_changed", base: { ...base, weightGrams: parcel.weightGrams - 1 } } }] })).toThrow();
+  });
   it("authenticates the complete snapshot without exposing credentials", async () => {
     const { deps, token, snapshot } = await quoteFixture();
     expect(deps.issuer.authenticate(token, now)).toEqual(snapshot);

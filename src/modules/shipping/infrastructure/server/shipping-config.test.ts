@@ -4,6 +4,19 @@ import { readShippingConfig } from "./shipping-config";
 import { fulfillmentEnabled } from "./fulfillment-service";
 const env = { ZIPNOVA_API_TOKEN:"token",ZIPNOVA_API_SECRET:"secret",ZIPNOVA_ACCOUNT_ID:"12",ZIPNOVA_ORIGIN_ID:"34",ZIPNOVA_DISPATCH_TYPE:"carrier_dropoff",ZIPNOVA_ACCOUNT_MODE:"operational" };
 describe("shipping configuration", () => {
+  it("defaults to 5% capped at 200 g and one cm without changing the fulfillment context", () => {
+    const config = readShippingConfig(env);
+    expect(config.marginPolicy).toEqual({ weightPercent: 5, maxExtraWeightGrams: 200, extraDimensionCm: 1 });
+    expect(readShippingConfig({ ...env, SHIPPING_MARGIN_WEIGHT_PERCENT: "6" }).contextFingerprint).toBe(config.contextFingerprint);
+    expect(readShippingConfig({ ...env, SHIPPING_MARGIN_WEIGHT_PERCENT: "0", SHIPPING_MARGIN_MAX_WEIGHT_GRAMS: "0", SHIPPING_MARGIN_DIMENSION_CM: "0" }).marginPolicy).toBeUndefined();
+  });
+  it.each([
+    { SHIPPING_MARGIN_WEIGHT_PERCENT: "-1" }, { SHIPPING_MARGIN_WEIGHT_PERCENT: "1.5" }, { SHIPPING_MARGIN_WEIGHT_PERCENT: "21" },
+    { SHIPPING_MARGIN_WEIGHT_PERCENT: "" }, { SHIPPING_MARGIN_MAX_WEIGHT_GRAMS: "1001" }, { SHIPPING_MARGIN_MAX_WEIGHT_GRAMS: "NaN" },
+    { SHIPPING_MARGIN_DIMENSION_CM: "6" }, { SHIPPING_MARGIN_WEIGHT_PERCENT: "0" }, { SHIPPING_MARGIN_MAX_WEIGHT_GRAMS: "0" },
+  ])("rejects invalid margin configuration: %j", override => {
+    expect(() => readShippingConfig({ ...env, ...override })).toThrow("Invalid shipping margin configuration");
+  });
   it("defaults to one parcel and includes the limit in the quote context", () => {
     expect(readShippingConfig(env).maxParcels).toBe(1);
     expect(readShippingConfig({...env, ZIPNOVA_MAX_PARCELS:"2"}).contextFingerprint).not.toBe(readShippingConfig(env).contextFingerprint);

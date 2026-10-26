@@ -8,7 +8,7 @@ export type ShippingBox = {
   tareWeightGrams: number; maxWeightGrams: number;
 };
 export type Placement = { productId: string; unit: number; x: number; y: number; z: number; widthCm: number; lengthCm: number; heightCm: number };
-export type PackingInstructions = { boxId: string; boxRevision: string; boxName: string; placements: Placement[] };
+export type PackingInstructions = { boxId: string; boxRevision: string; boxName: string; maxWeightGrams?: number; placements: Placement[] };
 type Space = { x: number; y: number; z: number; w: number; l: number; h: number };
 
 export function validateBox(box: ShippingBox): void {
@@ -71,7 +71,7 @@ export function buildSharedBoxPlan(input: Omit<BuildParcelPlanInput, "groupingRu
       if (!placed) break;
     }
     if (placements.length !== totalUnits) continue;
-    const packing: PackingInstructions = { boxId: box.id, boxRevision: box.revision, boxName: box.name, placements };
+    const packing: PackingInstructions = { boxId: box.id, boxRevision: box.revision, boxName: box.name, maxWeightGrams: box.maxWeightGrams, placements };
     const parcels = [{ weightGrams, heightCm: box.heightCm, widthCm: box.widthCm, lengthCm: box.lengthCm, items, groupingRule: null, classificationId, packing }];
     const fingerprint = createHash("sha256").update(JSON.stringify({ algorithm: "shared-box-v2", items, profiles: selected, box, parcels })).digest("hex");
     return { items, parcels, fingerprint };
