@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { cm, dimensions, type MosaicDesign } from "../domain/design";
 import { formatArs, type FrameEstimate } from "../domain/estimate";
@@ -8,7 +8,8 @@ import { MosaicSvg } from "./mosaic-svg";
 import { DemoNotice } from "./gallery";
 import styles from "./customization.module.css";
 
-export function FrameReview({ design, estimate, onEdit }: { design: MosaicDesign; estimate: FrameEstimate; onEdit: () => void }) {
+export function FrameReview({ design, estimate, onEdit, onContinue }: { design: MosaicDesign; estimate: FrameEstimate; onEdit: () => void; onContinue?: () => void }) {
+  const [accepted, setAccepted] = useState(false);
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => { heading.current?.focus(); }, []);
   const side = cm(dimensions(design.config, design.size).framedMm);
@@ -31,7 +32,8 @@ export function FrameReview({ design, estimate, onEdit }: { design: MosaicDesign
         <p className={styles.estimateAmount} aria-label="Precio estimado del cuadro">{formatArs(estimate.totalCents)}</p>
         <p className={styles.shippingPending}>Envío a cotizar</p>
         <p className={styles.hint}>El precio final se confirmará con los materiales y las tarifas del taller.</p>
-        <div className={styles.nextSteps}><h3>Antes de comprar</h3><p>Los cuadros personalizados se compran por separado, con su propio envío y plazo de fabricación.</p><p>La fabricación lleva aproximadamente una semana, a confirmar según disponibilidad. El plazo de transporte se suma después.</p><p>La compra estará disponible cuando estén confirmados el precio, los materiales y el envío.</p></div>
+        <div className={styles.nextSteps}><h3>Antes de comprar</h3><p>Los cuadros personalizados se compran por separado, con su propio envío y plazo de fabricación.</p><p>La fabricación lleva aproximadamente una semana, a confirmar según disponibilidad. El plazo de transporte se suma después.</p><p>El cobro real estará disponible cuando estén confirmados el precio, los materiales y el envío.</p></div>
+        {onContinue && <div className={styles.purchaseConsent}><label><input type="checkbox" checked={accepted} onChange={e => setAccepted(e.target.checked)} />Revisé el diseño y quiero continuar con esta versión.</label><button className={styles.primaryButton} disabled={!accepted} onClick={onContinue}>Continuar con el envío</button><p className={styles.hint}>Recorrido de prueba. No se cobra dinero.</p></div>}
         <p className={styles.reviewNotice} role="status">No se creó un pedido ni se reservó un turno. Este resumen es de prueba y se pierde al salir o recargar.</p>
       </section>
     </div>

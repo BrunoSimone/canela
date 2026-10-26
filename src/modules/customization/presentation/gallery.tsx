@@ -6,7 +6,7 @@ import { MosaicSvg } from "./mosaic-svg";
 import styles from "./customization.module.css";
 
 export function DemoNotice() {
-  return <p className={styles.notice}><span className={styles.noticeDot} aria-hidden="true" />Versión de prueba · Medidas, colores y precios de ejemplo. Todavía no se puede comprar.</p>;
+  return <p className={styles.notice}><span className={styles.noticeDot} aria-hidden="true" />Versión de prueba · Medidas, colores y precios de ejemplo. Sin cobros reales.</p>;
 }
 
 export function GalleryCards({ templates }: { templates: DesignTemplate[] }) {

@@ -14,18 +14,28 @@ const mocks = vi.hoisted(() => ({ load: vi.fn() }));
 vi.mock("./local-image", () => ({ loadLocalImage: mocks.load }));
 vi.mock("react-easy-crop", () => ({ default: () => <div>Recortador de imagen</div> }));
 const template = (): DesignTemplate => ({ id: "test", title: "Flor de prueba", description: "Ejemplo", published: true, demonstration: true, design: renderMosaic(raster(), testWorkshop, 3) });
-const setup = (selected = true) => render(<Creator config={testWorkshop} pricing={testPricing} template={selected ? template() : null} example={template()} templateUnavailable={false} />);
+const setup = (selected = true) => render(<Creator config={testWorkshop} pricing={testPricing} template={selected ? template() : null} templateUnavailable={false} />);
 const visibleCells = () => [...screen.getByRole("img", { name: /Tu mosaico/ }).querySelectorAll("rect")].slice(2).map(cell => cell.getAttribute("fill"));
 beforeEach(() => { vi.stubGlobal("URL", { revokeObjectURL: vi.fn() }); });
 afterEach(() => { cleanup(); vi.clearAllMocks(); vi.unstubAllGlobals(); });
 
 describe("PER-130: creator user journeys", () => {
-  it("starts empty, offers a gallery example, and never offers checkout", async () => {
+  it("PER-132: starts empty without examples, price or dimensions; enables after a valid photo", async () => {
     setup(false);
-    expect((screen.getByRole("button", { name: "Revisar mi cuadro" }) as HTMLButtonElement).disabled).toBe(true);
-    await userEvent.click(screen.getByRole("button", { name: "Probar con un ejemplo" }));
-    expect(screen.getByRole("img", { name: /Tu mosaico de 3 por 3/ })).toBeTruthy();
-    expect(screen.queryByRole("button", { name: /comprar|pagar/i })).toBeNull();
+    expect((screen.getByRole("slider", { name: "Cantidad de venecitas por lado" }) as HTMLInputElement).disabled).toBe(true);
+    expect(screen.queryByRole("button", { name: "Probar con un ejemplo" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Revisar mi cuadro" })).toBeNull();
+    expect(screen.queryByLabelText("Precio estimado del cuadro")).toBeNull();
+    expect(screen.queryByText(/con marco|venecitas enteras/)).toBeNull();
+    mocks.load.mockRejectedValueOnce(new Error("Imagen inválida"));
+    await userEvent.upload(screen.getByLabelText("Elegir imagen"), new File(["x"], "foto.png", { type: "image/png" }));
+    expect(await screen.findByRole("alert")).toBeTruthy();
+    expect(screen.queryByLabelText("Precio estimado del cuadro")).toBeNull();
+    mocks.load.mockResolvedValueOnce({ url: "blob:valid", raster: raster() });
+    await userEvent.upload(screen.getByLabelText("Elegir imagen"), new File(["x"], "foto.png", { type: "image/png" }));
+    expect(await screen.findByRole("img", { name: /Tu mosaico/ })).toBeTruthy();
+    expect((screen.getByRole("slider", { name: "Cantidad de venecitas por lado" }) as HTMLInputElement).disabled).toBe(false);
+    expect(screen.getByLabelText("Precio estimado del cuadro")).toBeTruthy();
   });
   it("gallery template → change size/color → preview → reset", async () => {
     setup();
@@ -35,7 +45,7 @@ describe("PER-130: creator user journeys", () => {
     expect(visibleCells()).toEqual(Array(25).fill("#000000"));
     await userEvent.click(screen.getByRole("button", { name: "Empezar de nuevo" }));
     expect(screen.queryByRole("img", { name: /Tu mosaico/ })).toBeNull();
-    expect((screen.getByRole("button", { name: "Revisar mi cuadro" }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.queryByRole("button", { name: "Revisar mi cuadro" })).toBeNull();
   });
   it("keeps a previous design when loading fails", async () => {
     mocks.load.mockRejectedValue(new Error("Ese formato no es compatible."));
@@ -84,7 +94,7 @@ describe("PER-130: creator user journeys", () => {
     expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:first");
   });
   it("explains an unavailable template while keeping upload accessible", () => {
-    render(<Creator config={testWorkshop} pricing={testPricing} template={null} example={null} templateUnavailable />);
+    render(<Creator config={testWorkshop} pricing={testPricing} template={null} templateUnavailable />);
     expect(screen.getByRole("alert").textContent).toContain("no está disponible");
     expect(screen.getByLabelText("Elegir imagen")).toBeTruthy();
   });

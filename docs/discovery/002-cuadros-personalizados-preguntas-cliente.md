@@ -209,3 +209,13 @@ configurable y un resumen en memoria. Ningún importe de demostración puede cob
 La futura guía corresponde exclusivamente al taller autenticado y al diseño pagado.
 La previsualización pública no es una protección contra capturas/copias.
 Compra separada confirmada por Bruno, registrada en PER-DEC-014.
+
+
+## Compra separada simulada (2026-10-26)
+
+Bruno solicita continuar con fixtures mientras Mariela confirma los datos, sin
+habilitar cobros reales. [PER-132](../specs/132-cuadros-compra-simulada.md) implementa
+resumen aceptado, domicilio, cotización backend, pago simulado y resultado.
+Se elimina el ejemplo del creador vacío y se ocultan los datos hasta tener un diseño.
+La simulación es local, efímera y no crea pedidos productivos. Los criterios de
+venta real (proveedores, snapshot durable, fabricación y guía del taller) siguen pendientes.

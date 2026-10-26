@@ -3,6 +3,10 @@
 2026-10-26 · Rama `codex/creador-cuadros-personalizados`.
 Extiende y reemplaza los puntos de PER-130 sobre paleta, guía pública y ausencia de precio.
 
+> Actualización: [PER-132](132-cuadros-compra-simulada.md) reemplaza la visibilidad
+> del precio sin imagen y extiende el resumen con una compra local simulada.
+> Las exclusiones de cobro, envíos y pedidos reales siguen vigentes.
+
 ## Problema y alcance
 
 La paleta de diez colores desplaza grises y pieles hacia verdes/azules. El creador

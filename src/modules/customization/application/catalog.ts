@@ -21,5 +21,5 @@ export async function loadCreator(repository: DesignCatalog, id?: string) {
   const [{ config, templates }, pricing] = await Promise.all([loadGallery(repository), repository.pricing()]);
   validatePricing(config, pricing);
   const template = templates.find(t => t.id === id) ?? null;
-  return { config, pricing, template, example: templates[0] ?? null, templateUnavailable: !!id && !template };
+  return { config, pricing, template, templateUnavailable: !!id && !template };
 }

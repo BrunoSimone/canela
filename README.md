@@ -181,11 +181,14 @@ pnpm commerce:preflight    # read-only configuration/migration checks
 
 Primera versión en `codex/creador-cuadros-personalizados`:
 `/crear-cuadro` permite cargar/recortar una imagen local, ajustar tamaño y colores
-y revisar un resumen con precio estimado de prueba; `/cuadros` ofrece ejemplos reutilizables.
+y recorrer una compra separada simulada (resumen, domicilio, envío, pago y resultado);
+`/cuadros` ofrece ejemplos reutilizables. El creador vacío no muestra precios ni medidas
+y mantiene deshabilitado el tamaño hasta tener un diseño.
 La paleta provisional tiene 32 colores. El creador público no exporta guías de fabricación.
 Ver [spec PER-130](docs/specs/130-creador-cuadros-demo.md),
-[ampliación PER-131](docs/specs/131-cuadros-paleta-cotizacion.md) y
-[evidencia actual](docs/evidence/PER-131.md).
+[ampliación PER-131](docs/specs/131-cuadros-paleta-cotizacion.md),
+[compra simulada PER-132](docs/specs/132-cuadros-compra-simulada.md) y
+[evidencia actual](docs/evidence/PER-132.md).
 
 ```bash
 SITE_MAINTENANCE_MODE=0 CUADROS_PREVIEW_ENABLED=1 pnpm dev --port 3000
@@ -196,9 +199,24 @@ Estas variables afectan solo ese proceso local. Las rutas están bloqueadas en
 Vercel Production. La configuración y los ejemplos vienen del repositorio de
 servidor `src/modules/customization/infrastructure/demo-catalog.ts`; medidas,
 límites, paleta y precios son provisionales y se cambian allí, sin modificar el motor.
-La estimación separa venecitas, mano de obra e insumos; el envío queda pendiente.
+La estimación separa venecitas, mano de obra e insumos. El envío usa fixtures de
+`demo-purchase-config.ts`: no son tarifas de Zipnova. Para probar, subí una imagen,
+revisá y aceptá el diseño, continuá al domicilio y usá «Completar con datos ficticios».
+Cotizá y elegí aprobado, pendiente o rechazado antes de «Simular pago».
+
+`/api/cuadros/prueba` solo funciona con `NODE_ENV=development`, sin `VERCEL_ENV`
+y con la función habilitada. Producción y despliegues preview rechazan las operaciones.
+No se conecta con Mercado Pago, Zipnova, Sanity, emails ni el carrito de stock.
+El backend valida el diseño y calcula los importes; las cotizaciones vencen a los
+15 minutos. Guarda únicamente snapshots temporales en memoria (hasta 30 minutos,
+100 cotizaciones, 10 intentos por cotización y 5 pedidos de prueba activos).
+Reiniciar el servidor descarta todas las simulaciones; la limpieza es por solicitud.
+Para una prueba de capacidad nueva se puede reiniciar el servidor local.
+
 Las fotos se procesan en memoria del navegador y se pierden al salir/recargar.
-No hay compra de cuadros, subida de originales ni persistencia de borradores.
+Solo la grilla aceptada llega al backend; no hay subida de originales ni borradores
+persistentes. La simulación no crea pedidos en el panel de Mariela. La venta real
+requiere otra iteración con datos confirmados, persistencia durable y proveedores.
 La publicación de diseños de compradores en Sanity pertenece a la etapa de venta.
 
 ### Environment
