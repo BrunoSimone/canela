@@ -4,12 +4,13 @@ import { SanityInventory } from "./sanity-inventory";
 
 export class SanityInventoryDocuments implements InventoryDocuments {
   private readonly base: string;
-  constructor(private readonly token: string, private readonly dataset: string) {
+  constructor(private readonly token: string, private readonly dataset: string, private readonly signal?: AbortSignal) {
     if (!token || !/^[a-z0-9_-]+$/.test(dataset)) throw Error("SANITY_INVENTORY_NOT_CONFIGURED");
     this.base = `https://${projectId}.api.sanity.io/v${apiVersion}/data`;
   }
   private async request(path: string, body?: unknown) {
-    const response = await fetch(`${this.base}/${path}`, { method: body ? "POST" : "GET", headers: { Authorization: `Bearer ${this.token}`, "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : undefined, cache: "no-store", signal: AbortSignal.timeout(10000) });
+    const timeout = AbortSignal.timeout(10000);
+    const response = await fetch(`${this.base}/${path}`, { method: body ? "POST" : "GET", headers: { Authorization: `Bearer ${this.token}`, "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : undefined, cache: "no-store", signal: this.signal ? AbortSignal.any([this.signal, timeout]) : timeout });
     if (response.status === 409) throw new InventoryConflict();
     if (!response.ok) throw Error(`SANITY_INVENTORY_HTTP_${response.status}`);
     return response.json();
@@ -34,8 +35,8 @@ export class SanityInventoryDocuments implements InventoryDocuments {
     return (await this.request(`query/${this.dataset}?${queryParams}`)).result;
   }
 }
-export function inventoryStore() {
+export function inventoryStore(signal?: AbortSignal) {
   const name = process.env.SANITY_INVENTORY_DATASET;
   if (!name || (process.env.NODE_ENV !== "production" && name === "production")) throw Error("SANITY_INVENTORY_DATASET_UNSAFE");
-  return new SanityInventory(new SanityInventoryDocuments(process.env.SANITY_INVENTORY_TOKEN ?? "", name));
+  return new SanityInventory(new SanityInventoryDocuments(process.env.SANITY_INVENTORY_TOKEN ?? "", name, signal));
 }

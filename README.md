@@ -4,8 +4,9 @@ Inventario vigente: Sanity es la fuente única de cantidades/reservas y se gesti
 con **Producto → Stock** en Studio. Ver [spec 100](docs/specs/100-inventario-sanity.md)
 y [guía del cliente](docs/runbooks/carga-cliente.md).
 
-Estado al 23/10/2026: versión publicada con mantenimiento activo y checkout
-deshabilitado. Revisión de tienda/panel, pruebas y pendientes externos en
+Estado al 26/10/2026: tienda con mantenimiento activo y checkout deshabilitado.
+Cierre de implementación, regresión y pendientes de aceptación en
+[FIN-120](docs/evidence/FIN-120.md); revisión de tienda/panel en
 [UX-110](docs/evidence/UX-110.md). La apertura requiere completar los gates del
 [runbook](docs/runbooks/despacho-avisos-apertura.md).
 

@@ -8,6 +8,19 @@ const profile: ShippingProfile = { productId: "a", version: 1, weightGrams: 100,
 function plan(profiles = [profile], quantity = 2, boxes = [box]) { return buildSharedBoxPlan({ items: profiles.map(p => ({ productId: p.productId, quantity })), profiles, boxes, constraints }); }
 
 describe("shared box", () => {
+  it("classifies a shared box containing glass and general merchandise as glass", () => {
+    const profiles = [{ ...profile, classificationId: "1" }, { ...profile, productId: "glass", classificationId: "6" }];
+    for (const selection of [profiles, [...profiles].reverse()]) {
+      const result = plan(selection, 1);
+      expect(result.parcels).toHaveLength(1);
+      expect(result.parcels[0].classificationId).toBe("6");
+      expect(result.parcels[0].weightGrams).toBe(400);
+    }
+  });
+  it("never downgrades glass or guesses an unrelated mixed classification", () => {
+    expect(plan([{ ...profile, classificationId: "6" }], 1).parcels[0].classificationId).toBe("6");
+    expect(() => plan([{ ...profile, classificationId: "4" }, { ...profile, productId: "glass", classificationId: "6" }], 1)).toThrow();
+  });
   it("packs distinct products and quantities in one box, charging tare once", () => {
     const result = plan([profile, { ...profile, productId: "b" }]);
     expect(result.parcels).toHaveLength(1);

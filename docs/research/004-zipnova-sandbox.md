@@ -23,6 +23,36 @@ taller aprueba una regla real de embalaje conjunto.
 El bloqueo de acceso a sandbox está resuelto. La limitación de retiro es
 operativa y no se resuelve con código ni por activar el modo de pruebas.
 
+## Seguimiento de soporte — 26/10/2026
+
+Bruno compartió una nueva respuesta de Enzo a la consulta enviada el 24/10:
+
+- El regreso a producción requiere una solicitud expresa; no ocurre de forma
+  automática y no depende del cierre de este ticket.
+- Soporte indica que el cambio debería ser inmediato **cuando tome la solicitud**.
+  Esto no fija un plazo de atención desde el envío del mensaje.
+- Las restricciones de admisión deben consultarse con el equipo comercial en
+  `comercial@zipnova.com`, describiendo la operación de Canela.
+
+Queda resuelto cómo pedir el cambio de modo. No se solicitó el regreso a producción
+con esta actualización; la última confirmación de cuenta continúa siendo sandbox.
+La respuesta no confirma admisión, embalaje, cobertura por roturas ni clasificación
+API de vidrio, cerámica o espejos. Tampoco confirma un entorno de pruebas separado
+para después del cambio. Estas condiciones no pueden inferirse de una etiqueta
+sandbox válida.
+
+La consulta comercial está preparada en
+[el borrador de condiciones](../drafts/consulta-zipnova-condiciones.md); no enviada.
+La carga de stock, pesos y medidas en Sanity puede continuar en paralelo.
+
+### Comprobación autenticada del 26/10
+
+El panel de Canela muestra **Modo de Pruebas**. Su modal explica que los envíos y
+etiquetas actuales no sirven para operar realmente y que el aviso desaparecerá
+cuando habiliten la cuenta. Queda resuelta la comprobación visual del modo remoto;
+no se infiere de la flag local. Starter está activo a ARS 0, sin adicionales.
+Ver [revisión de cuenta y condiciones](006-zipnova-cuenta-condiciones.md).
+
 ## Configuración local
 
 `ZIPNOVA_ACCOUNT_MODE=sandbox` y `ZIPNOVA_DISPATCH_TYPE=carrier_dropoff` reflejan

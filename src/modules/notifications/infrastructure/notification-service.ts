@@ -4,13 +4,15 @@ import { readOrderMailConfig, validateFrozenMail } from "./mail-config";
 import { PostgresNotificationRepository } from "./postgres-notification-repository";
 import { renderNotification } from "./order-mail";
 import { sendResendEmail } from "./resend-mailer";
-export async function processOrderNotifications(orderId?:string,limit=2):Promise<number>{
+import type { Sql } from "postgres";
+export async function processOrderNotifications(orderId?:string,limit=2,options?:{sql:Sql;signal:AbortSignal}):Promise<number>{
   const config=readOrderMailConfig();if(!config)return 0;
-  const sql=getDatabase(),repo=new PostgresNotificationRepository(sql);let processed=0;
+  const sql=options?.sql??getDatabase(),repo=new PostgresNotificationRepository(sql);let processed=0;
   for(let i=0;i<Math.min(Math.max(limit,1),5);i++){
     if(i>0)await new Promise(resolve=>setTimeout(resolve,600));
+    options?.signal.throwIfAborted();
     if(!await deliverNotification({repo,environment:config.environment,render:job=>renderNotification(sql,config,job),
-      validate:(job,payload)=>validateFrozenMail(config,job.environment,payload,job.kind),send:(payload,key)=>sendResendEmail(config.apiKey,payload,key)},orderId))break;
+      validate:(job,payload)=>validateFrozenMail(config,job.environment,payload,job.kind),send:(payload,key)=>sendResendEmail(config.apiKey,payload,key,fetch,options?.signal)},orderId))break;
     processed++;
   }
   return processed;

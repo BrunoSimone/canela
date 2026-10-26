@@ -13,8 +13,10 @@ proyecto Canela. El catálogo conserva todos los productos y fotos existentes.
 3. Mantener desactivado el apilado si no está comprobado que la protección admite
    otras piezas encima. El giro permite solo rotar sobre la base, sin acostar la pieza.
 4. Activar caja exclusiva únicamente para piezas que no pueden compartir caja.
-5. La clasificación de Zipnova puede quedar vacía mientras se consulta al proveedor.
-   Se pueden publicar las mediciones; el checkout esperará los datos completos.
+5. Elegir la clasificación por contenido: **Cristales y vidrio (6)** para vidrio,
+   espejos o cuadros con vidrio; **General (1)** para cerámica decorativa o cuadros
+   sin vidrio. **Cerámicos (4)** corresponde a pisos y revestimientos. No hay una
+   opción seleccionada por defecto; sin clasificación no se puede cotizar.
 6. Pulsar **Publicar**. Guardar un borrador no actualiza la tienda.
 
 En **Cajas de envío**, crear cada tamaño que efectivamente usará el taller:

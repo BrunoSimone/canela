@@ -1,6 +1,7 @@
 import { MailDeliveryError, type OutboundEmail } from "../domain/notification";
-export async function sendResendEmail(apiKey:string,payload:OutboundEmail,key:string,fetcher:typeof fetch=fetch):Promise<string>{
-  const response=await fetcher("https://api.resend.com/emails",{method:"POST",redirect:"error",cache:"no-store",signal:AbortSignal.timeout(10000),
+export async function sendResendEmail(apiKey:string,payload:OutboundEmail,key:string,fetcher:typeof fetch=fetch,signal?:AbortSignal):Promise<string>{
+  const timeout=AbortSignal.timeout(10000);
+  const response=await fetcher("https://api.resend.com/emails",{method:"POST",redirect:"error",cache:"no-store",signal:signal?AbortSignal.any([signal,timeout]):timeout,
     headers:{"Content-Type":"application/json",Authorization:`Bearer ${apiKey}`,"Idempotency-Key":key},body:JSON.stringify(payload)});
   if(!response.ok){
     const retry=response.status>=500||[408,409,429].includes(response.status);

@@ -100,7 +100,13 @@ const producto: SchemaTypeDefinition = {
           name: "classificationId",
           title: "Clasificación de mercadería en Zipnova",
           type: "string",
-          description: "ID o código confirmado por Zipnova para esta pieza. Consultar condiciones para vidrio, cerámica y espejos; no asumir General. Sin este dato no se cotiza.",
+          description: "Elegí según el contenido. Vidrio y espejos: Cristales y vidrio (6). Cerámica decorativa y cuadros sin vidrio: General (1). Cerámicos (4) corresponde a pisos y revestimientos. Sin selección no se cotiza.",
+          options: { list: [
+            { title: "Cristales y vidrio — vidrio, espejos, cuadros con vidrio (6)", value: "6" },
+            { title: "General — cerámica decorativa, cuadros sin vidrio (1)", value: "1" },
+            { title: "Cerámicos — pisos y revestimientos (4)", value: "4" },
+            { title: "Bachas — cocina o vanitory (3)", value: "3" },
+          ] },
           validation: (rule) => rule.regex(/^[A-Za-z0-9_-]{1,50}$/),
         },
         {

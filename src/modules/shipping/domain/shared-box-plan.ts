@@ -30,7 +30,12 @@ export function buildSharedBoxPlan(input: Omit<BuildParcelPlanInput, "groupingRu
   for (const p of selected) {
     if (![p.weightGrams, p.heightCm, p.widthCm, p.lengthCm, p.version].every(n => Number.isSafeInteger(n) && n > 0) || typeof p.shipSeparately !== "boolean") throw new InvalidParcelPlanError("Invalid protected unit");
   }
-  if (selected.some(p => !p.classificationId) || new Set(selected.map(p => p.classificationId)).size !== 1) throw new MissingShippingProfileError(items.map(i => i.productId));
+  const classifications = new Set(selected.map(p => p.classificationId));
+  // Conservative application rule: a General + glass box still contains glass.
+  // Other mixed classifications require a separate, explicit packing rule.
+  const glassAndGeneral = classifications.has("6") && [...classifications].every(id => id === "1" || id === "6");
+  if (selected.some(p => !p.classificationId) || (classifications.size !== 1 && !glassAndGeneral)) throw new MissingShippingProfileError(items.map(i => i.productId));
+  const classificationId = glassAndGeneral ? "6" : selected[0].classificationId;
   const totalUnits = items.reduce((sum, i) => sum + i.quantity, 0);
   if (totalUnits > 1 && selected.some(p => p.shipSeparately)) throw new ParcelLimitExceededError();
   const units: { profile: ShippingProfile; unit: number }[] = items.flatMap(i => Array.from({ length: i.quantity }, (_, unit) => ({ profile: profiles.get(i.productId)!, unit: unit + 1 })));
@@ -67,8 +72,8 @@ export function buildSharedBoxPlan(input: Omit<BuildParcelPlanInput, "groupingRu
     }
     if (placements.length !== totalUnits) continue;
     const packing: PackingInstructions = { boxId: box.id, boxRevision: box.revision, boxName: box.name, placements };
-    const parcels = [{ weightGrams, heightCm: box.heightCm, widthCm: box.widthCm, lengthCm: box.lengthCm, items, groupingRule: null, classificationId: selected[0].classificationId, packing }];
-    const fingerprint = createHash("sha256").update(JSON.stringify({ algorithm: "shared-box-v1", items, profiles: selected, box, parcels })).digest("hex");
+    const parcels = [{ weightGrams, heightCm: box.heightCm, widthCm: box.widthCm, lengthCm: box.lengthCm, items, groupingRule: null, classificationId, packing }];
+    const fingerprint = createHash("sha256").update(JSON.stringify({ algorithm: "shared-box-v2", items, profiles: selected, box, parcels })).digest("hex");
     return { items, parcels, fingerprint };
   }
   throw new ParcelLimitExceededError();

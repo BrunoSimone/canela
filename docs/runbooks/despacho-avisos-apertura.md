@@ -1,6 +1,6 @@
 # Despacho, correos y apertura
 
-Actualizado el 2026-10-23: cierre de regresión, revisión UX y despliegue cerrado.
+Actualizado el 2026-10-26: presupuesto del worker y regresión FIN-120.
 El estado verificado de publicación figura en [OPEN-01](../evidence/OPEN-01.md). Contrato:
 [spec 080](../specs/080-despacho-avisos-apertura.md). Evidencia:
 [OPS-01](../evidence/OPS-01.md).
@@ -92,8 +92,12 @@ secreto vive en Vercel y en el repositorio. Una respuesta 503 marca el job falli
 revisar las notificaciones de Actions y el panel. GitHub puede demorar ejecuciones,
 por lo que no es un SLA de cinco minutos. Cada corrida actualiza
 `background_job_health`; el preflight comprueba una corrida saludable reciente.
-No poner el secreto en una URL ni en un cliente web. El endpoint procesa como
-máximo 5 avisos por llamada. El límite es acotado; 429 se recupera con backoff.
+No poner el secreto en una URL ni en un cliente web. Desde FIN-120 el endpoint
+procesa un aviso y una intención de reserva por llamada (hasta 12 avisos por hora
+con un disparador de cinco minutos, además de los intentos inmediatos). Tiene un presupuesto
+total de 25 s: cancela peticiones externas y cierra su pool SQL dedicado al
+agotarlo; devuelve 503 sin registrar una corrida saludable. Un envío incierto
+conserva su lease y clave de idempotencia. 429 se recupera con backoff.
 
 ## Preflight y futura apertura
 
@@ -152,9 +156,9 @@ un servicio nuevo ni se cambió el plan de Vercel en esta iteración.
 
 Opción propuesta: cron-job.org, con método POST, cuerpo vacío y avisos de fallo,
 recuperación y desactivación. Su límite documentado es **30 segundos**, mientras
-la función tiene un máximo de 60: antes de adoptarlo comprobar la duración con
-cola real y recuperación de reservas, y ajustar el lote/presupuesto de ejecución
-si excede 30 segundos. No interpretar un timeout del disparador como garantía
+la función tiene un máximo de 60: FIN-120 limita el trabajo a 25 segundos y prueba
+la cancelación de una consulta SQL real de 60 segundos sin afectar otro pool.
+No interpretar un timeout del disparador como garantía
 de que el servidor no procesó trabajos; consultar `background_job_health` y los
 IDs de Resend antes de reintentar. No desactivar GitHub hasta validar el reemplazo.
 La cuenta y el almacenamiento del secreto en ese proveedor requieren intervención

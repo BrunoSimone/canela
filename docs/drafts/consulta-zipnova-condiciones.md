@@ -1,28 +1,38 @@
-# Consulta a Zipnova — borrador sin enviar
+# Correo a Comercial — borrador retirado, no enviar
 
-Asunto: Canela (22052): mercadería frágil, límite de bultos y paso a producción
+26/10/2026
 
-Hola Enzo, gracias por habilitar el modo de pruebas de Canela (22052).
-Ya validamos cotización, alta de un envío de prueba y descarga de etiqueta.
-Antes de definir la operación necesitamos confirmar:
+**Estado:** retirado por indicación de Bruno. Se conserva como antecedente;
+no enviar ni esperar esta consulta para la apertura. El trabajo continúa con
+las condiciones oficiales de embalaje de los transportes ya revisadas.
 
-1. Canela vende piezas de vidrio y cerámica, espejos y cuadros. Para OCA y Correo
-   Argentino desde Mar del Plata, ¿qué productos aceptan, qué clasificación debemos
-   informar en la API y qué condiciones de embalaje, cobertura y exclusiones aplican?
-2. En la respuesta indicaron «solo envíos de un único bulto». ¿Ese límite aplica
-   a ambos transportes o únicamente a Correo Argentino? Actualmente limitamos todo
-   pedido a un bulto y solo ofrecemos despacho en sucursal.
-3. ¿Cómo identificamos las sucursales habilitadas para admitir estos envíos y las
-   condiciones de despacho? ¿Hay mínimos, cargos adicionales o requisitos de saldo?
-4. Para salir de pruebas, ¿debemos solicitar el cambio a soporte? ¿Afecta a toda la
-   cuenta y a todas sus credenciales? ¿Podemos contar con una cuenta de pruebas
-   independiente para mantener desarrollo aislado cuando la tienda esté operativa?
-5. ¿La API permite consultar de forma inequívoca el modo actual de la cuenta?
-   También agradeceríamos los pasos/requisitos para pasar a operación real y cómo
-   identificar las etiquetas de prueba al hacer ese cambio.
+**Para:** comercial@zipnova.com
 
-Todavía no solicitamos desactivar pruebas. Queremos cerrar estas condiciones y
-coordinar luego la habilitación productiva.
+**Asunto:** Canela: envíos de vidrio, cerámica y espejos
 
-Gracias,
-Bruno — integración de Canela
+Hola, ¿cómo están?
+
+Soy Bruno, de Canela (cuenta 22052). Enzo nos pasó este contacto para consultarles
+por los envíos de nuestros productos.
+
+Vendemos piezas de vidrio, cerámica, espejos y cuadros. La idea es despachar desde
+Mar del Plata por OCA o Correo Argentino, llevando los paquetes a sucursal. Cada
+pedido iría en una caja, con las piezas protegidas individualmente.
+
+Nos quedó una duda sobre el embalaje:
+
+Leímos la [guía de bazar](https://ayuda-envios.zipnova.com/hc/es-419/articles/45276951402131-Embalaje-de-productos-de-bazar),
+que indica caja resistente con separadores, y la
+[guía de frágiles](https://ayuda-envios.zipnova.com/hc/es-419/articles/45276928115219-Embalaje-de-productos-fr%C3%A1giles),
+que exige estructura de madera para vidrio. Las guías oficiales de
+[OCA](https://www.oca.com.ar/Content/Guia_Paquetes.pdf) y
+[Correo Argentino](https://www.correoargentino.com.ar/servicios/paqueteria/condiciones-de-embalaje)
+contemplan cartón adecuado para frágiles. ¿La madera es una condición adicional
+de Zipnova o de algún servicio específico del transporte? ¿Aplica también a
+nuestras piezas pequeñas de bazar cuando despachamos directamente en sucursal?
+
+Podemos enviarles fotos de las piezas para que nos indiquen qué condiciones
+corresponden en cada caso.
+
+Muchas gracias,
+Bruno

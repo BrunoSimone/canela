@@ -20,6 +20,16 @@ describe("OPS-07 email isolation",()=>{
   });
 });
 describe("OPS-05 Resend adapter",()=>{
+  it("cancels an in-flight send when the worker deadline expires", async () => {
+    const controller = new AbortController();
+    const fetcher = vi.fn<typeof fetch>((_, init) => new Promise((_, reject) => {
+      init!.signal!.addEventListener("abort", () => reject(init!.signal!.reason), { once: true });
+    }));
+    const result = sendResendEmail("secret", mail, "stable-retry-key", fetcher, controller.signal);
+    const rejected = expect(result).rejects.toThrow("deadline");
+    controller.abort(new Error("deadline"));
+    await rejected;
+  });
   it("sends the frozen payload with the stable key",async()=>{
     const fetcher=vi.fn().mockResolvedValue(Response.json({id:"accepted"}));
     expect(await sendResendEmail("secret",mail,"key",fetcher)).toBe("accepted");

@@ -13,6 +13,24 @@ el registro de despacho y ambos avisos están implementados localmente según
 [spec 080](../specs/080-despacho-avisos-apertura.md). Ver
 [operación de despacho y correos](despacho-avisos-apertura.md).
 
+**Seguimiento del 26/10/2026:** soporte confirmó que volver a producción requiere
+solicitud expresa y no depende del cierre del ticket. Estima que el cambio será
+inmediato cuando atienda la solicitud; no confirmó un plazo de atención. Mantener
+sandbox hasta coordinar el cambio y recibir confirmación antes de ajustar las
+flags. Para admisión, embalaje y cobertura de piezas frágiles derivó a
+`comercial@zipnova.com`. Ver [respuesta y alcance](../research/004-zipnova-sandbox.md#seguimiento-de-soporte--26102026)
+y [borrador comercial retirado](../drafts/consulta-zipnova-condiciones.md).
+Bruno decidió continuar con las condiciones oficiales de embalaje de OCA/Correo
+ya revisadas y no esperar una respuesta comercial ni consultar cobertura.
+
+**Verificación en el panel del 26/10:** Canela muestra Starter gratuito, sin
+adicionales y sin vencimiento; API incluida. El aviso **Modo de Pruebas** y su
+modal confirman el entorno remoto. El portal indica que desaparecerá al habilitar
+la cuenta. Para preparar el paquete se toman como referencia las condiciones
+oficiales de OCA/Correo revisadas. La consulta sobre las diferencias entre guías
+de Zipnova fue retirada y no se mantiene como bloqueo de apertura. Ver
+[cuenta, recargas y condiciones](../research/006-zipnova-cuenta-condiciones.md).
+
 ## Configuración
 
 1. Aplicar `0008_shipping_quote.sql`, `0009_order_shipment.sql` y `0010_dispatch_notifications.sql` mediante `pnpm db:migrate` **antes** de ejecutar
@@ -34,10 +52,14 @@ el registro de despacho y ambos avisos están implementados localmente según
    activa sandbox. **Estado confirmado de Canela: `sandbox`.** Se conservan la
    URL y credenciales actuales. Volver a solicitar modo operativo al terminar
    las pruebas, coordinando la apertura comercial.
-6. En Sanity completar el perfil embalado: peso (mínimo 10 g), dimensiones
-   exteriores en cm, clasificación de mercadería confirmada por Zipnova, versión
-   y envío separado. No seleccionar General por defecto para piezas frágiles.
-   Incrementar versión al cambiar embalaje. No agrupar sin una regla aprobada.
+6. En Sanity completar peso (mínimo 10 g) y medidas de UNA unidad protegida,
+   sin caja exterior. Cargar aparte las cajas compartidas. Seleccionar explícitamente
+   clasificación según la [referencia oficial](https://docs.zipnova.com/envios/referencia/clasificaciones-de-producto):
+   `6` vidrio, espejos o cuadros con vidrio; `1` cerámica decorativa/cuadros sin
+   vidrio cuando no aplica otra clasificación; `4` solo pisos/revestimientos y
+   `3` bachas. La lista publicada en Studio no asigna valores por defecto.
+   La caja mixta General + vidrio conserva clasificación `6`; otras mezclas
+   siguen bloqueadas. La clasificación no sustituye un embalaje adecuado.
 7. Solo en el entorno aislado de pruebas, activar `ZIPNOVA_FULFILLMENT_MODE=sandbox`.
    Sin esta flag el alta permanece cerrada. Exige cuenta sandbox y despacho en
    sucursal; el código rechaza cuenta operativa. La flag no fue activada en el
@@ -62,7 +84,8 @@ pnpm test:db
 RUN_ZIPNOVA_QUOTE_CONTRACT=1 node --env-file=.env.local node_modules/vitest/vitest.mjs run src/modules/shipping/infrastructure/zipnova/client.contract.test.ts
 ```
 
-El contrato opt-in consulta despacho en sucursal con un bulto General sintético,
+El contrato opt-in consulta despacho en sucursal con bultos sintéticos de
+clasificación General (`1`) y Cristales y vidrio (`6`),
 respetando `ZIPNOVA_ACCOUNT_MODE` sin forzar modo operativo;
 no debe interpretarse como aceptación comercial de vidrio, cerámica o espejos.
 No imprimir las credenciales ni respuestas remotas completas.
@@ -91,14 +114,14 @@ No imprimir las credenciales ni respuestas remotas completas.
 1. Abrir un pedido pagado con snapshot Zipnova sandbox y datos de destinatario
    completos. Los pedidos anteriores sin documento requieren revisión; no se
    inventan datos ni se completan con fixtures.
-2. Guardar peso y medidas reales del paquete. En esta etapa deben coincidir
-   exactamente con el bulto cotizado. Si difieren, se bloquea el alta para revisión
-   operativa. Corregir la medición solo si hubo un error; nunca falsearla para
-   superar el control. No se cobra ninguna diferencia automáticamente.
-3. Pulsar **Confirmar embalaje y generar etiqueta**. Canela recotiza, comprueba
-   ambos importes y registra un intento único antes de crear el envío. El paquete
-   queda bloqueado para edición. Doble clic o solicitudes concurrentes reutilizan
-   el mismo registro.
+2. Guardar peso y medidas reales del paquete. Si difieren de lo cotizado al comprar,
+   se consulta una tarifa nueva para ese embalaje; nunca falsear las mediciones.
+   La diferencia de costo queda a cargo de Canela y no se cobra al comprador.
+3. Consultar el costo, revisar el importe y aceptarlo explícitamente antes de
+   pulsar **Generar etiqueta con este costo**. Canela recotiza y registra un intento
+   único antes de crear el envío. Cambiar la preparación invalida la aceptación
+   anterior. El paquete queda bloqueado para edición al iniciar el alta; doble
+   clic o solicitudes concurrentes reutilizan el mismo registro.
 4. Al obtener el alta, Canela solicita el PDF automáticamente. Si demora, usar
    **Consultar envío y etiqueta**. Si se perdió la respuesta del alta, la misma
    acción busca por la referencia externa guardada y consulta su detalle.
@@ -130,7 +153,10 @@ origen de la cuenta: mantenerlo fuera del repositorio y de publicaciones públic
 
 ## Apertura pendiente
 
-Confirmar despacho viable desde el taller, alcance del límite de un bulto, aceptación y
-clasificación de mercadería frágil, perfiles reales y plazo de preparación.
+Confirmar despacho viable desde el taller, perfiles reales y plazo de preparación.
+El alcance implementado conserva un bulto por pedido; la clasificación se elige
+de la referencia oficial publicada en Sanity.
+Preparar el embalaje según las condiciones oficiales del transporte. No esperar
+el borrador retirado de Comercial como paso de este runbook.
 Completar la aceptación externa integral y los pasos del [runbook de apertura](despacho-avisos-apertura.md) antes de
 quitar mantenimiento o permitir cobros productivos.
