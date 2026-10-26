@@ -1,4 +1,4 @@
-/** The free scheduler disconnects at 30s. Cancel IO before that, not just the response. */
+/** Bound manual recovery work and cancel its IO, not just the response. */
 export async function runWithWorkerDeadline<T>(
   work: (signal: AbortSignal) => Promise<T>,
   close: () => Promise<void>,

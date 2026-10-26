@@ -14,10 +14,11 @@ conserva mantenimiento y checkout deshabilitado durante esta iteración.
 - **FIN-01:** una compra nueva con MP test confirma mediante un webhook automático
   auténtico antes de cualquier reconciliación por retorno. Verificar pago, reserva
   consumida, descuento único y aviso al taller; eventos repetidos no duplican efectos.
-- **FIN-02:** un disparador externo periódico autentica el worker productivo,
-  conserva el secreto fuera de URLs/logs y demuestra al menos tres ejecuciones
-  consecutivas con intervalo de cinco minutos y alertas configuradas. No dar por
-  resuelta la cadencia mediante invocaciones manuales ni ensanchar su umbral de salud.
+- **FIN-02 (sustituido el 26/10):** Bruno descarta cron y adopta recuperación
+  manual según la [spec 121](121-recuperacion-manual-sin-cron.md). Retirar schedule
+  y el requisito de actividad periódica; mantener cola, reintentos inmediatos,
+  acciones manuales y controles basados en pendientes reales. La decisión no se
+  presenta como una validación de la cadencia anterior.
 - **FIN-03:** comprobar el presupuesto del endpoint frente al límite del disparador;
   probar errores, concurrencia e idempotencia de los reintentos que se modifiquen.
 - **FIN-04:** comprobar las clasificaciones publicadas por Zipnova y ofrecer una

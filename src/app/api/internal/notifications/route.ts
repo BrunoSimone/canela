@@ -4,6 +4,7 @@ import { handleNotificationWorker } from "@/modules/notifications/presentation/h
 import { recoverReservationIntents } from "@/modules/inventory/infrastructure/recover-reservation-intents";
 import { inventoryStore } from "@/modules/inventory/infrastructure/sanity-documents";
 import { runWithWorkerDeadline } from "@/modules/notifications/application/worker-deadline";
+import { readManualRecoveryStatus } from "@/modules/notifications/infrastructure/manual-recovery-status";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 export async function POST(request: Request) {
@@ -17,14 +18,13 @@ export async function POST(request: Request) {
       signal.throwIfAborted();
       await recoverReservationIntents(sql, inventoryStore(signal), 1);
       signal.throwIfAborted();
-      const [health] = await sql`SELECT count(*) FILTER (WHERE state='review') AS review,
-        count(*) FILTER (WHERE state IN ('pending','sending') AND created_at < now()-interval '1 hour') AS overdue
-        FROM order_notification WHERE environment=${process.env.PAYMENT_ENVIRONMENT ?? "test"}`;
-      const review = Number(health.review), overdue = Number(health.overdue);
+      const { review, overdue, expiredReservations } = await readManualRecoveryStatus(
+        sql, process.env.PAYMENT_ENVIRONMENT === "production" ? "production" : "test",
+      );
       await sql`INSERT INTO background_job_health(name,finished_at,processed,review_count,overdue_count)
         VALUES('order_notifications',now(),${processed},${review},${overdue})
         ON CONFLICT(name) DO UPDATE SET finished_at=now(),processed=EXCLUDED.processed,review_count=EXCLUDED.review_count,overdue_count=EXCLUDED.overdue_count`;
-      return { processed, review, overdue };
+      return { processed, review, overdue, expiredReservations };
     }, () => sql.end({ timeout: 0 }));
   });
 }

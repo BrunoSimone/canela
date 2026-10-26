@@ -36,9 +36,10 @@ requiere datos reales y cuenta logística operativa; no se inventan esas aprobac
   embalaje real antes del alta. Un cambio de tarifa exige aceptación explícita de
   su costo por el operador; jamás modificar el total cobrado al comprador. Mantener
   validación de versión, entorno, destinatario y exclusividad del alta.
-- **OPEN-06:** Worker periódico autenticado para avisos pendientes, sin depender
-  de tráfico del comprador; ejecución manual y señales de error/revisión disponibles.
-  Unificar nombre de secreto entre ruta, configuración, documentación y despliegue.
+- **OPEN-06 (actualizado 26/10):** Recuperación manual autenticada según la
+  [spec 121](121-recuperacion-manual-sin-cron.md). Se retira el disparador periódico
+  por decisión de Bruno; conservar intentos inmediatos, reintento en panel,
+  ejecución técnica manual e idempotencia. No prometer detección sin supervisión.
 - **OPEN-07:** Pruebas unitarias de acomodo y errores; SQL para inventario, reservas,
   auditoría/concurrencia y fulfillment; pruebas HTTP de permisos/origen; compra
   integrada controlada más evidencia separada de servicios externos. No presentar
@@ -59,5 +60,5 @@ coordinación del modo operativo de Zipnova y aceptación final de la compra.
 1. Esquema y publicación de Sanity + guía de carga.
 2. Plan de caja y pruebas; integración cotización/checkout/panel.
 3. Inventario y pruebas SQL/HTTP; diferencias de embalaje/costo y pruebas.
-4. Worker y ejecución programada; verificación integrada.
+4. Worker y ejecución manual (actualización 26/10, spec 121); verificación integrada.
 5. Respaldo, migraciones, despliegue cerrado y evidencia de apertura pendiente.

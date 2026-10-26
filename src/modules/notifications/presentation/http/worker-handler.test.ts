@@ -24,3 +24,16 @@ it("reports review and overdue notices as failed health checks", async () => {
   expect(response.status).toBe(503);
   expect(await response.json()).toEqual({ processed: 2, review: 1, overdue: 0 });
 });
+
+it("MAN-04 reports remaining expired reservations for manual recovery", async () => {
+  const response = await handleNotificationWorker(request(`Bearer ${secret}`), secret,
+    async () => ({ processed: 0, review: 0, overdue: 0, expiredReservations: 2 }));
+  expect(response.status).toBe(503);
+  expect(await response.json()).toEqual({ processed: 0, review: 0, overdue: 0, expiredReservations: 2 });
+});
+
+it("MAN-04 accepts a completed manual run without requiring a scheduler", async () => {
+  const response = await handleNotificationWorker(request(`Bearer ${secret}`), secret,
+    async () => ({ processed: 1, review: 0, overdue: 0, expiredReservations: 0 }));
+  expect(response.status).toBe(200);
+});

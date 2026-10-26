@@ -2,7 +2,8 @@
 
 > Actualización 16/10/2026: la [spec 090](090-apertura-caja-compartida.md)
 > reemplaza la estrategia de bultos por unidad y agrega caja compartida, inventario,
-> aprobación de costo real y ejecución periódica de avisos.
+> aprobación de costo real y gestión de avisos. La [spec 121](121-recuperacion-manual-sin-cron.md)
+> establece recuperación manual sin cron desde el 26/10/2026.
 
 ## Estado
 

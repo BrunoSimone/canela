@@ -18,8 +18,9 @@ commit y envío de email. No se agrega proveedor de colas ni dependencia nueva.
   automático tardío para evitar duplicados fuera de la ventana del proveedor.
 - `after()` de Next inicia un intento acotado después de respuesta. No es la única
   fuente de recuperación: reintento administrativo, CLI y endpoint con secreto.
-  Scheduler pendiente de habilitación del entorno; sin promesa de ejecución autónoma
-  si no hay tráfico ni scheduler. Cola y estado permanecen visibles.
+  Por decisión de Bruno del 26/10/2026 no se usa scheduler; la [spec 121](../specs/121-recuperacion-manual-sin-cron.md)
+  fija supervisión humana, sin promesa de ejecución autónoma. El estado del aviso
+  permanece visible en la ficha del pedido; no hay alerta independiente del email.
 - Test y producción se aíslan por entorno persistido del pedido y configuración.
   Remitente/destino/cuerpo se congelan por aviso y cambios incompatibles requieren
   revisión. El acceso por email del admin conserva su template y comportamiento.

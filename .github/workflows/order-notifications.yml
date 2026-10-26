@@ -1,7 +1,5 @@
-name: Procesar avisos de pedidos
+name: Recuperación manual de avisos y reservas
 on:
-  schedule:
-    - cron: '3-58/5 * * * *'
   workflow_dispatch:
 permissions: {}
 concurrency:
@@ -12,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - name: Procesar cola y comprobar avisos que necesitan atención
+      - name: Procesar cola y comprobar pendientes que necesitan atención
         env:
           WORKER_SECRET: ${{ secrets.NOTIFICATION_WORKER_SECRET }}
         run: |

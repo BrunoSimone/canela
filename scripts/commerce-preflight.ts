@@ -12,6 +12,7 @@ import {SanityShippingProfileCatalog} from "../src/modules/shipping/infrastructu
 import {SanityShippingBoxes} from "../src/modules/shipping/infrastructure/sanity/sanity-shipping-boxes";
 import {buildSharedBoxPlan} from "../src/modules/shipping/domain/shared-box-plan";
 import {ZIPNOVA_INPUT_CONSTRAINTS} from "../src/modules/shipping/infrastructure/server/shipping-config";
+import {readManualRecoveryStatus} from "../src/modules/notifications/infrastructure/manual-recovery-status";
 async function main(){
  const checks:{check:string;status:"ok"|"blocked"|"manual"}[]=[];
  const check=(name:string,run:()=>boolean)=>{try{checks.push({check:name,status:run()?"ok":"blocked"});}catch{checks.push({check:name,status:"blocked"});}};
@@ -29,13 +30,11 @@ async function main(){
     const checksum=createHash("sha256").update(await readFile(`src/db/migrations/${name}`)).digest("hex");
     checks.push({check:`migration:${name}`,status:rows.some(r=>r.name===name&&r.checksum.trim()===checksum)?"ok":"blocked"});
    }
-   if(rows.some(r=>r.name==="0010_dispatch_notifications.sql")){
-    const [r]=await sql`SELECT count(*) AS total FROM order_notification WHERE state='review' AND environment=${process.env.PAYMENT_ENVIRONMENT??"test"}`;
-    checks.push({check:"notifications_need_review",status:Number(r.total)===0?"ok":"blocked"});
-   }
-   if(rows.some(r=>r.name==="0012_background_job_health.sql")){
-    const [health]=await sql`SELECT finished_at > now()-interval '15 minutes' AND review_count=0 AND overdue_count=0 AS healthy FROM background_job_health WHERE name='order_notifications'`;
-    checks.push({check:"periodic_worker_recent_and_healthy",status:health?.healthy===true?"ok":"blocked"});
+   if(rows.some(r=>r.name==="0013_sanity_inventory_intents.sql")){
+    const health=await readManualRecoveryStatus(sql,process.env.PAYMENT_ENVIRONMENT==="production"?"production":"test");
+    checks.push({check:"notifications_need_review",status:health.review===0?"ok":"blocked"});
+    checks.push({check:"notifications_overdue",status:health.overdue===0?"ok":"blocked"});
+    checks.push({check:"expired_pre_payment_reservations",status:health.expiredReservations===0?"ok":"blocked"});
    }
    const products=await readInventoryCatalog();
    const inventory=(await inventoryStore().list(products)).map(i=>({product_id:i.id,stock_on_hand:i.stockOnHand,stock_reserved:i.reserved,enabled:i.enabled}));
@@ -56,7 +55,7 @@ async function main(){
    checks.push({check:"offered_products_packable_and_valid",status:offered.length>0&&incomplete===0?"ok":"blocked"});
   }catch{checks.push({check:"database_read",status:"blocked"});}finally{await sql.end();}
  }
- for(const name of ["physical_measurements_and_stock_confirmed","carrier_account_mode_confirmed","dropoff_fragile_goods_and_costs","preparation_times","external_purchase_acceptance","launch_approval"]){checks.push({check:name,status:"manual"});}
+ for(const name of ["manual_order_and_notice_review","physical_measurements_and_stock_confirmed","carrier_account_mode_confirmed","dropoff_fragile_goods_and_costs","preparation_times","external_purchase_acceptance","launch_approval"]){checks.push({check:name,status:"manual"});}
  console.log(JSON.stringify({purpose:"read_only_configuration_check_not_launch_approval",mode:process.env.PAYMENT_ENVIRONMENT??"test",checks},null,2));
  if(checks.some(c=>c.status==="blocked"))process.exitCode=1;
 }

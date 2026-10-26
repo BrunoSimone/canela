@@ -3,7 +3,7 @@ import { runWithWorkerDeadline } from "./worker-deadline";
 
 afterEach(() => vi.useRealTimers());
 describe("FIN-03 worker deadline", () => {
-  it("aborts slow IO and closes its dedicated database before the scheduler timeout", async () => {
+  it("aborts slow IO and closes its dedicated database within the recovery budget", async () => {
     vi.useFakeTimers();
     const close = vi.fn(async () => {});
     let signal!: AbortSignal;
