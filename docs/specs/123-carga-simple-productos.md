@@ -35,6 +35,15 @@ No modificar cantidades ni completar medidas o clasificaciones por suposición.
 - **CAT-07:** Verificar compilación de Studio, tipos y contratos de catálogo,
   perfiles, acomodo e inventario. Revisar el formulario publicado y actualizar
   el runbook y las páginas correspondientes de la guía PDF antes de entregarla.
+- **CAT-08:** Indicar en los títulos qué datos de la ficha son obligatorios y
+  cuáles opcionales. En Envío, indicar que peso, tres medidas y contenido son
+  necesarios para cotizar. Conservar la carga gradual: esos requisitos no se
+  confunden con los de publicación de la ficha.
+- **CAT-09:** Diferenciar tres niveles: pieza sin envolver (información pública),
+  pieza con protección individual (acomodo), y caja cerrada (cotización). Explicar
+  que el peso estimado suma unidades protegidas más caja y relleno común. El
+  paquete terminado se mide y pesa en Preparación; se consulta su costo real y se
+  revisa cualquier diferencia antes de generar la etiqueta, según el flujo vigente.
 
 ## Auditoría de campos
 

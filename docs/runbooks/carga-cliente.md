@@ -8,7 +8,7 @@ proyecto Canela. El catálogo conserva todos los productos y fotos existentes.
 1. Abrir el producto en su categoría. En **Datos del producto**, completar nombre,
    categoría, subcategoría, precio, descripción y fotos. La descripción es opcional;
    la primera foto es la portada. La subcategoría alimenta los filtros de la tienda.
-2. En **Producto → Envío → Unidad protegida para envío**, pesar UNA pieza con la protección individual
+2. En **Producto → Envío → Pieza con protección individual**, pesar UNA pieza con la protección individual
    que realmente se usará (papel, separadores o protección específica), sin la caja
    exterior compartida. Cargar gramos enteros. Medir alto, ancho y largo de esa
    unidad protegida en centímetros enteros, redondeando hacia arriba.
@@ -32,6 +32,19 @@ que tiene una sola unidad, cargar 1; para una reposición, cargar la cantidad re
 Las medidas sin envolver son información opcional para el comprador. No copiar
 allí las medidas protegidas del envío: describen cosas diferentes.
 
+### Qué es obligatorio y qué se mide
+
+- Para publicar la ficha: nombre, categoría, subcategoría, precio y al menos una foto.
+- Opcionales: descripción, material y medidas del producto sin envolver.
+- Para cotizar: peso, alto, ancho, largo y contenido de una pieza protegida.
+  Publicar la ficha no garantiza que estos datos estén completos para vender con envío.
+
+| Dato | Qué se mide | Para qué sirve |
+| --- | --- | --- |
+| Medidas del producto sin envolver | La pieza tal como la recibe y usa el comprador | Mostrar su tamaño en la tienda |
+| Envío de cada producto | Una pieza con su protección individual | Calcular cuánto espacio y peso ocupa dentro de la caja compartida |
+| Cajas de envío | Interior útil, exterior cerrado y peso de caja con relleno común | Elegir una caja y cotizar el paquete completo |
+
 En **Cajas de envío**, crear cada tamaño que efectivamente usará el taller:
 
 - Nombre fácil de reconocer (por ejemplo, el código del proveedor de cajas).
@@ -43,6 +56,16 @@ En **Cajas de envío**, crear cada tamaño que efectivamente usará el taller:
 No introducir valores aproximados para desbloquear el checkout. El sistema
 selecciona una caja y calcula posiciones, peso y dimensiones para cotizar. Si no
 encuentra una combinación segura, impide iniciar el pago.
+
+La cotización previa al pago usa **las medidas exteriores de la caja elegida** y
+**la suma del peso de todas las piezas protegidas más la caja y el relleno común**.
+No suma los largos de las piezas ni usa las medidas descriptivas de la tienda.
+Es una estimación basada en los embalajes medidos que cargó el taller.
+
+Después de la compra, pesar y medir el paquete cerrado real en **Panel de Canela →
+Pedido → Preparación del envío**. Consultar su costo antes de generar la etiqueta.
+Si difiere del envío cobrado, el panel muestra la diferencia para que el taller la
+revise; no se cobra automáticamente un adicional al comprador.
 
 ## Stock: en la misma ficha de Sanity
 

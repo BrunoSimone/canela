@@ -36,14 +36,14 @@ const producto: SchemaTypeDefinition = {
   fields: [
     {
       name: "name",
-      title: "Nombre",
+      title: "Nombre (obligatorio)",
       type: "string",
       group: "product",
       validation: (rule) => rule.required(),
     },
     {
       name: "description",
-      title: "Descripción",
+      title: "Descripción (opcional)",
       type: "text",
       group: "product",
       rows: 3,
@@ -52,7 +52,7 @@ const producto: SchemaTypeDefinition = {
     },
     {
       name: "category",
-      title: "Categoría",
+      title: "Categoría (obligatoria)",
       type: "string",
       group: "product",
       options: { list: CATEGORY_OPTIONS, layout: "radio" },
@@ -60,7 +60,7 @@ const producto: SchemaTypeDefinition = {
     },
     {
       name: "sub",
-      title: "Subcategoría",
+      title: "Subcategoría (obligatoria)",
       type: "string",
       group: "product",
       description:
@@ -70,7 +70,7 @@ const producto: SchemaTypeDefinition = {
     },
     {
       name: "price",
-      title: "Precio (ARS)",
+      title: "Precio en pesos (obligatorio)",
       type: "number",
       group: "product",
       description: "Solo el número, sin símbolos. Ej: 8500",
@@ -78,7 +78,7 @@ const producto: SchemaTypeDefinition = {
     },
     {
       name: "images",
-      title: "Fotos",
+      title: "Fotos (al menos una)",
       type: "array",
       group: "product",
       of: [{ type: "image", options: { hotspot: true } }],
@@ -102,32 +102,32 @@ const producto: SchemaTypeDefinition = {
     },
     {
       name: "medidas",
-      title: "Medidas sin envolver (opcional)",
+      title: "Medidas del producto sin envolver (opcional)",
       type: "string",
       group: "product",
       fieldset: "optional",
-      description: 'Se muestran al comprador. Ej: "Alto 18 cm · Ø 10 cm". Las medidas con protección se cargan en Envío.',
+      description: 'Tamaño real de la pieza que verá el comprador en la tienda. Ej: "Alto 18 cm · Diámetro 10 cm". No se usa para calcular el envío. Cargá las medidas con protección en Envío.',
     },
     {
       name: "shippingProfile",
-      title: "Unidad protegida para envío",
+      title: "Pieza con protección individual",
       type: "object",
       group: "shipping",
       options: { collapsible: false },
       initialValue: { version: 1, shipSeparately: false, canRotate: false, canStack: false },
       description:
-        "Medí y pesá UNA pieza con su protección individual, sin la caja exterior. Completá peso, medidas y contenido para calcular el envío. Las cajas se cargan una vez en Cajas de envío.",
+        "Peso, medidas y contenido son necesarios para cotizar. Medí y pesá UNA pieza con su papel o protección individual, sin la caja exterior. Estos datos permiten elegir una caja para todo el pedido; no se muestran como tamaño del producto en la tienda. Las cajas se cargan aparte en Cajas de envío.",
       fieldsets: [
         {
           name: "dimensions",
-          title: "Medidas con protección (cm)",
-          description: "Redondeá hacia arriba: 12,4 cm = 13 cm.",
+          title: "Medidas de la pieza protegida (cm)",
+          description: "Las tres son necesarias para cotizar. Medí el espacio que ocupa la pieza envuelta, incluyendo salientes. Redondeá hacia arriba: 12,4 cm = 13 cm.",
           options: { collapsible: false, columns: 3 },
         },
         {
           name: "packing",
-          title: "Acomodo de la pieza",
-          description: "Abrí estas opciones si la pieza admite giro o apilado, o necesita su propia caja.",
+          title: "Acomodo de la pieza (opcional)",
+          description: "Podés dejar estas opciones desactivadas. Cambialas si la pieza admite giro o apilado, o necesita su propia caja.",
           options: { collapsible: true, collapsed: true },
         },
       ],
@@ -142,9 +142,9 @@ const producto: SchemaTypeDefinition = {
         },
         {
           name: "weightGrams",
-          title: "Peso (g)",
+          title: "Peso de la pieza protegida (g)",
           type: "number",
-          description: "En gramos enteros: 1,25 kg = 1250 g.",
+          description: "Necesario para cotizar. Incluí la protección individual, sin la caja exterior. En gramos enteros: 1,25 kg = 1250 g.",
           validation: (rule) => rule.required().integer().min(10),
         },
         {
@@ -170,7 +170,7 @@ const producto: SchemaTypeDefinition = {
         },
         {
           name: "classificationId",
-          title: "Contenido del envío",
+          title: "Contenido del envío (necesario para cotizar)",
           type: "string",
           description: "Es lo que declaramos al transporte. Elegí según la pieza; sin esta selección no se puede calcular el envío.",
           options: { list: [
@@ -256,14 +256,15 @@ const shippingBox: SchemaTypeDefinition = {
     ...["height", "width", "length"].map((axis, index) => ({
       name: `inner${axis[0].toUpperCase()}${axis.slice(1)}Cm`,
       title: `${["Alto", "Ancho", "Largo"][index]} interior útil (cm)`, type: "number",
-      description: "Espacio libre después de colocar revestimiento y protección de la caja.",
+      description: "Obligatorio. Espacio libre después de colocar revestimiento y protección de la caja. Se usa para comprobar que las piezas protegidas entran.",
       validation: (r: import("sanity").Rule) => r.required().integer().min(1).max(5000),
     })),
     ...["height", "width", "length"].map((axis, index) => ({
       name: `${axis}Cm`, title: `${["Alto", "Ancho", "Largo"][index]} exterior (cm)`, type: "number",
+      description: "Obligatorio. Medí la caja cerrada por fuera. Esta medida es la que se envía al cotizador.",
       validation: (r: import("sanity").Rule) => r.required().integer().min(1).max(5000),
     })),
-    { name: "tareWeightGrams", title: "Peso de caja y relleno común (g)", type: "number", description: "Sin productos. Incluí cinta, separadores y relleno adicional habitual.", validation: r => r.required().integer().min(1) },
+    { name: "tareWeightGrams", title: "Peso de caja y relleno común (g)", type: "number", description: "Obligatorio. Sin productos ni su protección individual. Incluí cinta, separadores y relleno adicional habitual. Se suma al peso de las piezas protegidas para cotizar el paquete completo.", validation: r => r.required().integer().min(1) },
     { name: "maxWeightGrams", title: "Peso máximo total que admite (g)", type: "number", description: "Incluye productos, protecciones y caja.", validation: r => r.required().integer().min(10) },
   ],
   validation: (rule: import("sanity").Rule) => rule.custom((value: unknown) => {
