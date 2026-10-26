@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, Package, Search, SlidersHorizontal } from "l
 
 import type { AdminOrder, AdminOrderPage, OrderSort } from "../domain/order";
 import { destinationLabel, formatDate, formatMoney, maskEmail } from "./order-format";
+import { ReviewBadge, ReviewNotice } from "./review-notice";
 import styles from "./admin.module.css";
 
 export function OrdersClient({
@@ -170,7 +171,7 @@ export function OrdersClient({
                         <span className={styles.mobileDestination}>{destinationLabel(order)}</span>
                       </span>
                     </span>
-                    <span className={styles.rowStatus}><StatusBadge order={order} /><small>{destinationLabel(order)}</small></span>
+                    <span className={styles.rowStatus}><StatusBadge order={order} />{order.status === "attention" && <span className={styles.reviewPriority}>Revisar con prioridad</span>}<small>{destinationLabel(order)}</small></span>
                     <strong className={styles.rowTotal}>{formatMoney(order.totalCents, order.currency)}</strong>
                   </button>
                   <Link className={styles.rowDetailLink} href={detailHref(order)} aria-label={`Abrir pedido ${order.reference}`}>Abrir <ChevronRight size={16} aria-hidden="true" /></Link>
@@ -208,7 +209,9 @@ export function OrdersClient({
                 <div className={styles.infoBlock}><span>Comprador</span><strong>{selected.buyer.name ?? "Nombre aún no disponible"}</strong><small>{maskEmail(selected.buyer.email)}</small></div>
                 <div className={styles.infoBlock}><span>Entrega</span><strong>{selected.deliveryMethod ?? "Modalidad aún no disponible"}</strong><small>{destinationLabel(selected)}</small></div>
                 <div className={styles.infoBlock}><span>Productos</span>{selected.items.map((item) => <strong key={item.productId}>{item.quantity} × {item.name}</strong>)}</div>
-                <div className={styles.nextAction}><span>Siguiente paso</span><p>{selected.nextAction}</p></div>
+                {selected.status === "attention"
+                  ? <ReviewNotice><p>{selected.nextAction}</p></ReviewNotice>
+                  : <div className={styles.nextAction}><span>Siguiente paso</span><p>{selected.nextAction}</p></div>}
                 <Link className={styles.primaryLink} href={detailHref(selected)}>Ver pedido <ChevronRight size={18} /></Link>
               </div>
             </>
@@ -220,8 +223,8 @@ export function OrdersClient({
 }
 
 export function StatusBadge({ order }: { order: AdminOrder }) {
-  const tone = order.status === "attention" ? styles.statusAttention
-    : order.status === "cancelled" ? styles.statusMuted
+  if (order.status === "attention") return <ReviewBadge />;
+  const tone = order.status === "cancelled" ? styles.statusMuted
       : order.status === "prepare" || order.status === "ready_to_ship" ? styles.statusActive
         : styles.statusNeutral;
   return <span className={`${styles.statusBadge} ${tone}`}>{order.statusLabel}</span>;

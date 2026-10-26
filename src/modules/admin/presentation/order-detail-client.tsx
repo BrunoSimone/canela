@@ -10,6 +10,7 @@ import { StatusBadge } from "./orders-client";
 import { PreparationEditor } from "./preparation-editor";
 import { OrderOperations } from "./order-operations";
 import { ShipmentActions } from "./shipment-actions";
+import { ReviewNotice } from "./review-notice";
 import styles from "./admin.module.css";
 
 export function OrderDetailClient({ id, demo, backHref }: { id: string; demo: boolean; backHref: string }) {
@@ -43,6 +44,16 @@ export function OrderDetailClient({ id, demo, backHref }: { id: string; demo: bo
         <div><span className={styles.detailKicker}>Ficha de pedido</span><h1>{order.reference}</h1><p>Creado el {formatDate(order.createdAt, true)}</p></div>
         <div className={styles.detailIntroRight}><StatusBadge order={order} /><strong>{formatMoney(order.totalCents, order.currency)}</strong></div>
       </div>
+      {(order.status === "attention" || order.notifications?.some(notice => notice.state === "review")) &&
+        <div className={styles.detailReview}>
+          <ReviewNotice>
+            {order.status === "attention" && <p>{order.nextAction}</p>}
+            {order.notifications?.some(notice => notice.state === "review") && <>
+              <p>Hay correos que necesitan intervención. Revisá los avisos de este pedido y pedí ayuda técnica.</p>
+              <a href="#despacho-y-avisos" className={styles.textButton}>Revisar avisos</a>
+            </>}
+          </ReviewNotice>
+        </div>}
       <div className={styles.detailGrid}>
         <div className={styles.detailColumn}>
           <section className={styles.detailCard}>
@@ -74,10 +85,10 @@ export function OrderDetailClient({ id, demo, backHref }: { id: string; demo: bo
           </section>
         </div>
         <div className={styles.detailColumn}>
-          <section className={styles.detailCard}>
+          {order.status !== "attention" && <section className={styles.detailCard}>
             <h2>Próximo paso</h2>
             <div className={styles.actionBox}><StatusBadge order={order} /><p>{order.nextAction}</p></div>
-          </section>
+          </section>}
           {order.packingPlan?.map((parcel, i) => <section className={styles.detailCard} key={i}>
             <h2>Caja y acomodo cotizados</h2>
             <p>{parcel.packing?.boxName ?? "Embalaje del pedido"} · {parcel.widthCm} × {parcel.lengthCm} × {parcel.heightCm} cm · {parcel.weightGrams} g totales.</p>

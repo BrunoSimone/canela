@@ -150,7 +150,7 @@ idempotencia ni botones manuales.
 2. Al abrir un pedido, revisar «Despacho y avisos». Si está pendiente, usar
    «Consultar y reintentar avisos pendientes» cuando corresponda. El botón respeta
    tiempos de espera, exclusividad e idempotencia; no fuerza un duplicado.
-3. Si aparece «Revisión», pedir asistencia técnica. No enviar otra copia ni cambiar
+3. Si aparece «Necesita revisión», atenderlo con prioridad y pedir asistencia técnica con el ID del pedido. No enviar otra copia ni cambiar
    estados de base para saltar la protección de resultados inciertos.
 4. Si aparece stock reservado sin una compra resuelta, solicitar revisión técnica.
    No ajustar cantidades manualmente para compensar reservas del sistema.

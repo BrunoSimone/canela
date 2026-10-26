@@ -177,7 +177,9 @@ function mapOrder(row: OrderRow): AdminOrder {
       ? row.shipment.state === "label_ready"
         ? {status:"label_ready" as const,statusLabel:"Rótulo listo",nextAction:"Descargar la etiqueta. El paquete todavía no fue despachado."}
         : ["review","uncertain"].includes(row.shipment.state)
-          ? {status:"attention" as const,statusLabel:"Requiere atención",nextAction:"Consultar el resultado del envío antes de volver a operar."}
+          ? {status:"attention" as const,statusLabel:"Necesita revisión",nextAction:row.shipment.state === "review"
+            ? "Pedí ayuda técnica para comprobar el envío en Zipnova antes de continuar. Compartí el ID del pedido; no generes otro envío."
+            : "Usá «Consultar envío y etiqueta» para comprobar si Zipnova recibió el envío. La consulta no crea otro envío."}
           : {status:"ready_to_ship" as const,statusLabel:"Etiqueta en preparación",nextAction:"Consultar la etiqueta sin crear otro envío."}
       : {}),
     buyer: { name: row.buyer_name, email: row.buyer_email, phone: row.recipient_phone },

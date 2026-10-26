@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import type { AdminOrder } from "../domain/order";
+import { ReviewNotice } from "./review-notice";
 import styles from "./admin.module.css";
 
 const messages:Record<string,string>={
@@ -40,7 +41,9 @@ export function ShipmentActions({order,onChanged}:{order:AdminOrder;onChanged:(o
         <p className={styles.integrationNote}>{order.dispatch?"Conservá la etiqueta del envío como referencia.":"La etiqueta está lista. Generarla no significa que el paquete haya sido despachado."}</p>
         <a className={styles.primaryLink} href={`/api/admin/orders/${order.id}/shipment/label`}>Descargar etiqueta PDF</a>
       </>:shipment?<>
-        <p className={styles.integrationNote}>{shipment.state==="review"?"El envío requiere revisión. No se generará otro automáticamente.":shipment.state==="uncertain"?"Estamos comprobando si Zipnova recibió el envío. La consulta no crea uno nuevo.":"El envío está en proceso. Consultá si la etiqueta ya está disponible."}</p>
+        {shipment.state==="review"
+          ? <ReviewNotice><p>Pedí ayuda técnica con el ID de este pedido para comprobar el envío en Zipnova. No generes otro envío hasta resolver este caso.</p></ReviewNotice>
+          : <p className={styles.integrationNote}>{shipment.state==="uncertain"?"Consultá si Zipnova recibió el envío. La consulta no crea uno nuevo.":"El envío está en proceso. Consultá si la etiqueta ya está disponible."}</p>}
         {order.shipmentEnabled&&shipment.state!=="review"&&<button className={styles.primaryLink} disabled={busy} onClick={()=>run("refresh")}>{busy?"Consultando…":"Consultar envío y etiqueta"}</button>}
       </>:order.shipmentEnabled&&order.preparation&&order.status==="ready_to_ship"?<>
         <p className={styles.integrationNote}>Confirmá que el paquete está embalado y las medidas guardadas son las reales. Canela verificará la tarifa y solicitará la etiqueta.</p>

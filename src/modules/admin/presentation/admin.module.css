@@ -111,9 +111,21 @@
 .rowStatus { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; min-width: 0; }
 .rowStatus small { font-size: 11px; color: var(--admin-soft); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: 100%; }
 .rowTotal { font-size: 12px; text-align: right; white-space: nowrap; }
-.statusBadge { display: inline-flex; align-items: center; width: fit-content; max-width: 100%; padding: 5px 8px; border-radius: 4px; font-size: 11px; line-height: 1.25; font-weight: 850; }
+.statusBadge { display: inline-flex; align-items: center; gap: 5px; width: fit-content; max-width: 100%; padding: 5px 8px; border-radius: 4px; font-size: 11px; line-height: 1.25; font-weight: 850; }
+.statusBadge > svg { flex: none; }
 .statusActive { color: #315b3d; background: #dcebdc; }
-.statusAttention { color: #813e22; background: #f8e2d5; }
+.statusAttention { color: #802e1d; background: #fbe2d8; }
+.reviewPriority { font-size: 11px; font-weight: 800; color: #802e1d; }
+.reviewNotice { display: flex; align-items: flex-start; gap: 12px; width: 100%; padding: 16px; border: 1px solid #db9b83; border-left: 4px solid #a13f26; border-radius: 5px; background: #fff0e9; color: #642c20; }
+.reviewNotice > svg { flex: none; margin-top: 1px; }
+.reviewNotice > div { min-width: 0; }
+.reviewNotice strong { font-size: 15px; font-weight: 850; }
+.reviewNotice p { margin-top: 8px; font-size: 13px; line-height: 1.55; }
+.reviewNotice .reviewPriority { margin-top: 3px; font-size: 12px; }
+.reviewNotice .textButton { display: inline-flex; align-items: center; color: #802e1d; text-decoration: underline; text-underline-offset: 3px; }
+.detailReview { margin-bottom: 20px; }
+.detailCard > .reviewNotice { margin-top: 14px; }
+.operationsCard { scroll-margin-top: 130px; }
 .statusMuted { color: #635e5a; background: #e9e6e1; }
 .statusNeutral { color: #675125; background: #f3e8ca; }
 .pagination { min-height: 54px; padding: 10px 17px; display: flex; justify-content: space-between; align-items: center; color: var(--admin-soft); font-size: 12px; }

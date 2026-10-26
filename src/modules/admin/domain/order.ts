@@ -63,8 +63,8 @@ const statusDescriptions: Record<string, Pick<AdminOrder, "status" | "statusLabe
   fulfillment_pending: { status: "prepare", statusLabel: "Preparar pedido", nextAction: "Registrar los bultos reales antes de crear el envío." },
   shipped: { status: "shipped", statusLabel: "Despachado", nextAction: "Consultar el seguimiento del transporte." },
   delivered: { status: "shipped", statusLabel: "Entregado", nextAction: "No hay acciones pendientes." },
-  review_required: { status: "attention", statusLabel: "Requiere atención", nextAction: "Revisar la verificación del pago antes de preparar el pedido." },
-  refund_pending: { status: "attention", statusLabel: "Requiere atención", nextAction: "Revisar el reintegro pendiente." },
+  review_required: { status: "attention", statusLabel: "Necesita revisión", nextAction: "Pedí ayuda técnica para verificar el pago y la reserva de stock antes de preparar el pedido. Compartí el ID del pedido." },
+  refund_pending: { status: "attention", statusLabel: "Necesita revisión", nextAction: "Comprobá el reintegro pendiente en Mercado Pago y pedí ayuda técnica si el pedido no se actualiza." },
   rejected: { status: "cancelled", statusLabel: "Cancelado", nextAction: "No preparar este pedido." },
   expired: { status: "cancelled", statusLabel: "Vencido", nextAction: "No preparar este pedido." },
   refunded: { status: "cancelled", statusLabel: "Reembolsado", nextAction: "No preparar este pedido." },
@@ -73,8 +73,8 @@ const statusDescriptions: Record<string, Pick<AdminOrder, "status" | "statusLabe
 export function describeOrderStatus(raw: string): Pick<AdminOrder, "status" | "statusLabel" | "nextAction"> {
   return statusDescriptions[raw] ?? {
     status: "attention",
-    statusLabel: "Requiere atención",
-    nextAction: "Revisar el estado del pedido.",
+    statusLabel: "Necesita revisión",
+    nextAction: "Pedí ayuda técnica para verificar el estado del pedido antes de continuar. Compartí el ID del pedido.",
   };
 }
 
