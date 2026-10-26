@@ -53,7 +53,7 @@ describe("SanityShippingProfileCatalog", () => {
           shipSeparately: false,
         },
       },
-      { id: "commission", sellable: false, profile: null },
+      { id: "commission", sellable: true, profile: null },
     ]);
   });
 

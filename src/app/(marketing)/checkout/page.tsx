@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { CartAvailabilitySync } from "@/modules/cart/presentation/cart-availability-sync";
+import { inventoryStore } from "@/modules/inventory/infrastructure/sanity-documents";
+import { readInventoryCatalog } from "@/modules/inventory/infrastructure/inventory-catalog";
 import { ArrowLeft, MessageCircle } from "lucide-react";
 
 import { CheckoutConfirmation } from "@/modules/checkout/presentation/components/checkout-confirmation";
@@ -8,12 +11,22 @@ import { SignedShippingQuoteService } from "@/modules/shipping/infrastructure/si
 
 export const dynamic = "force-dynamic";
 
-export default function CheckoutPage() {
+export default async function CheckoutPage() {
   const checkout = getControlledCheckoutPageData();
   if (!checkout) return <CheckoutUnavailable />;
 
+  let availableProductIds: string[];
+  try {
+    const stocks = await inventoryStore().list(await readInventoryCatalog());
+    availableProductIds = stocks.filter(s => s.enabled && s.stockOnHand > s.reserved).map(s => s.id);
+  } catch {
+    return <CheckoutUnavailable />;
+  }
   return (
-    <CheckoutConfirmation shipping={checkout} environment={checkout.environment} />
+    <>
+      <CartAvailabilitySync availableProductIds={availableProductIds} />
+      <CheckoutConfirmation shipping={checkout} environment={checkout.environment} />
+    </>
   );
 }
 

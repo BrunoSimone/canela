@@ -242,7 +242,7 @@ export function CheckoutConfirmation({ shipping: shippingConfig, environment }: 
                   </p>
                   {!item.checkoutEligible && (
                     <p className="mt-2 text-sm font-bold text-[#9b5944]">
-                      Esta pieza por encargo no entra al pago online.
+                      Esta pieza ya no está disponible. Quitala desde el carrito para continuar.
                     </p>
                   )}
                 </div>
@@ -384,7 +384,7 @@ export function CheckoutConfirmation({ shipping: shippingConfig, environment }: 
 
             {!canStartCheckout && (
               <p className="mt-5 border-l-2 border-[#b06a52] pl-3 text-sm leading-relaxed text-[#7e4b3a]">
-                Quitá las piezas por encargo para continuar con el pago online.
+                Quitá las piezas sin disponibilidad para continuar con el pago online.
               </p>
             )}
 

@@ -27,7 +27,8 @@ ADR-001 y la pantalla separada de OPEN-04; PostgreSQL conserva pedidos y pagos.
   autorizado del proyecto puede ajustar; auditoría, motivo y control de versión.
 - **INV-07:** Cantidad significa unidades aún no vendidas, incluyendo reservas
   de pagos pendientes; excluye pedidos ya pagados aunque sigan en el taller.
-  Pieza única <= 1, cantidades enteras no negativas, saldo >= reservas.
+  Cantidades enteras no negativas, saldo >= reservas. La spec 124 elimina
+  límites y excepciones por modalidad: disponible = saldo − reservas.
 - **INV-08:** Pruebas de concurrencia, carrito atómico, publicación editorial,
   reintentos, fallos entre bases, cancelación, autorización y compra integrada.
   Contrato real de Sanity en dataset de pruebas, separado de producción.

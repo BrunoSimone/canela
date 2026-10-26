@@ -27,5 +27,5 @@ export class MemoryDocuments implements InventoryDocuments {
 export function inventoryFixture() {
   const documents = new MemoryDocuments();
   const inventory = new SanityInventory(documents);
-  return { documents, inventory, stock: async (id: string) => (await inventory.list([{ id, name: id, tone: "stock", price: 1 }]))[0] };
+  return { documents, inventory, stock: async (id: string) => (await inventory.list([{ id, name: id, price: 1 }]))[0] };
 }

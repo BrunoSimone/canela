@@ -1,14 +1,8 @@
 import { hasAsset, urlFor } from "@/sanity/client";
 import { siteConfig } from "@/lib/config";
-import type { Product } from "@/lib/types";
+import type { StorefrontProduct } from "@/lib/types";
 
-const AVAILABILITY: Record<string, string> = {
-  stock: "https://schema.org/InStock",
-  unica: "https://schema.org/InStock",
-  encargo: "https://schema.org/PreOrder",
-};
-
-export function CatalogJsonLd({ products }: { products: Product[] }) {
+export function CatalogJsonLd({ products }: { products: StorefrontProduct[] }) {
   const items = products
     .filter((p) => p.images?.some(hasAsset))
     .map((p, i) => ({
@@ -32,7 +26,7 @@ export function CatalogJsonLd({ products }: { products: Product[] }) {
           "@type": "Offer",
           priceCurrency: "ARS",
           price: p.price,
-          availability: AVAILABILITY[p.tone] ?? "https://schema.org/InStock",
+          availability: p.available ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
           url: `${siteConfig.url}/#${p.category}`,
           seller: { "@id": `${siteConfig.url}/#organization` },
         },

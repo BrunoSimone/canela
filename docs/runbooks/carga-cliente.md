@@ -24,11 +24,10 @@ proyecto Canela. El catálogo conserva todos los productos y fotos existentes.
 
 ### Detalles opcionales
 
-En **Datos del producto → Detalles opcionales** quedan la modalidad de venta,
-nota de estado, medidas sin envolver y material. No hace falta completarlos para
-la carga habitual. Los productos nuevos usan **Venta por unidades**; elegir
-**Pieza única** si solo puede existir una unidad o **Por encargo** si no admite
-compra inmediata. Las fichas existentes conservan su modalidad.
+En **Datos del producto → Detalles opcionales** quedan las medidas sin envolver
+y el material. No hay modalidad ni etiqueta manual de disponibilidad: las
+unidades de la pestaña **Stock** determinan si se puede comprar. Para una pieza
+que tiene una sola unidad, cargar 1; para una reposición, cargar la cantidad real.
 
 Las medidas sin envolver son información opcional para el comprador. No copiar
 allí las medidas protegidas del envío: describen cosas diferentes.
@@ -55,8 +54,12 @@ encuentra una combinación segura, impide iniciar el pago.
 4. La ficha muestra **Sin vender**, **Reservadas** y **Disponibles**. Una compra
    reserva unidades; un pago aprobado las descuenta y uno rechazado las libera.
 5. Si aparece un conflicto, **Actualizar stock** antes de corregir nuevamente.
-   Las reservas no se pueden eliminar mediante un ajuste; pieza única admite una.
-6. **Ver últimos ajustes** muestra quién cambió el stock y por qué.
+   Las reservas no se pueden eliminar mediante un ajuste.
+6. La tienda calcula **disponibles = sin vender − reservadas**. Si quedan cero,
+   muestra **Agotado** y deshabilita la compra. Si hay unidades, permite agregarlas
+   sin una etiqueta manual. **Habilitar venta** permite pausar la oferta de una
+   pieza sin falsear sus cantidades; las piezas pausadas no aparecen.
+7. **Ver últimos ajustes** muestra quién cambió el stock y por qué.
 
 Sanity almacena las cantidades y reservas. Publicar un borrador de fotos, precio
 u otros datos del producto no modifica el stock. El panel de Canela se usa para

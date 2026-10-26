@@ -5,8 +5,7 @@ import Image from "next/image";
 import { ChevronLeft, ChevronRight, Minus, Plus, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { formatPrice, statusLabel, toneStyle } from "@/lib/product-status";
-import type { ProductTone } from "@/lib/types";
+import { formatPrice } from "@/lib/product-status";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useCart } from "@/modules/cart/presentation/hooks/use-cart";
 import { describeProductPurchaseAction } from "@/modules/catalog/presentation/product-purchase-action";
@@ -19,8 +18,7 @@ interface ImageLightboxProps {
   id: string;
   title: string;
   price: number;
-  tone: ProductTone;
-  statusNote?: string | null;
+  available: boolean;
   description?: string | null;
   categoryLabel: string;
   sub: string;
@@ -39,8 +37,7 @@ export function ImageLightbox({
   id,
   title,
   price,
-  tone,
-  statusNote,
+  available,
   description,
   categoryLabel,
   sub,
@@ -52,9 +49,7 @@ export function ImageLightbox({
   const count = images.length;
   const qty = qtyOf(id);
   const isSelected = qty > 0;
-  const purchaseAction = describeProductPurchaseAction({ quantity: qty, tone });
-  const toneCol = toneStyle(tone);
-  const label = statusLabel(tone, statusNote);
+  const purchaseAction = describeProductPurchaseAction({ quantity: qty, available });
   const hasSpecs = Boolean((medidas && medidas.trim()) || (material && material.trim()));
 
   // Reset a la primera foto y navegación con flechas del teclado al abrir.
@@ -168,12 +163,12 @@ export function ImageLightbox({
                 <span className="text-[29px] font-extrabold leading-none text-[#8a621d]">
                   {formatPrice(price)}
                 </span>
-                <span
+                {!available && <span
                   className="inline-flex items-center whitespace-nowrap rounded-full px-[13px] py-1.5 text-xs font-bold"
-                  style={{ background: toneCol.bg, color: toneCol.color }}
+                  style={{ background: "#EAE5DD", color: "#514A42" }}
                 >
-                  {label}
-                </span>
+                  Agotado
+                </span>}
               </div>
             </div>
 
@@ -232,6 +227,7 @@ export function ImageLightbox({
                   <button
                     type="button"
                     onClick={() => inc(id)}
+                    disabled={purchaseAction.disabled}
                     aria-label="Agregar uno"
                     className="flex size-11 items-center justify-center rounded-lg border border-[rgba(184,132,42,.5)] text-[#6E4E38] transition-colors hover:bg-[rgba(184,132,42,.12)]"
                   >
@@ -242,18 +238,19 @@ export function ImageLightbox({
             ) : (
               <button
                 type="button"
+                disabled={purchaseAction.disabled}
                 onClick={() => {
                   add({
                     id,
                     name: title,
                     price,
-                    checkoutEligible: tone !== "encargo",
+                    checkoutEligible: available,
                   });
                   closePanel();
                 }}
-                className="flex w-full items-center justify-center gap-2.5 rounded-[14px] border border-[var(--canela-ochre)] bg-[var(--canela-ochre)] px-4 py-[15px] text-[15px] font-extrabold text-[var(--canela-cream-card)] shadow-[0_8px_20px_rgba(184,132,42,.32)] transition-colors hover:bg-[var(--canela-ochre-dark)]"
+                className="flex w-full items-center justify-center gap-2.5 rounded-[14px] border border-[var(--canela-ochre)] bg-[var(--canela-ochre)] px-4 py-[15px] text-[15px] font-extrabold text-[var(--canela-cream-card)] shadow-[0_8px_20px_rgba(184,132,42,.32)] transition-colors hover:bg-[var(--canela-ochre-dark)] disabled:cursor-not-allowed disabled:opacity-60"
               >
-                <Plus className="size-4" strokeWidth={2.4} />
+                {available && <Plus className="size-4" strokeWidth={2.4} />}
                 {purchaseAction.idleLabel}
               </button>
             )}

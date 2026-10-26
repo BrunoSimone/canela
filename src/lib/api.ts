@@ -8,8 +8,6 @@ const PRODUCTS_QUERY = `*[_type == "producto"] | order(orderRank asc) {
   price,
   category,
   sub,
-  tone,
-  statusNote,
   medidas,
   material,
   images
@@ -45,10 +43,10 @@ export async function getHeroSlides(): Promise<HeroSlide[]> {
   }
 }
 
-export function groupByCategory(
-  products: Product[],
-): Record<Category, Product[]> {
-  const groups: Record<Category, Product[]> = { vidrio: [], ceramica: [], espejos: [] };
+export function groupByCategory<T extends Product>(
+  products: T[],
+): Record<Category, T[]> {
+  const groups: Record<Category, T[]> = { vidrio: [], ceramica: [], espejos: [] };
   for (const p of products) {
     if (groups[p.category]) groups[p.category].push(p);
   }

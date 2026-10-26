@@ -36,11 +36,12 @@ export function FloatingCart({ checkoutEnabled }: { checkoutEnabled: boolean }) 
               <div className="min-w-0"><p className="break-words font-bold">{item.name}</p><p className="mt-1 text-sm text-[#6E4E38]">{formatPrice(item.price)} por unidad</p></div>
               <button type="button" onClick={() => { remove(item.id); close.current?.focus(); }} aria-label={`Quitar ${item.name} del carrito`} className="flex size-11 shrink-0 items-center justify-center text-[#7e4b3a]"><X className="size-5" /></button>
             </div>
+            {!item.checkoutEligible && <p className="mt-2 text-sm font-bold text-[#7e4b3a]">Sin disponibilidad. Quitá esta pieza para continuar.</p>}
             <div className="mt-3 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <button type="button" onClick={() => { dec(item.id); if (item.qty === 1) close.current?.focus(); }} aria-label={`Quitar uno de ${item.name}`} className={quantityClass}><Minus className="size-4" /></button>
                 <span aria-label={`Cantidad de ${item.name}`} className="min-w-5 text-center font-bold tabular-nums">{item.qty}</span>
-                <button type="button" onClick={() => inc(item.id)} aria-label={`Agregar uno de ${item.name}`} className={quantityClass}><Plus className="size-4" /></button>
+                <button type="button" disabled={!item.checkoutEligible} onClick={() => inc(item.id)} aria-label={`Agregar uno de ${item.name}`} className={quantityClass}><Plus className="size-4" /></button>
               </div>
               <strong className="text-[var(--canela-ochre-dark)]">{formatPrice(item.price * item.qty)}</strong>
             </div>
@@ -49,7 +50,7 @@ export function FloatingCart({ checkoutEnabled }: { checkoutEnabled: boolean }) 
         <div className="shrink-0 border-t border-[rgba(184,132,42,.18)] p-5">
           {hasItems && <><div className="flex justify-between gap-3 font-bold"><span>Subtotal de productos</span><span aria-live="polite">{formatPrice(subtotal)}</span></div><p className="mb-4 mt-2 text-sm text-[#6E4E38]">Calculamos el envío con tu dirección en el siguiente paso.</p></>}
           {checkoutEnabled && canStartCheckout && <Link href="/checkout" onClick={closePanel} className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[var(--canela-ochre)] px-4 py-3 text-sm font-extrabold text-[var(--canela-cream-card)]"><CreditCard className="size-4" /> Continuar con la compra</Link>}
-          {checkoutEnabled && hasItems && !canStartCheckout && <p className="text-sm leading-relaxed text-[#6E4E38]">Quitá las piezas por encargo para pagar las piezas disponibles.</p>}
+          {checkoutEnabled && hasItems && !canStartCheckout && <p className="text-sm leading-relaxed text-[#6E4E38]">Quitá las piezas sin disponibilidad para continuar con la compra.</p>}
           {!checkoutEnabled && hasItems && <p className="text-sm leading-relaxed text-[#6E4E38]">La compra online está pausada. Tu carrito queda guardado para cuando retomemos las ventas.</p>}
           <button type="button" onClick={closePanel} className="mt-3 min-h-11 w-full font-bold text-[#6E4E38]">Seguir eligiendo</button>
         </div>

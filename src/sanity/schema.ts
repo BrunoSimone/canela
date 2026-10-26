@@ -16,12 +16,6 @@ const SUB_OPTIONS = [
   { title: "Cuadros", value: "Cuadros" },
 ];
 
-const TONE_OPTIONS = [
-  { title: "Pieza única", value: "unica" },
-  { title: "Venta por unidades", value: "stock" },
-  { title: "Por encargo", value: "encargo" },
-];
-
 const producto: SchemaTypeDefinition = {
   name: "producto",
   title: "Producto",
@@ -35,7 +29,7 @@ const producto: SchemaTypeDefinition = {
     {
       name: "optional",
       title: "Detalles opcionales",
-      description: "Para piezas únicas, encargos o información adicional. Podés dejarlos como están.",
+      description: "Información adicional para el comprador. Podés dejarlos vacíos.",
       options: { collapsible: true, collapsed: true },
     },
   ],
@@ -94,23 +88,17 @@ const producto: SchemaTypeDefinition = {
     },
     {
       name: "tone",
-      title: "Modalidad de venta",
+      title: "Modalidad anterior (sin uso)",
       type: "string",
-      group: "product",
-      fieldset: "optional",
-      description: "Usá Venta por unidades para la carga habitual. Pieza única limita el stock a una; Por encargo no permite compra inmediata.",
-      options: { list: TONE_OPTIONS, layout: "radio" },
-      initialValue: "stock",
-      validation: (rule) => rule.required(),
+      hidden: true,
+      readOnly: true,
     },
     {
       name: "statusNote",
-      title: "Nota de estado (opcional)",
+      title: "Nota anterior (sin uso)",
       type: "string",
-      group: "product",
-      fieldset: "optional",
-      description:
-        'Detalle del estado, sobre todo para "Por encargo". Ej: "Por encargo · 2 sem"',
+      hidden: true,
+      readOnly: true,
     },
     {
       name: "medidas",

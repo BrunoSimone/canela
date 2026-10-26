@@ -27,8 +27,10 @@ const cartSlice = createSlice({
   initialState: initialCartState,
   reducers: {
     addItem(state, action: PayloadAction<Omit<CartItem, "qty">>) {
+      if (!action.payload.checkoutEligible) return;
       const existing = state.items.find((item) => item.id === action.payload.id);
       if (existing) {
+        existing.checkoutEligible = true;
         existing.qty += 1;
       } else {
         state.items.push({ ...action.payload, qty: 1 });
@@ -37,7 +39,7 @@ const cartSlice = createSlice({
     },
     incrementItem(state, action: PayloadAction<string>) {
       const item = state.items.find((candidate) => candidate.id === action.payload);
-      if (item) item.qty += 1;
+      if (item?.checkoutEligible) item.qty += 1;
     },
     decrementItem(state, action: PayloadAction<string>) {
       const item = state.items.find((candidate) => candidate.id === action.payload);
@@ -59,6 +61,10 @@ const cartSlice = createSlice({
       state.items = parsePersistedItems(action.payload);
       state.hydrated = true;
     },
+    reconcileCartAvailability(state, action: PayloadAction<string[]>) {
+      const available = new Set(action.payload);
+      for (const item of state.items) item.checkoutEligible = available.has(item.id);
+    },
     toggleCartPanel(state) {
       state.panelOpen = !state.panelOpen;
     },
@@ -75,6 +81,7 @@ export const {
   removeItem,
   clearCart,
   hydrateCart,
+  reconcileCartAvailability,
   toggleCartPanel,
   closeCartPanel,
 } = cartSlice.actions;

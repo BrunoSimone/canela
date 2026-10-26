@@ -1,44 +1,15 @@
 import { describe, expect, it } from "vitest";
-
 import { describeProductPurchaseAction } from "./product-purchase-action";
 
-describe("describeProductPurchaseAction", () => {
-  it("presents direct-sale products as cart items in controlled checkout", () => {
-    expect(
-      describeProductPurchaseAction({
-        quantity: 0,
-        tone: "unica",
-      }),
-    ).toEqual({
-      containerLabel: "En tu carrito",
-      idleLabel: "Agregar al carrito",
-      selectedLabel: "En tu carrito · 1",
-    });
+describe("STK-03 stock-aware purchase controls", () => {
+  it.each([0, 2])("disables buying an unavailable item already selected %i times", quantity => {
+    expect(describeProductPurchaseAction({ quantity, available: false }))
+      .toMatchObject({ disabled: true, idleLabel: "Agotado", selectedLabel: "Agotado" });
   });
-
-  it("uses the cart language for commissioned products without enabling checkout", () => {
-    expect(
-      describeProductPurchaseAction({
-        quantity: 2,
-        tone: "encargo",
-      }),
-    ).toEqual({
-      containerLabel: "En tu carrito",
-      idleLabel: "Agregar al carrito",
-      selectedLabel: "En tu carrito · 2",
-    });
-  });
-
-  it("presents stock products as cart items without coupling copy to a feature flag", () => {
-    expect(
-      describeProductPurchaseAction({
-        quantity: 1,
-        tone: "stock",
-      }),
-    ).toEqual({
-      containerLabel: "En tu carrito",
-      idleLabel: "Agregar al carrito",
-      selectedLabel: "En tu carrito · 1",
-    });
+  it("lets available products enter the cart without an editorial mode", () => {
+    expect(describeProductPurchaseAction({ quantity: 0, available: true }))
+      .toMatchObject({ disabled: false, idleLabel: "Agregar al carrito" });
+    expect(describeProductPurchaseAction({ quantity: 3, available: true }))
+      .toMatchObject({ disabled: false, selectedLabel: "En tu carrito · 3" });
   });
 });

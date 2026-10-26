@@ -48,7 +48,7 @@ async function main(){
    for(const item of offered){
     const product=products.find(p=>p.id===item.product_id),shipping=profiles.find(p=>p.id===item.product_id);
     try{
-     if(!product||!shipping?.sellable||!shipping.profile||!Number.isFinite(product.price)||product.price<=0||(product.tone==="unica"&&item.stock_on_hand>1))throw Error("INCOMPLETE_PRODUCT");
+     if(!product||!shipping?.sellable||!shipping.profile||!Number.isFinite(product.price)||product.price<=0)throw Error("INCOMPLETE_PRODUCT");
      buildSharedBoxPlan({items:[{productId:item.product_id,quantity:1}],profiles:[shipping.profile],boxes,constraints:ZIPNOVA_INPUT_CONSTRAINTS});
     }catch{incomplete++;}
    }

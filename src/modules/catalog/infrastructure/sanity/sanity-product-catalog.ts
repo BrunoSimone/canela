@@ -11,8 +11,7 @@ const CHECKOUT_PRODUCTS_QUERY = `*[
 ] {
   "id": _id,
   name,
-  "priceArs": price,
-  tone
+  "priceArs": price
 }`;
 
 type SanityProductReader = {
@@ -27,7 +26,6 @@ type SanityCheckoutProduct = {
   id: string;
   name: string;
   priceArs: number;
-  tone: string;
 };
 
 const authoritativeReader = createClient({
@@ -57,8 +55,7 @@ export class SanityProductCatalog implements ProductCatalog {
       id: product.id,
       name: product.name,
       priceArs: product.priceArs,
-      sellable: product.tone === "unica" || product.tone === "stock",
-      ...(product.tone === "unica" ? { maxQuantity: 1 } : {}),
+      sellable: true,
     }));
   }
 }
@@ -72,7 +69,6 @@ function isSanityCheckoutProduct(value: unknown): value is SanityCheckoutProduct
   return (
     typeof product.id === "string" &&
     typeof product.name === "string" &&
-    typeof product.priceArs === "number" &&
-    typeof product.tone === "string"
+    typeof product.priceArs === "number"
   );
 }

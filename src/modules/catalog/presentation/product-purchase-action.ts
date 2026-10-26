@@ -1,22 +1,10 @@
-import type { ProductTone } from "@/lib/types";
+type ProductPurchaseActionInput = { quantity: number; available: boolean };
 
-type ProductPurchaseActionInput = {
-  quantity: number;
-  tone: ProductTone;
-};
-
-type ProductPurchaseAction = {
-  containerLabel: string;
-  idleLabel: string;
-  selectedLabel: string;
-};
-
-export function describeProductPurchaseAction({
-  quantity,
-}: ProductPurchaseActionInput): ProductPurchaseAction {
+export function describeProductPurchaseAction({ quantity, available }: ProductPurchaseActionInput) {
   return {
+    disabled: !available,
     containerLabel: "En tu carrito",
-    idleLabel: "Agregar al carrito",
-    selectedLabel: `En tu carrito · ${Math.max(quantity, 1)}`,
+    idleLabel: available ? "Agregar al carrito" : "Agotado",
+    selectedLabel: available ? `En tu carrito · ${Math.max(quantity, 1)}` : "Agotado",
   };
 }

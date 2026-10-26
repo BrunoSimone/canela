@@ -5,8 +5,7 @@ import Image from "next/image";
 import { Images, Plus } from "lucide-react";
 
 import { ImageLightbox } from "@/components/catalog/image-lightbox";
-import { formatPrice, statusLabel, toneStyle } from "@/lib/product-status";
-import type { ProductTone } from "@/lib/types";
+import { formatPrice } from "@/lib/product-status";
 import { describeProductPurchaseAction } from "@/modules/catalog/presentation/product-purchase-action";
 import { useCart } from "@/modules/cart/presentation/hooks/use-cart";
 
@@ -17,8 +16,7 @@ export interface CardProduct {
   price: number;
   categoryLabel: string;
   sub: string;
-  tone: ProductTone;
-  statusNote?: string | null;
+  available: boolean;
   medidas?: string | null;
   material?: string | null;
   imageUrls: string[];
@@ -35,12 +33,10 @@ export function ProductCard({
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const imageButton = useRef<HTMLButtonElement>(null);
   const qty = qtyOf(product.id);
-  const tone = toneStyle(product.tone);
-  const label = statusLabel(product.tone, product.statusNote);
   const isSelected = qty > 0;
   const purchaseAction = describeProductPurchaseAction({
     quantity: qty,
-    tone: product.tone,
+    available: product.available,
   });
 
   const cover = product.imageUrls[0] ?? null;
@@ -51,12 +47,12 @@ export function ProductCard({
         className="relative flex aspect-[4/5] items-center justify-center"
         style={cover ? undefined : { background: product.placeholderPattern }}
       >
-        <span
+        {!product.available && <span
           className="absolute left-3 top-3 z-10 whitespace-nowrap rounded-full px-2.5 py-1 text-[11.5px] font-bold shadow-[0_1px_4px_rgba(74,53,39,.18)]"
-          style={{ background: tone.bg, color: tone.color }}
+          style={{ background: "#EAE5DD", color: "#514A42" }}
         >
-          {label}
-        </span>
+          Agotado
+        </span>}
 
         {cover ? (
           <>
@@ -90,8 +86,7 @@ export function ProductCard({
               title={product.name}
               description={product.description}
               price={product.price}
-              tone={product.tone}
-              statusNote={product.statusNote}
+              available={product.available}
               categoryLabel={product.categoryLabel}
               sub={product.sub}
               medidas={product.medidas}
@@ -118,22 +113,23 @@ export function ProductCard({
           {formatPrice(product.price)}
         </div>
         <button
+          disabled={purchaseAction.disabled}
           onClick={() =>
             add({
               id: product.id,
               name: product.name,
               price: product.price,
-              checkoutEligible: product.tone !== "encargo",
+              checkoutEligible: product.available,
             })
           }
-          className="mt-auto flex items-center justify-center gap-2 rounded-xl border border-[var(--canela-ochre)] px-3 py-2.5 text-[13.5px] font-bold transition-colors"
+          className="mt-auto flex items-center justify-center gap-2 rounded-xl border border-[var(--canela-ochre)] px-3 py-2.5 text-[13.5px] font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-60"
           style={
             isSelected
               ? { background: "var(--canela-ochre)", color: "var(--canela-cream-card)" }
               : { background: "transparent", color: "var(--canela-ochre-dark)" }
           }
         >
-          <Plus className="size-[15px]" strokeWidth={2.4} />
+          {product.available && <Plus className="size-[15px]" strokeWidth={2.4} />}
           {isSelected ? purchaseAction.selectedLabel : purchaseAction.idleLabel}
         </button>
       </div>

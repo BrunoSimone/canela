@@ -27,8 +27,6 @@ export class SanityInventory implements InventoryStore {
     return new Set(docs.map(d => String(d.productId)));
   }
   async save(product: InventoryProduct, input: StockEdit, actor: string): Promise<Stock> {
-    if (product.tone === "unica" && input.stockOnHand > 1) throw new StockEditError("UNIQUE_PIECE_LIMIT");
-    if (product.tone === "encargo" && input.enabled) throw new StockEditError("MADE_TO_ORDER_NOT_SELLABLE");
     const id = stockId(product.id), auditId = `inventoryChange.${input.mutationId}`;
     const fingerprint = hash(JSON.stringify({ productId: product.id, input, actor }));
     return this.retry(async () => {

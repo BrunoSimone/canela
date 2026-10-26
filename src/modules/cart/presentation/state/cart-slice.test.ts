@@ -8,6 +8,7 @@ import {
   incrementItem,
   initialCartState,
   removeItem,
+  reconcileCartAvailability,
   selectCanStartCheckout,
   selectCartCount,
   cartReducer,
@@ -110,4 +111,23 @@ describe("cartReducer", () => {
     expect(selectCanStartCheckout({ cart: directOnly })).toBe(true);
     expect(selectCanStartCheckout({ cart: mixed })).toBe(false);
   });
+  it("STK-04 refreshes stale cart availability, preserving quantities and supporting restock", () => {
+    let state = cartReducer(initialCartState, hydrateCart([
+      { ...directItem, qty: 2 },
+      { id: "restocked", name: "Reposición", price: 50, qty: 1, checkoutEligible: false },
+    ]));
+    state = cartReducer(state, reconcileCartAvailability(["restocked"]));
+    expect(state.items.map(i => [i.id, i.qty, i.checkoutEligible])).toEqual([
+      [directItem.id, 2, false], ["restocked", 1, true],
+    ]);
+    state = cartReducer(state, incrementItem(directItem.id));
+    expect(state.items[0].qty).toBe(2);
+    state = cartReducer(state, reconcileCartAvailability([directItem.id, "restocked"]));
+    expect(selectCanStartCheckout({ cart: state })).toBe(true);
+    expect(state.items[0].qty).toBe(2);
+  });
+  it("STK-03 ignores adding a sold-out product", () => {
+    expect(cartReducer(initialCartState, addItem({ ...directItem, checkoutEligible: false })).items).toEqual([]);
+  });
+
 });

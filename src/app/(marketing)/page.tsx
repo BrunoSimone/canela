@@ -6,21 +6,21 @@ import { Nosotros } from "@/components/home/nosotros";
 import { ComoComprar } from "@/components/home/como-comprar";
 import { CATEGORIES } from "@/content/catalog";
 import { getHeroSlides, getProducts, groupByCategory } from "@/lib/api";
-import { filterCatalogByAvailability } from "@/modules/inventory/domain/catalog-visibility";
+import { buildStorefrontCatalog } from "@/modules/inventory/domain/catalog-visibility";
+import { CartAvailabilitySync } from "@/modules/cart/presentation/cart-availability-sync";
 import { inventoryStore } from "@/modules/inventory/infrastructure/sanity-documents";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const availability = inventoryStore();
-  const [products, heroSlides, availableProductIds] = await Promise.all([
+  const [products, heroSlides] = await Promise.all([
     getProducts(),
     getHeroSlides(),
-    availability.listAvailableProductIds(),
   ]);
-  const visibleProducts = filterCatalogByAvailability(
+  const visibleProducts = buildStorefrontCatalog(
     products,
-    availableProductIds,
+    await availability.list(products.map(p => ({ id: p._id, name: p.name, price: p.price }))),
   );
   const byCategory = groupByCategory(visibleProducts);
 
@@ -37,6 +37,7 @@ export default async function HomePage() {
 
   return (
     <>
+      <CartAvailabilitySync availableProductIds={visibleProducts.filter(p => p.available).map(p => p._id)} />
       <CatalogJsonLd products={visibleProducts} />
       <Hero slides={heroViews} />
 

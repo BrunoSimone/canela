@@ -53,12 +53,10 @@ describe("INV Sanity authoritative inventory", () => {
     await expect(f.inventory.save(product, edit({ expectedVersion: 1, expectedStock: 4 }), "owner")).rejects.toThrow("STOCK_CHANGED");
     await expect(f.inventory.save(product, edit({ expectedVersion: 2, expectedStock: 4, expectedReserved: 1, stockOnHand: 0 }), "owner")).rejects.toThrow("STOCK_BELOW_RESERVED");
   });
-  it("rejects competing adjustments and enforces unique/made-to-order rules", async () => {
+  it("rejects competing adjustments", async () => {
     const f = inventoryFixture();
     const results = await Promise.allSettled([f.inventory.save(product, edit(), "owner"), f.inventory.save(product, edit(), "owner")]);
     expect(results.filter(r => r.status === "fulfilled")).toHaveLength(1);
-    await expect(f.inventory.save({ ...product, tone: "unica" }, edit(), "owner")).rejects.toThrow("UNIQUE_PIECE_LIMIT");
-    await expect(f.inventory.save({ ...product, tone: "encargo" }, edit(), "owner")).rejects.toThrow("MADE_TO_ORDER_NOT_SELLABLE");
   });
   it("editorial publication cannot change operational stock; documents use private paths", async () => {
     const f = inventoryFixture(); f.documents.seed("piece", 1);
@@ -68,4 +66,21 @@ describe("INV Sanity authoritative inventory", () => {
     expect(stockId("piece")).toContain(".");
     expect(await f.inventory.listAvailableProductIds()).toEqual(new Set());
   });
+  it("STK-01/02 uses quantities for legacy products, reservations and replenishment", async () => {
+    const f = inventoryFixture();
+    const legacy = { ...product, tone: "unica" };
+    await f.inventory.save(legacy, edit({ stockOnHand: 2 }), "owner");
+    expect(await f.inventory.listAvailableProductIds()).toEqual(new Set(["piece"]));
+    await f.inventory.reserve("o", "c", [{ productId: "piece", quantity: 2 }]);
+    expect(await f.inventory.listAvailableProductIds()).toEqual(new Set());
+    await expect(f.inventory.reserve("over", "c", items)).rejects.toThrow("INVENTORY_UNAVAILABLE");
+    await f.inventory.settle("o", "consumed");
+    const current = await f.stock("piece");
+    await f.inventory.save({ ...product, tone: "encargo" } as typeof legacy,
+      edit({ expectedVersion: current.version, expectedStock: 0, stockOnHand: 3 }), "owner");
+    expect(await f.inventory.listAvailableProductIds()).toEqual(new Set(["piece"]));
+    await f.inventory.reserve("new", "c", [{ productId: "piece", quantity: 3 }]);
+    expect(await f.stock("piece")).toMatchObject({ reserved: 3 });
+  });
+
 });

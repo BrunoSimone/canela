@@ -17,7 +17,7 @@ async function main() {
     const inventory=new SanityInventory(new SanityInventoryDocuments(process.env.SANITY_INVENTORY_TOKEN??'',target));
     for(const row of rows){
       const product=products.find(p=>p.id===row.product_id);
-      if(!product || (product.tone==='unica' && row.stock_on_hand>1) || (product.tone==='encargo' && row.is_sellable))throw Error('Legacy inventory needs correction before migration');
+      if(!product)throw Error('Legacy inventory needs correction before migration');
     }
     let migrated=0;
     for(const row of rows){

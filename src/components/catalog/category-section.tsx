@@ -1,6 +1,6 @@
 import { hasAsset, urlFor } from "@/sanity/client";
 import type { CategoryMeta } from "@/content/catalog";
-import type { Product } from "@/lib/types";
+import type { StorefrontProduct } from "@/lib/types";
 import { CatalogGrid } from "@/components/catalog/catalog-grid";
 import type { CardProduct } from "@/components/catalog/product-card";
 
@@ -15,7 +15,7 @@ export function CategorySection({
   products,
 }: {
   meta: CategoryMeta;
-  products: Product[];
+  products: StorefrontProduct[];
 }) {
   const pattern = PLACEHOLDER_PATTERN[meta.key] ?? PLACEHOLDER_PATTERN.vidrio;
 
@@ -26,8 +26,7 @@ export function CategorySection({
     price: p.price,
     categoryLabel: meta.title,
     sub: p.sub,
-    tone: p.tone,
-    statusNote: p.statusNote,
+    available: p.available,
     medidas: p.medidas,
     material: p.material,
     imageUrls: (p.images ?? [])

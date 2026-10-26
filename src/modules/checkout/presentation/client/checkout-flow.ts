@@ -33,7 +33,7 @@ export function checkoutErrorMessage(code: string | null): string {
     case "OUT_OF_STOCK":
       return "Una de las piezas ya no está disponible. Revisá el pedido antes de continuar.";
     case "PRODUCT_NOT_SELLABLE":
-      return "Una pieza por encargo no participa de la compra online. Quitala del carrito para continuar.";
+      return "Una pieza ya no está disponible para comprar. Quitala del carrito para continuar.";
     case "SHIPPING_QUOTE_EXPIRED":
       return "La cotización de envío venció. Volvé a calcular el envío para continuar.";
     case "SHIPPING_QUOTE_INVALID":

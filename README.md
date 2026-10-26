@@ -94,7 +94,7 @@ src/
 The editorial product and hero documents are **drag-and-drop orderable** in the
 Studio (`@sanity/orderable-document-list`):
 
-- **`producto`** — `name`, `category` (`vidrio` / `ceramica` / `espejos`), `sub` (subcategory / filter chip), `price` (ARS), `tone` (status: unique / in-stock / made-to-order), optional `statusNote`, and `images[]` (min 1 — the first is the card cover, the rest feed the lightbox carousel).
+- **`producto`** — `name`, `category` (`vidrio` / `ceramica` / `espejos`), `sub` (subcategory / filter chip), `price` (ARS), optional description/material/display measurements, and `images[]` (min 1 — the first is the card cover, the rest feed the lightbox carousel).
 - **`heroSlide`** — `name`, `caption`, `category` (link target), `image`. Powers the rotating featured-piece carousel in the hero.
 - **Product shipping profile** — protected-unit weight/dimensions, classification,
   rotation and stacking constraints; separate from display measurements.
@@ -109,6 +109,10 @@ The product form separates **Datos del producto** and **Envío**, with uncommon
 details and packing options collapsed. Display measurements are optional;
 protected-unit measurements remain necessary for shipping. See
 [spec 123](docs/specs/123-carga-simple-productos.md).
+Availability is computed from Sanity stock minus reservations. Legacy `tone` and
+`statusNote` are hidden and ignored. Offered products with zero available units
+show **Agotado** and cannot be added; cart eligibility is refreshed on store and
+checkout visits. See [spec 124](docs/specs/124-disponibilidad-por-stock.md).
 
 Content is fetched in `src/lib/api.ts` via GROQ with a 60s revalidation window. Queries fail-soft: on a transient Sanity outage they return `[]` so the page still renders (empty sections show a friendly message) instead of erroring.
 

@@ -7,7 +7,6 @@ const SHIPPING_PROFILES_QUERY = `*[
   _type == "producto" && _id in $productIds
 ] {
   "id": _id,
-  tone,
   _rev,
   shippingProfile {
     version,
@@ -62,13 +61,12 @@ export class SanityShippingProfileCatalog {
 }
 
 function parseProduct(value: unknown): ShippingCatalogProduct {
-  if (!isRecord(value) || typeof value.id !== "string" ||
-    typeof value.tone !== "string") {
+  if (!isRecord(value) || typeof value.id !== "string") {
     throw new Error("Sanity returned an invalid shipping product");
   }
   return {
     id: value.id,
-    sellable: value.tone === "unica" || value.tone === "stock",
+    sellable: true,
     profile: parseProfile(value.id, value.shippingProfile, typeof value._rev === "string" ? value._rev : undefined),
   };
 }

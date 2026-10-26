@@ -90,8 +90,7 @@ export function ComoComprar() {
           </div>
           <p className="text-[14.5px] leading-relaxed text-[#6E4E38]">
             Al continuar, pagás en el sitio de Mercado Pago. Canela no recibe ni
-            almacena los datos de tu tarjeta. Las piezas por encargo todavía no
-            participan de la compra online.
+            almacena los datos de tu tarjeta.
           </p>
         </div>
       </div>

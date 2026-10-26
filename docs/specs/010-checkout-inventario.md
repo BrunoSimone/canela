@@ -6,6 +6,10 @@
 > reservas y ajustes; PostgreSQL conserva pedidos y pagos.
 
 
+> La [spec 124](124-disponibilidad-por-stock.md) actualiza visibilidad y
+> disponibilidad: los productos habilitados agotados se muestran sin compra;
+> no hay modalidades editoriales que sustituyan las cantidades.
+
 ## Estado
 
 Aprobada para implementación. La ventana de pago de 10 minutos, Neon, Orders
@@ -46,7 +50,7 @@ Permitir el pago inmediato de productos con stock disponible, garantizando que c
 
 ## Requisitos funcionales
 
-- **RF-CHK-001:** El catálogo público debe incluir únicamente productos con `available > 0` y habilitados editorialmente.
+- **RF-CHK-001:** El catálogo público incluye productos habilitados editorialmente; con `available = 0` muestra Agotado y deshabilita la compra (spec 124).
 - **RF-CHK-002:** El sistema no debe exponer la cantidad exacta disponible al comprador.
 - **RF-CHK-003:** Al comenzar el checkout, el servidor debe releer producto, precio y disponibilidad desde sus fuentes autoritativas.
 - **RF-INV-001:** El servidor debe reservar la cantidad solicitada mediante una operación atómica que solo tenga éxito si `available >= cantidad solicitada`.
@@ -102,7 +106,7 @@ Permitir el pago inmediato de productos con stock disponible, garantizando que c
 
 ## Escenarios y criterios de aceptación
 
-- **CA-001 — Agotado no visible:** Dado un producto habilitado con `available = 0`, cuando se genera una vista nueva del catálogo, entonces el producto no aparece.
+- **CA-001 — Agotado sin compra:** Dado un producto habilitado con `available = 0`, una vista nueva del catálogo muestra Agotado y deshabilita agregar/incrementar (spec 124).
 - **CA-002 — Caché desactualizada:** Dado que una vista cacheada todavía muestra un producto agotado, cuando el comprador inicia checkout, entonces el servidor responde sin stock, no crea una order MP y no altera inventario.
 - **CA-003 — Compra paralela:** Dado un producto con una unidad disponible, cuando dos solicitudes intentan reservarla concurrentemente, entonces exactamente una crea reserva y la otra recibe sin stock.
 - **CA-004 — Cantidad excesiva:** Dado un producto con dos unidades, cuando se solicitan tres, entonces no se crea una reserva parcial ni una order MP.

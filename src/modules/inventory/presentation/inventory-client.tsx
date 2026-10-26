@@ -6,8 +6,6 @@ import styles from "./inventory.module.css";
 const messages: Record<string, string> = {
   STOCK_CHANGED: "El stock cambió mientras editabas. Actualizá la lista antes de guardar otra vez.",
   STOCK_BELOW_RESERVED: "No podés dejar menos unidades que las reservadas por compradores.",
-  UNIQUE_PIECE_LIMIT: "Una pieza única admite como máximo una unidad.",
-  MADE_TO_ORDER_NOT_SELLABLE: "Los productos por encargo no admiten venta inmediata.",
   INVALID_STOCK_EDIT: "Revisá la cantidad y escribí un motivo de al menos tres caracteres.",
 };
 type History = { at: string; actor: string; reason: string; before: { stockOnHand: number }; after: { stockOnHand: number } };
@@ -59,10 +57,10 @@ function StockCard({ row, onSaved, request }: { request: InventoryFetch; row: In
     try { const r = await request(`?productId=${encodeURIComponent(row.id)}`, { cache: "no-store" }); if (!r.ok) throw new Error(); setHistory((await r.json()).history); }
     catch { setMessage("No pudimos consultar el historial."); }
   }
-  return <article className={styles.card}><h2>{row.name}</h2><p>{row.tone === "unica" ? "Pieza única" : row.tone === "encargo" ? "Por encargo" : "Venta por unidades"}</p>
-    <dl className={styles.counts}><div><dt>Sin vender</dt><dd>{row.stockOnHand}</dd></div><div><dt>Reservadas</dt><dd>{row.reserved}</dd></div><div><dt>Disponibles</dt><dd>{row.enabled && row.tone !== "encargo" ? row.stockOnHand - row.reserved : 0}</dd></div></dl>
-    <form onSubmit={save}><fieldset disabled={busy}><label>Unidades aún no vendidas<input type="number" min={row.reserved} max={row.tone === "unica" ? 1 : 1000000} step="1" required value={quantity} onChange={e => { setQuantity(e.target.value); dirty(); }} /></label>
-      <label className={styles.check}><input type="checkbox" checked={enabled} disabled={row.tone === "encargo"} onChange={e => { setEnabled(e.target.checked); dirty(); }} />Habilitar venta</label>
+  return <article className={styles.card}><h2>{row.name}</h2><p>La disponibilidad se calcula con las unidades sin vender menos las reservadas.</p>
+    <dl className={styles.counts}><div><dt>Sin vender</dt><dd>{row.stockOnHand}</dd></div><div><dt>Reservadas</dt><dd>{row.reserved}</dd></div><div><dt>Disponibles</dt><dd>{row.stockOnHand - row.reserved}</dd></div></dl>
+    <form onSubmit={save}><fieldset disabled={busy}><label>Unidades aún no vendidas<input type="number" min={row.reserved} max={1000000} step="1" required value={quantity} onChange={e => { setQuantity(e.target.value); dirty(); }} /></label>
+      <label className={styles.check}><input type="checkbox" checked={enabled} onChange={e => { setEnabled(e.target.checked); dirty(); }} />Habilitar venta</label>
       <label>Motivo del ajuste<input required minLength={3} maxLength={300} value={reason} placeholder="Carga inicial, reposición, rotura…" onChange={e => { setReason(e.target.value); dirty(); }} /></label>
       <button type="submit">{busy ? "Guardando…" : "Guardar stock"}</button></fieldset></form>
     {message && <p role="status">{message}</p>}<button className={styles.historyButton} type="button" onClick={showHistory}>Ver últimos ajustes</button>

@@ -8,6 +8,6 @@ export function parseStockEdit(input: unknown): StockEdit {
     typeof v.enabled !== "boolean" || typeof v.reason !== "string" || v.reason.trim().length < 3 || v.reason.trim().length > 300) throw new StockEditError("INVALID_STOCK_EDIT", 422);
   return { mutationId: v.mutationId, expectedVersion: v.expectedVersion as number, expectedStock: v.expectedStock as number, expectedReserved: v.expectedReserved as number, stockOnHand: v.stockOnHand as number, enabled: v.enabled, reason: v.reason.trim() };
 }
-export type InventoryProduct = { id: string; name: string; tone: "unica" | "stock" | "encargo"; price: number };
+export type InventoryProduct = { id: string; name: string; price: number };
 export type Stock = { stockOnHand: number; reserved: number; enabled: boolean; version: number };
 export type InventoryRow = InventoryProduct & Stock;
