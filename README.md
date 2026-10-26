@@ -217,9 +217,10 @@ the required database migrations and remaining launch conditions, and the
 [quotation evidence](docs/evidence/ZIP-01.md) and
 [shipment/label evidence](docs/evidence/ZIP-02.md) for verified behavior.
 
-Shipping estimates test a small box-level margin (5% of weight, capped at 200 g,
-and 1 cm per exterior dimension), applied only if both buyer and seller prices
-remain unchanged for the same service. Measured preparation drives the final label.
+Shipping estimates include a small box-level margin (5% of weight, capped at 200 g,
+and 1 cm per exterior dimension). Buyers see the resulting shipping price, including
+any tariff-band increase. There is no automatic fallback to unpadded measurements.
+Measured preparation drives the final label.
 See [spec 125](docs/specs/125-margen-embalaje.md) and [evidence](docs/evidence/MAR-125.md).
 `ZIPNOVA_FULFILLMENT_MODE=sandbox` explicitly enables shipment creation only for
 the sandbox account with carrier dropoff. It defaults to disabled.

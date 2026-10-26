@@ -29,7 +29,8 @@ requiere datos reales y cuenta logística operativa; no se inventan esas aprobac
   El snapshot conserva caja, revisiones y acomodo para el taller. Cambiar perfiles
   o cajas invalida cotizaciones anteriores. No crear reglas por cada carrito posible.
   La [spec 125](125-margen-embalaje.md) permite cotizar pequeñas holguras sobre el
-  exterior y peso completos sin cambiar el acomodo ni encarecer la tarifa.
+  exterior y peso completos sin cambiar el acomodo. El comprador paga la tarifa
+  del paquete con margen, incluso si cambia de tramo.
 - **OPEN-04:** Panel autenticado de stock: catálogo publicado, existencias,
   reservadas/disponibles, carga y ajustes con motivo, actor y control de concurrencia.
   Una pieza única admite como máximo una unidad. No reducir por debajo de reservas;

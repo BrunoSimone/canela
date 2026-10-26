@@ -76,13 +76,12 @@ comerciales de un transporte: se ofrecen solo sus opciones seleccionables.
 [Spec 125](../specs/125-margen-embalaje.md): valores opcionales de servidor
 `SHIPPING_MARGIN_WEIGHT_PERCENT=5`, `SHIPPING_MARGIN_MAX_WEIGHT_GRAMS=200`,
 `SHIPPING_MARGIN_DIMENSION_CM=1`. Aplicados al paquete completo después de la tara.
-Se cotiza base y margen y se comparan ambos importes por transporte/servicio/despacho.
-Solo se elige margen si los dos importes coinciden. Puede haber hasta dos consultas
-iniciales (ambas consumen el límite de 60/min), y una revalidación al pagar.
-Si falla únicamente la consulta adicional se conserva la base; el panel muestra
-que no se pudo confirmar margen. La consulta base nunca tiene una tarifa inventada.
+Se cotiza una sola vez el paquete con margen y el comprador ve la tarifa resultante,
+incluidos los saltos de tramo. Hay una revalidación al pagar; ambas consultas consumen
+el límite de 60/min. Sin tarifa válida o si el margen excede límites, se bloquea el
+flujo; nunca se ofrece automáticamente una cotización con menos margen.
 
-Poner los tres valores en `0` desactiva el margen. Los cambios invalidan cotizaciones
+Poner los tres valores en `0` desactiva expresamente el margen. Los cambios invalidan cotizaciones
 sin pagar; no cambian el contexto usado para despachar pedidos ya pagados. No se
 modifica Sanity ni se requiere migración SQL. Preparación/etiqueta siempre recotizan
 mediciones reales, sin agregar margen. El importe final sigue sujeto a confirmación.

@@ -1,58 +1,62 @@
-# 125 — Margen de embalaje sin aumento de tarifa
+# 125 — Margen de embalaje incluido en la cotización
 
 Fecha: 26/10/2026. Complementa las specs 060, 070 y 090.
 
-## Alcance
+## Corrección de alcance
 
-Cubrir pequeñas variaciones del embalaje estimado al cotizar, manteniendo el precio
-del mismo transporte y servicio. Sanity conserva medidas reales de la pieza protegida
-y de las cajas. No cambia el acomodo físico, la cantidad de bultos ni la preparación.
+Bruno indicó que descartar margen al subir la tarifa deja descubierto justamente
+el riesgo que se busca cubrir. Eligió **cotizar siempre con margen y mostrar al
+comprador la tarifa resultante**, incluso cuando cambia de tramo. Esta regla
+sustituye la comparación con precio base implementada inicialmente; no se conserva
+como alternativa automática.
 
-Política inicial: agregar al paquete completo **5% del peso, redondeado hacia arriba
-a gramos, con un máximo de 200 g**, y **1 cm total a cada dimensión exterior**.
-La tara y el margen se aplican una sola vez por caja, nunca por producto.
+Sanity almacena medidas reales de la pieza protegida y de las cajas. Agregar al
+paquete completo **5% del peso, redondeado hacia arriba a gramos, con un máximo de
+200 g**, y **1 cm total a cada dimensión exterior**. La tara y el margen se aplican
+una sola vez por caja, nunca por producto. El acomodo físico no cambia.
 
 ## Criterios de aceptación
 
-- **MAR-01**: sumar el margen después de calcular piezas y tara. No alterar las
-  posiciones ni simular más espacio útil. Respetar peso máximo de caja y límites de
-  entrada; si el margen completo excede alguno, conservar la estimación sin margen.
-- **MAR-02**: cotizar base y margen, como máximo dos llamadas iniciales. Para cada
-  combinación de transporte, servicio y despacho, aplicar margen solamente cuando
-  precio comprador **y** precio vendedor coinciden exactamente con la base.
-  Una subida de cualquiera de ellos, ausencia del servicio o fallo conocido de la
-  consulta adicional conserva la base. Un fallo de la consulta base bloquea el flujo.
-  No inventar tolerancias del transporte ni prometer cobertura de cualquier variación.
-- **MAR-03**: firmar las medidas elegidas, base, resultado del margen y política
-  mediante el fingerprint del plan. Revalidar en checkout solamente las medidas
-  elegidas, con una llamada y precios exactos. Cambios en catálogo, caja o política
-  obligan a recotizar antes de reservar stock o generar el pago.
-- **MAR-04**: el panel distingue caja física estimada y medidas cotizadas con margen;
-  informa cuando no se aplicó margen. No precarga la preparación como si se hubiera
-  pesado. La etiqueta usa exclusivamente las medidas reales registradas y la aprobación
-  del costo vigente; nunca vuelve a sumar margen. Los pedidos pagados anteriormente
-  siguen siendo despachables aunque cambie la política de nuevas cotizaciones.
+- **MAR-01**: sumar margen después de calcular piezas y tara. No alterar posiciones
+  ni simular más espacio útil. Respetar peso máximo de caja y límites de entrada;
+  si no puede aplicarse el margen completo, bloquear la cotización y el pago.
+- **MAR-02**: una consulta con las medidas que incluyen margen. Mostrar al comprador
+  el precio devuelto para ese paquete y conservar también el costo vendedor.
+  Un aumento de tramo no descarta margen ni vuelve a una tarifa sin margen.
+  Sin servicio disponible, respuesta válida o cuota API, no se ofrece una opción
+  alternativa sin protección. No hay comparación con una segunda tarifa base.
+- **MAR-03**: firmar medidas elegidas, base y política mediante el fingerprint del
+  plan. Revalidar en checkout esas mismas medidas, con una llamada y ambos precios
+  exactos. Cambios en catálogo, caja o política obligan a recotizar antes de reservar
+  stock o generar pago. Rechazar cotizaciones pendientes de la política anterior,
+  incluyendo las que omitieron margen por precio, disponibilidad o límites.
+- **MAR-04**: el panel distingue caja física estimada de medidas cotizadas con margen,
+  sin afirmar que se añadió gratis. La preparación no se precarga como medición real.
+  La etiqueta usa exclusivamente peso/medidas reales registrados y aprobación del
+  costo vigente; nunca vuelve a sumar margen ni cambia el total pagado. Pedidos
+  históricos pagados siguen siendo despachables y conservan sus datos de auditoría.
 - **MAR-05**: configuración de servidor opcional, valores por defecto 5/200/1;
   `SHIPPING_MARGIN_WEIGHT_PERCENT` (0–20), `SHIPPING_MARGIN_MAX_WEIGHT_GRAMS`
   (0–1000), `SHIPPING_MARGIN_DIMENSION_CM` (0–5), enteros. Peso requiere porcentaje
-  y tope ambos positivos o ambos cero. Los tres en cero desactivan el margen.
-  Valores inválidos fallan explícitamente. No cambian contexto de cuenta ni modos
-  de pago/envío, y no hay llamadas extras si está desactivado.
+  y tope ambos positivos o ambos cero. Los tres en cero permiten una desactivación
+  técnica expresa, nunca un fallback automático. Valores inválidos fallan.
+  La política no modifica el contexto de cuenta ni los modos de pago/envío.
 
 ## Verificación
 
-Pruebas de dominio: acumulación, tope, redondeo, dimensiones, límites e inmutabilidad.
-Pruebas de aplicación: comparación por servicio, cambios en ambos precios, errores,
-checkout con snapshot preservado, cambio de política y preparación real sin margen.
-Pruebas de presentación: distinguir medidas físicas de cotizadas y compatibilidad
-con pedidos anteriores. Contraste de cotizaciones reales sin crear envíos ni pagos.
+Dominio: acumulación, tope, redondeo, dimensiones, límites e inmutabilidad.
+Aplicación: conservar margen aunque la tarifa suba, no volver a la base ante errores,
+checkout con snapshot preservado y precio revalidado, invalidar política anterior,
+preparación real sin margen adicional. Persistencia SQL y presentación de medidas
+estimadas/cotizadas, incluyendo pedidos históricos. Contraste de tarifas reales
+con consultas únicamente, sin crear envíos ni pagos.
 
 ## Operación y límites
 
-La comparación adicional consume cuota de API y puede añadir latencia (timeout
-existente de 12 s por llamada). Se conserva el limitador compartido de 60 consultas
-por minuto. Si falla solo la consulta de margen, el panel lo identifica como no
-disponible; no se presenta como aplicado. No hay reintentos ni consultas programadas.
-El precio puede cambiar luego por tarifa, destino o embalaje final. Sigue vigente
-la recotización y aprobación antes de generar la etiqueta. No cubre una caja distinta
-ni sustituye pesar y medir. El checkout público no expone decisiones técnicas del margen.
+Una llamada inicial y una revalidación al pagar. Se conserva el timeout de 12 s y
+el limitador compartido de 60 consultas por minuto, sin reintentos programados.
+La holgura reduce el riesgo de subestimar pequeñas variaciones; no garantiza que
+cualquier paquete final ni una tarifa futura cuesten lo mismo. Sigue vigente la
+recotización y aprobación antes de crear la etiqueta. No cubre una caja distinta
+ni sustituye pesar y medir. El comprador ve el costo de envío resultante sin
+exponerle detalles técnicos del algoritmo.

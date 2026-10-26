@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import type { ParcelConstraints, ParcelDimensions, ParcelPlan, PlannedParcel } from "./parcel-plan";
 
 export type QuoteMarginPolicy = { weightPercent: number; maxExtraWeightGrams: number; extraDimensionCm: number };
+// Non-applied states are retained only to read historical paid orders.
 export type QuoteMarginStatus = "applied" | "price_changed" | "unavailable" | "limits";
 export type QuoteMargin = { status: QuoteMarginStatus; base: ParcelDimensions };
 export const DEFAULT_QUOTE_MARGIN: QuoteMarginPolicy = { weightPercent: 5, maxExtraWeightGrams: 200, extraDimensionCm: 1 };
@@ -27,14 +28,14 @@ export function buildMarginParcels(parcels: PlannedParcel[], policy: QuoteMargin
 
 /** Only unpaid checkout plans depend on margin policy; the fulfillment account context does not. */
 export function marginPlanFingerprint(plan: ParcelPlan, policy?: QuoteMarginPolicy): string {
-  return policy ? createHash("sha256").update(JSON.stringify({ version: "quote-margin-v1", base: plan.fingerprint,
+  return policy ? createHash("sha256").update(JSON.stringify({ version: "quote-margin-v2-required", base: plan.fingerprint,
     weightPercent: policy.weightPercent, maxExtraWeightGrams: policy.maxExtraWeightGrams, extraDimensionCm: policy.extraDimensionCm })).digest("hex") : plan.fingerprint;
 }
 
-export function markQuoteMargin(base: PlannedParcel[], selected: PlannedParcel[], status: QuoteMarginStatus): PlannedParcel[] {
+export function markQuoteMargin(base: PlannedParcel[], selected: PlannedParcel[]): PlannedParcel[] {
   return selected.map((p, i) => {
     const { weightGrams, heightCm, widthCm, lengthCm } = base[i];
-    return { ...p, quoteMargin: { status, base: { weightGrams, heightCm, widthCm, lengthCm } } };
+    return { ...p, quoteMargin: { status: "applied", base: { weightGrams, heightCm, widthCm, lengthCm } } };
   });
 }
 

@@ -12,8 +12,8 @@ El sistema calcula una sola caja para el pedido, con posiciones sin superposici�
 sin giro ni apilado salvo autorización por producto. La tara se suma una sola vez.
 Si no encuentra un acomodo válido, no inicia el pago. El cálculo es conservador;
 el taller siempre debe comprobar el embalaje real antes de generar la etiqueta.
-La [spec 125](../specs/125-margen-embalaje.md) agrega un margen de cotización solo
-si no cambia el precio; Sanity debe seguir almacenando mediciones reales, sin
+La [spec 125](../specs/125-margen-embalaje.md) incluye un margen de cotización y
+muestra al comprador la tarifa resultante. Sanity almacena mediciones reales, sin
 inflarlas manualmente. La preparación y etiqueta usan el paquete realmente medido.
 
 Publicar cambios actualiza automáticamente la revisión usada para invalidar
