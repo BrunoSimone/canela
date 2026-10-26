@@ -91,14 +91,16 @@ La repetición del contrato Zipnova recuperó el mismo envío mediante lectura y
 PDF de prueba. Se conserva `tmp/zipnova-fulfillment-contract.json`: no eliminarlo
 para reintentar, porque registra la identidad previa al POST original.
 
-## Pendiente de apertura
+## Pendientes registrados al cierre del 14/10
+
+Este apartado conserva los pendientes de esa entrega. Para el estado vigente,
+consultar [el plan de apertura](../plans/007-apertura-2026-10-27.md). La recuperación
+manual quedó implementada y verificada el 26/10 en [MAN-121](MAN-121.md).
 
 - Embalajes/clasificación/stock reales, correo del dueño, preparación y viabilidad
   de llevar paquetes a sucursal. El catálogo todavía requiere esos datos.
 - Respuesta comercial sobre frágiles, multibulto y coordinación de modo operativo.
 - Compra externa integral y aceptación de su resultado.
-- Programar worker periódico y sus alertas en el entorno que se vaya a abrir.
-  `after()` + botón/CLI no prometen procesamiento sin tráfico o intervención.
 - Aplicar migraciones 0008..0010, configurar secretos/gates y desplegar en un paso
   posterior autorizado. Esta iteración no modificó Vercel, Neon ni `.env.local`.
 

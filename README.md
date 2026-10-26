@@ -216,10 +216,13 @@ mode redirects both messages to one authorized test address. Dispatch requires
 explicit confirmation after the package is handed to the carrier. See the
 [dispatch/mail/launch runbook](docs/runbooks/despacho-avisos-apertura.md),
 [spec 080](docs/specs/080-despacho-avisos-apertura.md) and
-[OPS evidence](docs/evidence/OPS-01.md). The GitHub Actions workflow calls the authenticated
-worker on a five-minute schedule, with manual dispatch and failure signals for
-overdue/review jobs. Observed schedule delays on 23/10 require a reliable trigger
-before opening; see [UX-110](docs/evidence/UX-110.md).
+[OPS evidence](docs/evidence/OPS-01.md). Recovery follows
+[spec 121](docs/specs/121-recuperacion-manual-sin-cron.md): immediate attempts after
+payment/dispatch events, an authenticated retry in the order panel, and technical
+recovery on demand through GitHub Actions (`workflow_dispatch`) or the protected
+endpoint. Operators must check orders and notices; there is no background schedule
+or independent email-failure alarm. Preflight checks actual pending work, not the
+age of the last worker run. See [manual recovery evidence](docs/evidence/MAN-121.md).
 
 ### Content
 

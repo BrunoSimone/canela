@@ -37,8 +37,7 @@ requiere datos reales y cuenta logística operativa; no se inventan esas aprobac
   su costo por el operador; jamás modificar el total cobrado al comprador. Mantener
   validación de versión, entorno, destinatario y exclusividad del alta.
 - **OPEN-06 (actualizado 26/10):** Recuperación manual autenticada según la
-  [spec 121](121-recuperacion-manual-sin-cron.md). Se retira el disparador periódico
-  por decisión de Bruno; conservar intentos inmediatos, reintento en panel,
+  [spec 121](121-recuperacion-manual-sin-cron.md): intentos inmediatos, reintento en panel,
   ejecución técnica manual e idempotencia. No prometer detección sin supervisión.
 - **OPEN-07:** Pruebas unitarias de acomodo y errores; SQL para inventario, reservas,
   auditoría/concurrencia y fulfillment; pruebas HTTP de permisos/origen; compra

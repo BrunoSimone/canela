@@ -1,6 +1,6 @@
 # Producción de Canela
 
-## Estado vigente — 23 de octubre de 2026
+## Estado vigente — actualizado el 26 de octubre de 2026
 
 La tienda permanece en mantenimiento y con checkout deshabilitado. Sanity es la
 única fuente de catálogo y cantidades; el panel administra pedidos, embalaje,
@@ -18,11 +18,13 @@ La aceptación sandbox de pago, descuento de stock, etiqueta y despacho está en
 automático reintentado ya tiene entrega 200. La revisión completa de tienda/panel,
 regresión y publicación cerrada se registra en [UX-110](../evidence/UX-110.md).
 
-El worker está configurado en GitHub Actions cada cinco minutos. Se observaron
-retrasos de varias horas el 23/10; no dar esa frecuencia por garantizada. La
-invocación manual comprobó que el endpoint funciona. Ver el runbook de
-[despacho, avisos y apertura](despacho-avisos-apertura.md) para recuperación y
-requisitos de un disparador externo fiable antes de abrir ventas.
+La recuperación se ejecuta a pedido: botón de avisos en la ficha y herramienta
+técnica manual en GitHub Actions. Los eventos de pago/despacho intentan enviar
+sus avisos inmediatamente. El operador debe revisar pedidos y avisos; no hay
+ejecución periódica ni una segunda alerta independiente si falla el email.
+El preflight comprueba pendientes reales, sin exigir una corrida reciente.
+Ver [recuperación manual comprobada](../evidence/MAN-121.md) y el procedimiento de
+[despacho, avisos y apertura](despacho-avisos-apertura.md#supervisión-y-recuperación-manual).
 
 Guía del cliente: [carga en Sanity](carga-cliente.md). Configuración de cobros
 productivos: [MP producción](../evidence/MP-produccion-2026-10-22.md). La compra

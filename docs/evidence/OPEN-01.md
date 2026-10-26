@@ -2,6 +2,10 @@
 
 16/10/2026. Contrato: [spec 090](../specs/090-apertura-caja-compartida.md).
 
+La evidencia de pruebas y despliegue corresponde al 16/10. La recuperación
+vigente se actualizó el 26/10 según [MAN-121](MAN-121.md); el stock autoritativo
+en Sanity se documenta en [INV-100](INV-100.md).
+
 ## Implementado y verificado
 
 - Sanity publicado en https://canela-artesanal.sanity.studio/: unidad protegida,
@@ -18,11 +22,12 @@
 - Paquete real recotizado antes del alta. Costo explícito para el taller y diferencia
   contra el importe pagado. El comprador mantiene su total. Token de aprobación
   ligado a pedido, versión, medidas y tarifa; tarifa revisada nuevamente al confirmar.
-- Worker autenticado, salud persistida y workflow periódico cada cinco minutos
-  con ejecución manual. Fallos, avisos en revisión o demorados más de una hora
-  hacen fallar la ejecución. Programación de GitHub Actions de mejor esfuerzo.
-- Preflight de solo lectura comprueba migraciones, gates, worker reciente, cajas
-  activas, stock ofrecido y perfiles capaces de entrar en una caja.
+- Recuperación autenticada e historial de ejecuciones. Desde el 26/10, el workflow
+  es exclusivamente manual; informa fallos, avisos en revisión/demorados e
+  intenciones de reserva vencidas. Ver MAN-121 para las pruebas de ese cambio.
+- Preflight de solo lectura comprueba migraciones, gates, cajas activas, stock
+  ofrecido y perfiles capaces de entrar en una caja. Desde el 26/10 consulta
+  pendientes reales en lugar de exigir una ejecución reciente.
 
 ## Evidencia de QA
 

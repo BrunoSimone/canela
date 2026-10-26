@@ -57,7 +57,7 @@ sin explicitarlo. Ejecutar suites, tipos, lint y build; guardar evidencia OPS-01
 - [x] Contrato Zipnova repetido por lectura del mismo envío sandbox, sin nuevo POST.
 - [x] Preflight, runbook y borrador de consulta comercial.
 - [ ] Aceptación externa integral de compra MP + Zipnova + correo con un pedido común.
-- [x] Scheduler y preparación de configuración para despliegue cerrado completados en spec 090; verificar publicación en OPEN-01.
+- [x] Recuperación técnica manual y configuración para despliegue cerrado; alcance actualizado el 26/10 en spec 121 y publicación verificada en MAN-121.
 - [ ] Confirmaciones comerciales/datos del dueño y posterior aprobación de apertura.
 
 Detalle verificable y límites: [OPS-01](../evidence/OPS-01.md).

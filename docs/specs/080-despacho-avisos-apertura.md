@@ -43,9 +43,10 @@ cerrados. No desplegar, contratar servicios ni enviar consultas comerciales.
   Resend, no confirma entrega en bandeja. Nunca exponer payload ni emails en logs.
 - **OPS-06 — Operación de avisos:** intentar el envío después de procesar pago o
   despacho. Estado y acción de reintento autenticada en la ficha. CLI de procesamiento
-  y endpoint protegido por secreto para un scheduler futuro, sin contratar ni
-  configurar uno en esta iteración. El reintento respeta lease/backoff/ventana y
-  no fuerza mensajes en revisión. Sin configuración, conservar pendientes.
+  y endpoint protegido por secreto para recuperación técnica manual, según la
+  spec 121. El reintento respeta lease/backoff/ventana y no fuerza mensajes en
+  revisión. Sin configuración, conservar pendientes. La operación requiere
+  supervisión humana; no hay una tarea periódica pendiente de implementar.
 - **OPS-07 — Entornos:** `ORDER_EMAIL_MODE=disabled|test|production`, disabled por
   defecto. Test redirige exclusivamente a `ORDER_EMAIL_TEST_TO` y marca asunto y
   cuerpo como prueba; nunca usa destinatarios de compradores. Production exige

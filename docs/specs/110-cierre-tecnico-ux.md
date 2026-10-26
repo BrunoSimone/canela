@@ -35,7 +35,7 @@ activo y checkout productivo deshabilitado.
 - **TEC-02 Regresión:** ejecutar unitarias/HTTP, integración SQL aislada,
   TypeScript, lint y build. Contratos externos solo contra cuentas/datasets de
   prueba, distinguiendo resultados ejecutados de omitidos.
-- **TEC-03 Publicación cerrada:** verificar flags, migraciones y worker, publicar,
+- **TEC-03 Publicación cerrada:** verificar flags, migraciones y recuperación manual, publicar,
   comprobar mantenimiento, autenticación y endpoints; conservar rollback.
 
 ## Fuera de la apertura técnica

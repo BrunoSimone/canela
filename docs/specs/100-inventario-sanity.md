@@ -19,7 +19,8 @@ ADR-001 y la pantalla separada de OPEN-04; PostgreSQL conserva pedidos y pagos.
   reintento consulta el resultado. Pago aprobado sin reserva válida va a revisión.
 - **INV-05:** Primero se persiste el pedido/intención en PostgreSQL y luego se
   reserva en Sanity. MP solo se invoca después de confirmar esa reserva. Un fallo
-  entre bases es recuperable por idempotencia. Un worker cancela intenciones
+  entre bases es recuperable por idempotencia. La herramienta técnica manual
+  de la [spec 121](121-recuperacion-manual-sin-cron.md) cancela intenciones
   abandonadas sin MP; no libera reservas con pagos en curso por el reloj.
 - **INV-06:** Los documentos de stock usan IDs privados con puntos. Nunca se
   devuelven cantidades ni credenciales al comprador. Solo un usuario Sanity

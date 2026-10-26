@@ -177,5 +177,3 @@ idempotencia ni botones manuales.
 Sin intervención humana ni nuevos eventos no se promete detección ni reintento.
 No hay alertas externas nuevas ni procesamiento por abrir una pantalla. El alcance
 puede revisarse cuando exista volumen real que justifique automatizar la operación.
-La evaluación anterior del scheduler queda como antecedente en FIN-120; no es un
-bloqueo de apertura ni requiere crear/iniciar sesión en cron-job.org.

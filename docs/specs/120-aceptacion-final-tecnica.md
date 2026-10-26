@@ -14,12 +14,11 @@ conserva mantenimiento y checkout deshabilitado durante esta iteración.
 - **FIN-01:** una compra nueva con MP test confirma mediante un webhook automático
   auténtico antes de cualquier reconciliación por retorno. Verificar pago, reserva
   consumida, descuento único y aviso al taller; eventos repetidos no duplican efectos.
-- **FIN-02 (sustituido el 26/10):** Bruno descarta cron y adopta recuperación
-  manual según la [spec 121](121-recuperacion-manual-sin-cron.md). Retirar schedule
-  y el requisito de actividad periódica; mantener cola, reintentos inmediatos,
-  acciones manuales y controles basados en pendientes reales. La decisión no se
-  presenta como una validación de la cadencia anterior.
-- **FIN-03:** comprobar el presupuesto del endpoint frente al límite del disparador;
+- **FIN-02 (actualizado el 26/10):** recuperación manual según la
+  [spec 121](121-recuperacion-manual-sin-cron.md). Mantener cola, intentos inmediatos,
+  acciones manuales y controles basados en pendientes reales. Verificar la
+  herramienta técnica a pedido y documentar la supervisión humana necesaria.
+- **FIN-03:** comprobar el límite total de duración del endpoint de recuperación;
   probar errores, concurrencia e idempotencia de los reintentos que se modifiquen.
 - **FIN-04:** comprobar las clasificaciones publicadas por Zipnova y ofrecer una
   selección explícita en Sanity. Según su referencia oficial: vidrio/espejos `6`,
