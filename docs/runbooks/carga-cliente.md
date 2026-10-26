@@ -5,19 +5,33 @@
 Abrir https://canela-artesanal.sanity.studio e ingresar con la cuenta invitada al
 proyecto Canela. El catálogo conserva todos los productos y fotos existentes.
 
-1. Abrir el producto en su categoría. Revisar nombre, precio y modalidad de venta.
-2. En **Unidad protegida para envío**, pesar UNA pieza con la protección individual
+1. Abrir el producto en su categoría. En **Datos del producto**, completar nombre,
+   categoría, subcategoría, precio, descripción y fotos. La descripción es opcional;
+   la primera foto es la portada. La subcategoría alimenta los filtros de la tienda.
+2. En **Producto → Envío → Unidad protegida para envío**, pesar UNA pieza con la protección individual
    que realmente se usará (papel, separadores o protección específica), sin la caja
    exterior compartida. Cargar gramos enteros. Medir alto, ancho y largo de esa
    unidad protegida en centímetros enteros, redondeando hacia arriba.
-3. Mantener desactivado el apilado si no está comprobado que la protección admite
-   otras piezas encima. El giro permite solo rotar sobre la base, sin acostar la pieza.
-4. Activar caja exclusiva únicamente para piezas que no pueden compartir caja.
-5. Elegir la clasificación por contenido: **Cristales y vidrio (6)** para vidrio,
-   espejos o cuadros con vidrio; **General (1)** para cerámica decorativa o cuadros
-   sin vidrio. **Cerámicos (4)** corresponde a pisos y revestimientos. No hay una
-   opción seleccionada por defecto; sin clasificación no se puede cotizar.
-6. Pulsar **Publicar**. Guardar un borrador no actualiza la tienda.
+3. Elegir **Contenido del envío** según la pieza: **Vidrio, espejos o cuadros con
+   vidrio**, o **Cerámica decorativa o cuadros sin vidrio**. Pisos/revestimientos
+   y bachas tienen sus propias opciones. No hay una selección por defecto;
+   sin contenido no se puede cotizar. Los códigos del transporte son internos.
+4. Abrir **Acomodo de la pieza** solo si hace falta indicar giro, apilado o caja
+   exclusiva. Mantener desactivado el apilado si no está comprobado que la
+   protección admite otras piezas encima. El giro conserva la pieza vertical.
+   Activar caja exclusiva únicamente para piezas que no pueden compartir caja.
+5. Pulsar **Publicar**. Guardar un borrador no actualiza la tienda.
+
+### Detalles opcionales
+
+En **Datos del producto → Detalles opcionales** quedan la modalidad de venta,
+nota de estado, medidas sin envolver y material. No hace falta completarlos para
+la carga habitual. Los productos nuevos usan **Venta por unidades**; elegir
+**Pieza única** si solo puede existir una unidad o **Por encargo** si no admite
+compra inmediata. Las fichas existentes conservan su modalidad.
+
+Las medidas sin envolver son información opcional para el comprador. No copiar
+allí las medidas protegidas del envío: describen cosas diferentes.
 
 En **Cajas de envío**, crear cada tamaño que efectivamente usará el taller:
 

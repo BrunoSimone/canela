@@ -105,6 +105,10 @@ Studio (`@sanity/orderable-document-list`):
 
 The Studio (`sanity.config.ts`) presents a **Hero** list, products grouped by
 category, shipping boxes and the product stock view.
+The product form separates **Datos del producto** and **Envío**, with uncommon
+details and packing options collapsed. Display measurements are optional;
+protected-unit measurements remain necessary for shipping. See
+[spec 123](docs/specs/123-carga-simple-productos.md).
 
 Content is fetched in `src/lib/api.ts` via GROQ with a 60s revalidation window. Queries fail-soft: on a transient Sanity outage they return `[]` so the page still renders (empty sections show a friendly message) instead of erroring.
 

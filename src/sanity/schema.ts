@@ -1,4 +1,4 @@
-import type { SchemaTypeDefinition } from "sanity";
+import { ALL_FIELDS_GROUP, type SchemaTypeDefinition } from "sanity";
 import { orderRankField } from "@sanity/orderable-document-list";
 
 export const CATEGORY_OPTIONS = [
@@ -26,17 +26,32 @@ const producto: SchemaTypeDefinition = {
   name: "producto",
   title: "Producto",
   type: "document",
+  groups: [
+    { name: "product", title: "Datos del producto", default: true },
+    { name: "shipping", title: "Envío" },
+    { ...ALL_FIELDS_GROUP, hidden: true },
+  ],
+  fieldsets: [
+    {
+      name: "optional",
+      title: "Detalles opcionales",
+      description: "Para piezas únicas, encargos o información adicional. Podés dejarlos como están.",
+      options: { collapsible: true, collapsed: true },
+    },
+  ],
   fields: [
     {
       name: "name",
       title: "Nombre",
       type: "string",
+      group: "product",
       validation: (rule) => rule.required(),
     },
     {
       name: "description",
       title: "Descripción",
       type: "text",
+      group: "product",
       rows: 3,
       description:
         "Texto corto que aparece en la tarjeta del producto (opcional).",
@@ -45,6 +60,7 @@ const producto: SchemaTypeDefinition = {
       name: "category",
       title: "Categoría",
       type: "string",
+      group: "product",
       options: { list: CATEGORY_OPTIONS, layout: "radio" },
       validation: (rule) => rule.required(),
     },
@@ -52,6 +68,7 @@ const producto: SchemaTypeDefinition = {
       name: "sub",
       title: "Subcategoría",
       type: "string",
+      group: "product",
       description:
         "Vidrio → Reciclado / Vitrofusión · Cerámica → Casa / Jardín · Espejos y Cuadros → Espejos / Cuadros",
       options: { list: SUB_OPTIONS },
@@ -61,13 +78,27 @@ const producto: SchemaTypeDefinition = {
       name: "price",
       title: "Precio (ARS)",
       type: "number",
+      group: "product",
       description: "Solo el número, sin símbolos. Ej: 8500",
       validation: (rule) => rule.required().min(0),
+    },
+    {
+      name: "images",
+      title: "Fotos",
+      type: "array",
+      group: "product",
+      of: [{ type: "image", options: { hotspot: true } }],
+      description: "La primera foto es la portada. Las demás se ven al ampliar la pieza.",
+      options: { layout: "grid" },
+      validation: (rule) => rule.required().min(1),
     },
     {
       name: "tone",
       title: "Modalidad de venta",
       type: "string",
+      group: "product",
+      fieldset: "optional",
+      description: "Usá Venta por unidades para la carga habitual. Pieza única limita el stock a una; Por encargo no permite compra inmediata.",
       options: { list: TONE_OPTIONS, layout: "radio" },
       initialValue: "stock",
       validation: (rule) => rule.required(),
@@ -76,39 +107,43 @@ const producto: SchemaTypeDefinition = {
       name: "statusNote",
       title: "Nota de estado (opcional)",
       type: "string",
+      group: "product",
+      fieldset: "optional",
       description:
         'Detalle del estado, sobre todo para "Por encargo". Ej: "Por encargo · 2 sem"',
     },
     {
       name: "medidas",
-      title: "Medidas",
+      title: "Medidas sin envolver (opcional)",
       type: "string",
-      description: 'Ej: "20 × 12 cm" o "Alto 18 cm · Ø 10 cm".',
-      validation: (rule) => rule.required(),
+      group: "product",
+      fieldset: "optional",
+      description: 'Se muestran al comprador. Ej: "Alto 18 cm · Ø 10 cm". Las medidas con protección se cargan en Envío.',
     },
     {
       name: "shippingProfile",
       title: "Unidad protegida para envío",
       type: "object",
+      group: "shipping",
+      options: { collapsible: false },
       initialValue: { version: 1, shipSeparately: false, canRotate: false, canStack: false },
       description:
-        "Medí y pesá UNA pieza con su papel, separadores o protección individual, SIN la caja exterior compartida. Podés cargar las medidas ahora y completar la clasificación después. La tienda solo cotiza perfiles completos.",
-      fields: [
-        { name: "canRotate", title: "Se puede girar 90° sobre la base", type: "boolean", initialValue: false, description: "Conserva la pieza vertical; permite intercambiar ancho y largo." },
-        { name: "canStack", title: "Admite otras piezas protegidas encima", type: "boolean", initialValue: false, description: "Activar únicamente si la protección soporta ese apilado. Si alguna pieza no lo permite, el pedido se acomoda en una sola capa." },
+        "Medí y pesá UNA pieza con su protección individual, sin la caja exterior. Completá peso, medidas y contenido para calcular el envío. Las cajas se cargan una vez en Cajas de envío.",
+      fieldsets: [
         {
-          name: "classificationId",
-          title: "Clasificación de mercadería en Zipnova",
-          type: "string",
-          description: "Elegí según el contenido. Vidrio y espejos: Cristales y vidrio (6). Cerámica decorativa y cuadros sin vidrio: General (1). Cerámicos (4) corresponde a pisos y revestimientos. Sin selección no se cotiza.",
-          options: { list: [
-            { title: "Cristales y vidrio — vidrio, espejos, cuadros con vidrio (6)", value: "6" },
-            { title: "General — cerámica decorativa, cuadros sin vidrio (1)", value: "1" },
-            { title: "Cerámicos — pisos y revestimientos (4)", value: "4" },
-            { title: "Bachas — cocina o vanitory (3)", value: "3" },
-          ] },
-          validation: (rule) => rule.regex(/^[A-Za-z0-9_-]{1,50}$/),
+          name: "dimensions",
+          title: "Medidas con protección (cm)",
+          description: "Redondeá hacia arriba: 12,4 cm = 13 cm.",
+          options: { collapsible: false, columns: 3 },
         },
+        {
+          name: "packing",
+          title: "Acomodo de la pieza",
+          description: "Abrí estas opciones si la pieza admite giro o apilado, o necesita su propia caja.",
+          options: { collapsible: true, collapsed: true },
+        },
+      ],
+      fields: [
         {
           name: "version",
           title: "Versión del perfil",
@@ -119,33 +154,53 @@ const producto: SchemaTypeDefinition = {
         },
         {
           name: "weightGrams",
-          title: "Peso de la unidad protegida (g)",
+          title: "Peso (g)",
           type: "number",
+          description: "En gramos enteros: 1,25 kg = 1250 g.",
           validation: (rule) => rule.required().integer().min(10),
         },
         {
           name: "heightCm",
-          title: "Alto de la unidad protegida (cm)",
+          title: "Alto",
           type: "number",
+          fieldset: "dimensions",
           validation: (rule) => rule.required().integer().min(1),
         },
         {
           name: "widthCm",
-          title: "Ancho de la unidad protegida (cm)",
+          title: "Ancho",
           type: "number",
+          fieldset: "dimensions",
           validation: (rule) => rule.required().integer().min(1),
         },
         {
           name: "lengthCm",
-          title: "Largo de la unidad protegida (cm)",
+          title: "Largo",
           type: "number",
+          fieldset: "dimensions",
           validation: (rule) => rule.required().integer().min(1),
         },
+        {
+          name: "classificationId",
+          title: "Contenido del envío",
+          type: "string",
+          description: "Es lo que declaramos al transporte. Elegí según la pieza; sin esta selección no se puede calcular el envío.",
+          options: { list: [
+            { title: "Vidrio, espejos o cuadros con vidrio", value: "6" },
+            { title: "Cerámica decorativa o cuadros sin vidrio", value: "1" },
+            { title: "Pisos y revestimientos cerámicos", value: "4" },
+            { title: "Bachas de cocina o vanitory", value: "3" },
+          ] },
+          validation: (rule) => rule.regex(/^[A-Za-z0-9_-]{1,50}$/),
+        },
+        { name: "canRotate", title: "Se puede girar sobre la base", type: "boolean", fieldset: "packing", initialValue: false, description: "Conserva la pieza vertical; permite intercambiar ancho y largo." },
+        { name: "canStack", title: "Admite otras piezas protegidas encima", type: "boolean", fieldset: "packing", initialValue: false, description: "Activar solo si comprobaste que la protección soporta ese peso. Desactivado, el pedido se acomoda en una sola capa." },
         {
           name: "shipSeparately",
           title: "Esta pieza necesita una caja exclusiva",
           description: "Activar solo si nunca puede compartir caja con otras piezas.",
           type: "boolean",
+          fieldset: "packing",
           initialValue: false,
         },
       ],
@@ -154,18 +209,9 @@ const producto: SchemaTypeDefinition = {
       name: "material",
       title: "Material (opcional)",
       type: "string",
+      group: "product",
+      fieldset: "optional",
       description: 'Ej: "Vidrio reciclado", "Cerámica esmaltada".',
-    },
-    {
-      name: "images",
-      title: "Fotos",
-      type: "array",
-      of: [{ type: "image", options: { hotspot: true } }],
-      description:
-        "La primera foto es la portada de la tarjeta. Podés subir varias: se " +
-        "ven en un carrusel al ampliar la pieza.",
-      options: { layout: "grid" },
-      validation: (rule) => rule.required().min(1),
     },
     orderRankField({ type: "producto" }),
   ],
