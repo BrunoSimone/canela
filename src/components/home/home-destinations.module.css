@@ -1,12 +1,13 @@
 .home { width: 100%; }
-.intro { padding: 26px 22px; background: var(--canela-cream); color: var(--canela-brown); text-align: center; }
-.intro h1 { max-width: 960px; margin: 0 auto; font-size: clamp(20px, 2.3vw, 28px); font-weight: 600; line-height: 1.5; text-wrap: balance; }
-.intro h1 span { color: #606839; }
+.intro { width: 100%; max-width: 1180px; margin: 0 auto; padding: clamp(32px, 4vw, 56px) 22px 24px; }
+.intro h1 { max-width: 720px; margin: 0; font: 400 clamp(38px, 4.3vw, 60px)/1.16 var(--font-heading); text-wrap: balance; text-shadow: 0 2px 12px #24170f26; }
+.intro h1 span { display: block; }
 .destinations { display: flex; flex-direction: column; }
-.opening { display: flex; flex-direction: column; min-height: calc(100svh - 66px); }
-.opening .banner { flex: 1; min-height: 500px; }
 .banner { position: relative; isolation: isolate; display: flex; align-items: flex-end; min-height: max(560px, calc(100svh - 76px)); overflow: hidden; color: #fbf7ee; background: #4a3527; }
 .banner::after { content: ""; position: absolute; z-index: -1; inset: 0; background: linear-gradient(90deg, #24170fe6 0%, #24170f91 35%, #24170f00 75%), linear-gradient(0deg, #24170fa6, transparent 65%); }
+.store { flex-direction: column; align-items: stretch; justify-content: space-between; min-height: max(600px, calc(100svh - 66px)); }
+.store::after { background: linear-gradient(180deg, #24170fb3, #24170f00 48%), linear-gradient(90deg, #24170f73, #24170f00 78%), linear-gradient(0deg, #24170fc7, transparent 65%); }
+.store .copy { padding-top: 32px; }
 .banner:focus-visible { outline: 4px solid #fbf7ee; outline-offset: -10px; }
 .photo, .scene { position: absolute; z-index: -2; inset: 0; overflow: hidden; }
 .productImage { object-fit: cover; object-position: center; transition: transform .8s ease; }
@@ -32,9 +33,11 @@
 .photoFallback p { font-size: 13px; }
 @keyframes arrive { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 @media (max-width: 767px) {
-  .intro { padding: 22px 24px; }
+  .intro { padding: 32px 24px 24px; }
+  .intro h1 { font-size: clamp(32px, 10vw, 38px); }
   .banner { min-height: max(640px, calc(100svh - 66px)); }
   .banner::after { background: linear-gradient(0deg, #24170ff2, #24170fb3 30%, #24170f00 75%); }
+  .store::after { background: linear-gradient(180deg, #24170fc7, #24170f00 60%), linear-gradient(0deg, #24170ff2, #24170fb3 30%, #24170f00 75%); }
   .creator::after { background: linear-gradient(0deg, #242b1df5, #242b1dd9 35%, #242b1d00 73%); }
   .copy { padding: 40px 24px; }
   .copy h2 { font-size: clamp(54px, 10vw, 76px); max-width: 400px; }
