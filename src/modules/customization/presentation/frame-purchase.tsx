@@ -83,7 +83,7 @@ export function FramePurchase({ design, estimate, onEdit }: { design: MosaicDesi
     });
   }
   if (step === "review") return <FrameReview design={design} estimate={estimate} onEdit={onEdit} onContinue={() => { setError(""); setStep("shipping"); }} />;
-  const title = step === "shipping" ? "¿A dónde iría tu cuadro?" : step === "payment" ? "Probá el pago de tu cuadro" : order?.status === "approved" ? "Prueba completada" : order?.status === "pending" ? "Pago de prueba pendiente" : "Pago de prueba rechazado";
+  const title = step === "shipping" ? "Datos de envío" : step === "payment" ? "Pago de prueba" : order?.status === "approved" ? "Prueba completada" : order?.status === "pending" ? "Pago de prueba pendiente" : "Pago de prueba rechazado";
   const field = (key: keyof Fields, label: string, options: { optional?: boolean; type?: string; maxLength?: number; pattern?: string; numeric?: boolean } = {}) => <label className={styles.formField} key={key}>{label}{options.optional && <span className={styles.optional}>Opcional</span>}<input name={key} value={fields[key]} onChange={e => setFields(prev => ({ ...prev, [key]: e.target.value }))} required={!options.optional} type={options.type ?? "text"} maxLength={options.maxLength ?? 100} pattern={options.pattern} inputMode={options.numeric ? "numeric" : undefined} autoComplete="off" /></label>;
   return <div className={styles.page}>
     {step !== "result" && <button className={styles.backLink} disabled={busy} onClick={() => step === "shipping" ? setStep("review") : backToShipping()}><ArrowLeft size={16} aria-hidden="true" />{step === "shipping" ? "Volver al resumen" : "Editar domicilio"}</button>}
@@ -108,7 +108,7 @@ export function FramePurchase({ design, estimate, onEdit }: { design: MosaicDesi
           <button className={styles.primaryButton} type="submit" disabled={busy}>{busy ? "Preparando…" : "Cotizar envío de prueba"}</button>
         </form>}
         {step === "payment" && quote && <section className={styles.reviewDetails} aria-label="Pago de prueba">
-          <h2>Todo listo para simular</h2>
+          <h2>Simular el pago</h2>
           <p>La cotización dura 15 minutos. Revisá el total y elegí qué resultado querés probar.</p>
           <fieldset disabled={busy} className={styles.simulationOptions}><legend>Resultado del pago simulado</legend>{([['approved', 'Aprobado', 'El pedido avanzaría a fabricación.'], ['pending', 'Pendiente', 'Espera la confirmación del pago.'], ['rejected', 'Rechazado', 'Permite volver a intentar.']] as const).map(([value, label, detail]) => <label key={value}><input type="radio" name="outcome" value={value} checked={outcome === value} onChange={() => { setOutcome(value); attemptId.current = null; setError(""); }} /><span><strong>{label}</strong><small>{detail}</small></span></label>)}</fieldset>
           <button className={styles.primaryButton} disabled={busy} onClick={pay}>{busy ? "Simulando…" : "Simular pago"}</button>
@@ -116,7 +116,7 @@ export function FramePurchase({ design, estimate, onEdit }: { design: MosaicDesi
         </section>}
         {step === "result" && order && <section className={`${styles.reviewDetails} ${styles.resultPanel}`} aria-label="Resultado de la simulación">
           <div role="status">{order.status === "approved" ? <CheckCircle2 size={40} aria-hidden="true" /> : order.status === "pending" ? <Clock3 size={40} aria-hidden="true" /> : <CircleAlert size={40} aria-hidden="true" />}
-            <h2>{order.status === "approved" ? "El recorrido llegó hasta el final" : order.status === "pending" ? "Esperando confirmación" : "Podés volver a intentar"}</h2>
+            <h2>{order.status === "approved" ? "Pago de prueba aprobado" : order.status === "pending" ? "Esperando confirmación" : "Podés volver a intentar"}</h2>
             <p>{order.status === "approved" ? "En una compra real, este diseño quedaría confirmado para fabricación. Esta simulación no crea un pedido en el panel de Mariela ni reserva un turno real." : order.status === "pending" ? "Todavía no se iniciaría la fabricación. Podés simular la confirmación o el rechazo para ver qué sucede después." : "No se inicia la fabricación ni se ocupa capacidad de prueba. El diseño y la cotización siguen disponibles para otro intento."}</p>
           </div>
           <p className={styles.reviewNotice}>Sin cobros ni envíos reales. Tu carrito de productos no cambió.</p>

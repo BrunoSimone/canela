@@ -96,7 +96,7 @@ export function Creator({ config, pricing, template, templateUnavailable, purcha
 
   return <div className={styles.page}>
     <Link className={styles.backLink} href="/cuadros"><ArrowLeft size={16} aria-hidden="true" /> Explorar diseños</Link>
-    <div className={styles.pageHeading}><div><h1>Tu imagen, hecha mosaico</h1><p>Encontrá el encuadre, elegí el tamaño y mirá cómo toma forma tu cuadro.</p></div></div>
+    <div className={styles.pageHeading}><div><h1>Crear un cuadro en mosaico</h1><p>Subí una imagen, ajustá el encuadre y elegí el tamaño del cuadro.</p></div></div>
     <DemoNotice />
     {templateUnavailable && !source && <p role="alert" className={styles.error}>Ese diseño no está disponible. Podés elegir otro en la galería o usar tu propia imagen.</p>}
     <div className={`${styles.workspace} ${design ? styles.activeWorkspace : ""}`}>
@@ -110,7 +110,7 @@ export function Creator({ config, pricing, template, templateUnavailable, purcha
           </div>
           <p className={styles.hint}>Tu foto se procesa en este dispositivo. Al salir o recargar se pierde el diseño en edición.</p>
           {error && <p role="alert" className={styles.error}>{error}</p>}
-          {source?.kind === "template" && <p className={styles.templateHint}>Partiste de «{source.template.title}». Ajustá el tamaño o los colores para hacerlo tuyo.</p>}
+          {source?.kind === "template" && <p className={styles.templateHint}>Diseño seleccionado: «{source.template.title}». Podés editar el tamaño y los colores.</p>}
           {source?.kind === "image" && <div className={styles.cropTools}>
             <div className={styles.cropper} aria-label="Recortar imagen" inert={hasRetouches || loading}>
               <Cropper image={source.image.url} crop={crop} zoom={zoom} aspect={1} onCropChange={value => { if (!hasRetouches) { setCrop(value); setView("mosaic"); } }} onZoomChange={value => { if (!hasRetouches) { setZoom(value); setView("mosaic"); } }} onCropComplete={(_, pixels) => { if (!hasRetouches) setArea(pixels); }} zoomWithScroll={false} keyboardStep={5} mediaProps={{ alt: "Tu imagen para recortar" }} />
@@ -140,7 +140,7 @@ export function Creator({ config, pricing, template, templateUnavailable, purcha
           {result?.error ? <p role="alert" className={styles.error}>{result.error}</p> : design ? <>
             {view === "source" && source?.kind === "image" ? <svg className={styles.previewArt} role="img" aria-label="Recorte de tu imagen" viewBox={`${area?.x ?? (source.image.raster.width - Math.min(source.image.raster.width, source.image.raster.height)) / 2} ${area?.y ?? (source.image.raster.height - Math.min(source.image.raster.width, source.image.raster.height)) / 2} ${area?.width ?? Math.min(source.image.raster.width, source.image.raster.height)} ${area?.height ?? Math.min(source.image.raster.width, source.image.raster.height)}`}><image href={source.image.url} width={source.image.raster.width} height={source.image.raster.height} /></svg> : <MosaicSvg design={design} label={`Tu mosaico de ${size} por ${size} venecitas`} className={styles.previewArt} />}
             <span className={styles.previewCaption}>{view === "source" ? "Recorte de tu imagen" : "Simulación de material · Los colores y el acabado reales pueden variar"}</span>
-          </> : <div className={styles.emptyPreview}><ImageIcon size={42} strokeWidth={1} aria-hidden="true" /><h3>Empezá con una imagen</h3><p>Una foto o una idea sencilla.<br />La convertimos en un mosaico, pieza por pieza.</p><button className={styles.primaryButton} onClick={() => input.current?.click()}>Elegir imagen</button></div>}
+          </> : <div className={styles.emptyPreview}><ImageIcon size={42} strokeWidth={1} aria-hidden="true" /><h3>Vista previa del mosaico</h3><p>Subí una imagen para ver el diseño.</p><button className={styles.primaryButton} onClick={() => input.current?.click()}>Elegir imagen</button></div>}
         </div>
       </section>
     </div>

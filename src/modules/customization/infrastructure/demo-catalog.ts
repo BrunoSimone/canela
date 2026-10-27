@@ -35,7 +35,7 @@ function example(id: string, title: string, description: string, paint: (x: numb
 
 function templates() {
   return [
-    example("palmera", "Una tarde bajo la palmera", "Verdes profundos, arena y un cielo sereno.", (x, y) => {
+    example("palmera", "Palmera", "Palmera sobre arena, con cielo celeste.", (x, y) => {
       if (y >= 20) return (x + y) % 5 === 0 ? "murvi-e-60" : "murvi-c-06";
       if ((x - 19) ** 2 + (y - 5) ** 2 < 10) return "murvi-e-60";
       const trunk = 12 - Math.floor((y - 9) / 7);
@@ -46,7 +46,7 @@ function templates() {
       if (Math.abs(dx) < 6 && Math.abs(y - (7 + Math.round(Math.abs(dx) * 0.9))) <= 1) return "murvi-o-48";
       return "murvi-c-41";
     }),
-    example("atardecer", "El sol sobre el mar", "Una línea de horizonte y colores cálidos.", (x, y) => {
+    example("atardecer", "Atardecer sobre el mar", "Sol terracota sobre franjas de agua azul.", (x, y) => {
       if (y < 15 && (x - 12) ** 2 + (y - 11) ** 2 <= 36) return "murvi-n-07";
       if (y >= 15) return y % 4 === 0 ? "murvi-c-41" : "murvi-v-20";
       return y < 6 ? "murvi-b-34" : "murvi-r-26";

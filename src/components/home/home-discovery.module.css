@@ -1,6 +1,5 @@
 .spotlight { max-width: 1136px; margin: 48px auto 56px; display: grid; grid-template-columns: 1.06fr 1fr; overflow: hidden; border: 1px solid rgba(96,104,57,.2); border-radius: 26px; background: #f0eddc; }
 .spotlightCopy { padding: clamp(28px,4vw,48px); }
-.eyebrow { margin: 0 0 14px; color: #606839; font-size: 11px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
 .spotlight h2, .catalogIntro h2 { margin: 0; font-family: var(--font-heading); font-size: clamp(40px,4.6vw,58px); font-weight: 400; line-height: 1.05; }
 .intro { max-width: 430px; margin: 20px 0; font-size: 15px; line-height: 1.8; color: #5a4130; }
 .steps { padding: 0; margin: 24px 0; display: grid; gap: 12px; list-style: none; font-size: 14px; font-weight: 600; }
@@ -16,7 +15,6 @@
 .artScene { position: relative; display: block; min-width: 0; min-height: 440px; overflow: hidden; background: radial-gradient(ellipse at 45% 35%, #eeead7, #d7d5b8); }
 .artScene::before { content: ""; position: absolute; width: 75%; aspect-ratio: 1; border: 1px solid rgba(96,104,57,.18); border-radius: 50%; top: 12%; left: 12%; }
 .artScene::after { content: ""; position: absolute; inset: auto 0 0; height: 17%; background: linear-gradient(#c3bea0,#d8d0b3); box-shadow: 0 -1px 0 rgba(96,104,57,.12); }
-.artEyebrow { position: absolute; top: 28px; left: 28px; color: #50572f; font-size: 10px; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
 .mainArt { position: absolute; width: 65%; height: auto; top: 19%; left: 12%; z-index: 1; transform: rotate(-5deg); box-shadow: 8px 18px 24px rgba(62,44,32,.23); transition: transform .5s ease; }
 .companionArt { position: absolute; width: 35%; height: auto; bottom: 16%; right: 5%; z-index: 2; transform: rotate(7deg); box-shadow: 5px 12px 22px rgba(62,44,32,.22); transition: transform .5s ease; }
 .artScene:hover .mainArt { transform: rotate(-3deg) translateY(-4px); }
@@ -36,7 +34,6 @@
   .intro { margin: 16px 0; }
   .steps { margin: 20px 0; }
   .artScene { min-height: 0; aspect-ratio: 1.08; grid-row: 1; }
-  .artEyebrow { top: 20px; left: 22px; }
   .mainArt { width: 59%; left: 13%; top: 18%; }
   .companionArt { width: 33%; bottom: 16%; right: 9%; }
   .artCaption { bottom: 17px; left: 22px; right: 22px; }

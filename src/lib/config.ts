@@ -10,7 +10,7 @@ export const siteConfig = {
   alternateName: "Canela",
   legalName: "Canela Diseño artesanal",
   descriptor: "Diseño artesanal",
-  tagline: "Diseño artesanal · Cerrando el ciclo",
+  tagline: "Diseño artesanal",
   description:
     "Canela Store ofrece piezas artesanales hechas en Mar del Plata: vidrio " +
     "reciclado y vitrofusión, cerámica, espejos y cuadros, con compra online " +

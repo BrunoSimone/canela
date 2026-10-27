@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { motion, useReducedMotion, type Variants } from "motion/react";
-import { ArrowRight, ImagePlus, Pause, Play } from "lucide-react";
+import { ArrowRight, ImagePlus } from "lucide-react";
 
 import { CanelaBadge } from "@/components/brand/canela-badge";
 import { siteConfig } from "@/lib/config";
@@ -65,15 +65,14 @@ const item: Variants = {
 
 export function Hero({ slides, customizationEnabled = false }: { slides: HeroSlideView[]; customizationEnabled?: boolean }) {
   const [slide, setSlide] = useState(0);
-  const [paused, setPaused] = useState(false);
   const reduce = useReducedMotion() ?? false;
   const count = slides.length;
 
   useEffect(() => {
-    if (reduce || paused || count <= 1) return;
-    const id = setInterval(() => setSlide((s) => (s + 1) % count), 4200);
-    return () => clearInterval(id);
-  }, [reduce, paused, count]);
+    if (reduce || count <= 1) return;
+    const id = setTimeout(() => setSlide((s) => (s + 1) % count), 4200);
+    return () => clearTimeout(id);
+  }, [reduce, count, slide]);
 
   const active = slides[slide] ?? slides[0];
 
@@ -111,15 +110,13 @@ export function Hero({ slides, customizationEnabled = false }: { slides: HeroSli
             className="m-0 font-heading text-[clamp(44px,5.5vw,68px)] font-normal leading-[1.05] text-[var(--canela-brown)] text-balance"
             {...itemProps}
           >
-            {customizationEnabled ? <>Objetos para tu casa.<br /><span className="text-[#606839]">Un cuadro con tu historia.</span></> : "Canela Store"}
+            {customizationEnabled ? <>Vidrio y cerámica.<br /><span className="text-[#606839]">Cuadros en mosaico.</span></> : "Canela Store"}
           </motion.h1>
           <motion.p
             className="m-0 max-w-[460px] text-base leading-relaxed text-[#5a4130]"
             {...itemProps}
           >
-            {customizationEnabled
-              ? "Piezas en vidrio, cerámica y mosaico, hechas en Mar del Plata. Elegí una del taller o transformá tu imagen en un cuadro propio."
-              : "En Canela trabajamos con vidrio reciclado, cerámica y espejos. Diseñamos y elaboramos piezas decorativas y utilitarias en Mar del Plata."}
+            Objetos decorativos, espejos y cuadros fabricados en Mar del Plata.
           </motion.p>
           <motion.div className="flex flex-wrap items-center gap-3" {...itemProps}>
             {customizationEnabled && <a href="/crear-cuadro" className="inline-flex min-h-12 items-center gap-2.5 rounded-full bg-[var(--canela-brown)] px-6 py-3.5 text-[15px] font-bold text-[var(--canela-cream-card)] transition-transform hover:scale-[1.03]"><ImagePlus size={19} aria-hidden="true" />Crear mi cuadro</a>}
@@ -127,7 +124,7 @@ export function Hero({ slides, customizationEnabled = false }: { slides: HeroSli
               {customizationEnabled ? "Explorar la tienda" : "Ver catálogo"}<ArrowRight size={17} aria-hidden="true" />
             </a>
           </motion.div>
-          {customizationEnabled && <motion.p className="m-0 text-xs leading-relaxed text-[#6E4E38]" {...itemProps}>Probá el creador con tu foto · Sin cobros reales por ahora.</motion.p>}
+          {customizationEnabled && <motion.p className="m-0 text-xs leading-relaxed text-[#6E4E38]" {...itemProps}>Creador en prueba · Sin cobros reales.</motion.p>}
         </motion.div>
 
         {active && (
@@ -148,12 +145,11 @@ export function Hero({ slides, customizationEnabled = false }: { slides: HeroSli
 
             <div
               className="canela-float relative flex aspect-square w-[min(340px,82%)] items-center justify-center"
-              style={reduce || paused || count <= 1 ? undefined : { animation: "canela-float 6s ease-in-out infinite" }}
+              style={reduce || count <= 1 ? undefined : { animation: "canela-float 6s ease-in-out infinite" }}
             >
-              <SpinningRing reduce={reduce || paused || count <= 1} />
+              <SpinningRing reduce={reduce || count <= 1} />
               <a
                 href={active.href}
-                onFocus={() => setPaused(true)}
                 aria-label={`Ver ${active.name}`}
                 className="relative z-[1] flex aspect-square w-full items-center justify-center overflow-hidden rounded-full border-[6px] border-[var(--canela-cream-card)] shadow-[0_16px_42px_rgba(74,53,39,.24)]"
               >
@@ -192,13 +188,12 @@ export function Hero({ slides, customizationEnabled = false }: { slides: HeroSli
                 {slides.map((_, i) => (
                   <button
                     key={i}
-                    onClick={() => { setSlide(i); setPaused(true); }}
+                    onClick={() => setSlide(i)}
                     aria-label={`Ver pieza ${i + 1}`}
                     aria-pressed={i === slide}
                     className="flex size-11 items-center justify-center"
                   ><span className="h-2 rounded-full" style={{width: i === slide ? 22 : 8, background: i === slide ? "var(--canela-ochre)" : "rgba(184,132,42,.4)"}} /></button>
                 ))}
-                {!reduce && <button type="button" onClick={() => setPaused(value => !value)} aria-label={paused ? "Reanudar carrusel" : "Pausar carrusel"} className="inline-flex size-11 items-center justify-center rounded-full text-[#6E4E38] transition-colors hover:bg-[rgba(251,247,238,.5)]">{paused ? <Play size={17} aria-hidden="true" /> : <Pause size={17} aria-hidden="true" />}</button>}
               </div>
             )}
           </motion.div>

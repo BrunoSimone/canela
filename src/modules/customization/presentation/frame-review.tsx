@@ -15,12 +15,12 @@ export function FrameReview({ design, estimate, onEdit, onContinue }: { design: 
   const side = cm(dimensions(design.config, design.size).framedMm);
   return <div className={styles.page}>
     <button className={styles.backLink} onClick={onEdit}><ArrowLeft size={16} aria-hidden="true" /> Seguir editando</button>
-    <div className={styles.pageHeading}><div><h1 ref={heading} tabIndex={-1}>Revisá tu cuadro</h1><p>Tu diseño y una primera idea de su precio, en un solo lugar.</p></div></div>
+    <div className={styles.pageHeading}><div><h1 ref={heading} tabIndex={-1}>Revisá tu cuadro</h1><p>Confirmá el diseño, las medidas y el precio antes de continuar.</p></div></div>
     <DemoNotice />
     <div className={styles.reviewLayout}>
       <div className={styles.previewWall}><MosaicSvg design={design} label={`Tu mosaico de ${design.size} por ${design.size} venecitas`} className={styles.previewArt} /><span className={styles.previewCaption}>Simulación de material · Los colores y el acabado reales pueden variar</span></div>
       <section className={styles.reviewDetails} aria-label="Resumen del cuadro">
-        <h2>Un cuadro hecho para vos</h2>
+        <h2>Cuadro personalizado</h2>
         <p>{side} × {side} cm con marco · Medidas de prueba</p>
         <p className={`${styles.estimateLabel} ${styles.reviewPriceLabel}`}>Precio del cuadro con marco · ARS · De prueba</p>
         <p className={styles.estimateAmount} aria-label="Precio estimado del cuadro">{formatArs(estimate.totalCents)}</p>

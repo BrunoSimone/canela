@@ -32,7 +32,7 @@ const STEPS: Step[] = [
     iconBg: "rgba(90,180,220,.2)",
     iconColor: "#2f7fa3",
     title: "Pagá con Mercado Pago",
-    text: "Te llevamos a Mercado Pago para completar el pago de forma segura. Después preparamos tu pedido.",
+    text: "El pago se completa en Mercado Pago. Después preparamos tu pedido.",
   },
 ];
 
@@ -40,15 +40,11 @@ export function ComoComprar() {
   return (
     <section id="como-comprar" className="anchor-offset mx-auto max-w-[1180px] px-[22px] pb-11 pt-16">
       <div className="mb-10 text-center">
-        <span className="text-xs font-bold uppercase tracking-[0.22em] text-[var(--canela-ochre)]">
-          Cómo comprar
-        </span>
         <h2 className="my-2 font-heading text-[clamp(32px,4.5vw,48px)] font-normal text-[var(--canela-brown)]">
-          Comprar es simple
+          Cómo comprar
         </h2>
         <p className="mx-auto max-w-[520px] text-base leading-relaxed text-[#6E4E38]">
-          Elegís tus piezas, revisás el total y pagás online con Mercado Pago.
-          Sin vueltas.
+          El envío se calcula antes de pasar a Mercado Pago.
         </p>
       </div>
 
@@ -86,7 +82,7 @@ export function ComoComprar() {
         </div>
         <div className="min-w-[220px] flex-1">
           <div className="mb-1 text-base font-extrabold text-[var(--canela-brown)]">
-            Pago seguro con Mercado Pago
+            Pago con Mercado Pago
           </div>
           <p className="text-[14.5px] leading-relaxed text-[#6E4E38]">
             Al continuar, pagás en el sitio de Mercado Pago. Canela no recibe ni

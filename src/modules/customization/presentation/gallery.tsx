@@ -10,7 +10,7 @@ export function DemoNotice() {
 }
 
 export function GalleryCards({ templates }: { templates: DesignTemplate[] }) {
-  if (!templates.length) return <div className={styles.emptyGallery}><h2>Pronto habrá nuevos diseños</h2><p>Mientras tanto, podés probar el creador con tu propia imagen.</p><Link className={styles.primaryButton} href="/crear-cuadro">Crear mi cuadro</Link></div>;
+  if (!templates.length) return <div className={styles.emptyGallery}><h2>No hay diseños disponibles</h2><p>Podés crear un cuadro subiendo tu imagen.</p><Link className={styles.primaryButton} href="/crear-cuadro">Crear mi cuadro</Link></div>;
   return <div className={styles.galleryGrid}>{templates.map((t, i) => {
     const { framedMm } = dimensions(t.design.config, t.design.size);
     return <article key={t.id} className={styles.galleryCard}>
@@ -28,9 +28,9 @@ export function GalleryCards({ templates }: { templates: DesignTemplate[] }) {
 
 export function Gallery({ templates }: { templates: DesignTemplate[] }) {
   return <div className={styles.page}>
-    <div className={styles.pageHeading}><div><Link href="/" className={styles.backLink}>Volver a la tienda</Link><h1>Un cuadro, muchas posibilidades</h1><p>Elegí un diseño como punto de partida y dale tu propia forma, pieza por pieza.</p></div>
+    <div className={styles.pageHeading}><div><Link href="/" className={styles.backLink}>Volver a la tienda</Link><h1>Galería de cuadros</h1><p>Seleccioná un diseño para editar su tamaño y sus colores en el creador.</p></div>
       <Link className={styles.primaryButton} href="/crear-cuadro"><ImagePlus size={19} aria-hidden="true" /> Usar mi imagen</Link></div>
     <DemoNotice /><GalleryCards templates={templates} />
-    <div className={styles.galleryFooter}><h2>Tu imagen también puede ser un mosaico</h2><p>Probá con una foto, una ilustración o una forma simple. Vos elegís cuánto detalle darle.</p><Link href="/crear-cuadro" className={styles.textLink}>Abrir el creador <ArrowUpRight size={18} aria-hidden="true" /></Link></div>
+    <div className={styles.galleryFooter}><h2>Crear un cuadro desde una imagen</h2><p>Podés subir una foto o una ilustración en formato JPG, PNG o WebP.</p><Link href="/crear-cuadro" className={styles.textLink}>Abrir el creador <ArrowUpRight size={18} aria-hidden="true" /></Link></div>
   </div>;
 }

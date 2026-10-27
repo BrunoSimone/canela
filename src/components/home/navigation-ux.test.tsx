@@ -22,17 +22,21 @@ describe("UX-01 navigation and motion controls",()=>{
     expect(document.activeElement).toBe(menu);
     expect(menu.getAttribute("aria-expanded")).toBe("false");
   });
-  it("can pause and resume the carousel without focus undoing the click",()=>{
+  it("rotates without a pause control, including after selecting or focusing a slide",()=>{
     vi.useFakeTimers();
     render(<Hero slides={[{name:"Pieza A",caption:"Cerámica",href:"#ceramica",imageUrl:null},{name:"Pieza B",caption:"Vidrio",href:"#vidrio",imageUrl:null}]} />);
-    const pause=screen.getByRole("button",{name:"Pausar carrusel"});
-    expect(pause.textContent).toBe("");
-    fireEvent.focus(pause);fireEvent.click(pause);
-    act(()=>vi.advanceTimersByTime(5000));
-    expect(screen.getByRole("link",{name:"Ver Pieza A"})).toBeTruthy();
-    fireEvent.click(screen.getByRole("button",{name:"Reanudar carrusel"}));
-    act(()=>vi.advanceTimersByTime(4300));
+    expect(screen.queryByRole("button",{name:/pausar|reanudar/i})).toBeNull();
+    act(()=>vi.advanceTimersByTime(4200));
     expect(screen.getByRole("link",{name:"Ver Pieza B"})).toBeTruthy();
+    act(()=>vi.advanceTimersByTime(1000));
+    fireEvent.click(screen.getByRole("button",{name:"Ver pieza 1"}));
+    act(()=>vi.advanceTimersByTime(3500));
+    expect(screen.getByRole("link",{name:"Ver Pieza A"})).toBeTruthy();
+    act(()=>vi.advanceTimersByTime(700));
+    const second=screen.getByRole("link",{name:"Ver Pieza B"});
+    fireEvent.focus(second);
+    act(()=>vi.advanceTimersByTime(4200));
+    expect(screen.getByRole("link",{name:"Ver Pieza A"})).toBeTruthy();
   });
   it("promotes the creator and keeps a direct catalog path only when enabled",()=>{
     const { rerender }=render(<Hero slides={[]} customizationEnabled />);

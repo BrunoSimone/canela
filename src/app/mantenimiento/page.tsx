@@ -8,8 +8,8 @@ import { siteConfig } from "@/lib/config";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Estamos preparando la tienda",
-  description: "La tienda online de Canela está en preparación. Encontranos en Instagram mientras terminamos los últimos detalles.",
+  title: "Tienda en mantenimiento",
+  description: "El catálogo y las compras online de Canela están temporalmente deshabilitados. Podés contactarnos por Instagram.",
   robots: { index: false, follow: false },
 };
 
@@ -31,11 +31,11 @@ export default function MaintenancePage() {
           <path d="m46 66 27-21 19 26Z" fill="#B06A52" />
         </svg>
         <h1 className="font-heading text-[clamp(3rem,7vw,4.75rem)] leading-[1.08] text-[var(--canela-brown)]">
-          Estamos poniendo a punto nuestra tienda
+          Tienda en mantenimiento
         </h1>
         <p className="mx-auto mt-7 max-w-[470px] text-base leading-relaxed text-[#6E4E38] sm:text-lg">
-          El catálogo y las compras online están en pausa mientras terminamos
-          los últimos detalles.
+          El catálogo y las compras online están temporalmente deshabilitados.
+          Podés contactarnos por Instagram.
         </p>
         <a
           href={siteConfig.instagramUrl}

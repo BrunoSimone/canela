@@ -45,7 +45,7 @@ export function FloatingCart({ checkoutEnabled }: { checkoutEnabled: boolean }) 
               </div>
               <strong className="text-[var(--canela-ochre-dark)]">{formatPrice(item.price * item.qty)}</strong>
             </div>
-          </div>) : <p className="py-8 text-center text-sm leading-relaxed text-[#6E4E38]">Todavía no agregaste piezas. Elegí tus favoritas del catálogo para comenzar.</p>}
+          </div>) : <p className="py-8 text-center text-sm leading-relaxed text-[#6E4E38]">El carrito está vacío. Agregá productos desde el catálogo.</p>}
         </div>
         <div className="shrink-0 border-t border-[rgba(184,132,42,.18)] p-5">
           {hasItems && <><div className="flex justify-between gap-3 font-bold"><span>Subtotal de productos</span><span aria-live="polite">{formatPrice(subtotal)}</span></div><p className="mb-4 mt-2 text-sm text-[#6E4E38]">Calculamos el envío con tu dirección en el siguiente paso.</p></>}

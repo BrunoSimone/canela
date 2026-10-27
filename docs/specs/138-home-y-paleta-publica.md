@@ -16,8 +16,8 @@ Estado: implementado y verificado localmente. [Evidencia](../evidence/PER-138.md
 - Home: acceso principal al creador desde el hero; presentación visual del mosaico
   antes del catálogo y accesos claros a galería y categorías. Conservar identidad
   cromática, tipografías, carrusel, anillos y animaciones existentes.
-- Sustituir el texto visible de pausa/reanudación por un ícono con nombre accesible.
-  Mantener control manual, pausa al enfocar y respeto de movimiento reducido.
+- Carrusel sin accionable ni estado de pausa manual, según la corrección de
+  [PER-139](139-textos-descriptivos-y-carrusel.md). Respeta movimiento reducido.
 - Respetar la disponibilidad del feature: no promocionar rutas deshabilitadas ni
   habilitar cobros reales. Los diseños de muestra y la condición de prueba se indican.
 
@@ -30,7 +30,8 @@ Estado: implementado y verificado localmente. [Evidencia](../evidence/PER-138.md
    con una indicación de recargar, evitando reinterpretar sus referencias.
 3. El hero ofrece creador y catálogo cuando el feature está activo; sin él, la tienda
    conserva su navegación y no enlaza al creador. La galería también es alcanzable.
-4. El carrusel se pausa/reanuda con teclado o puntero, sin texto visible de pausa.
+4. El carrusel rota automáticamente y permite seleccionar diapositivas, sin control
+   de pausa. Ver PER-139 para el tono descriptivo de los textos públicos.
 5. QA en escritorio, tablet y celular de 375 y 320 px: jerarquía legible, enlaces
    funcionales, objetivos táctiles cómodos y ausencia de desborde horizontal.
 

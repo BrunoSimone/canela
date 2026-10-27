@@ -45,7 +45,7 @@ async function payment() {
   await userEvent.click(screen.getByRole("button", { name: "Completar con datos ficticios" }));
   await waitFor(() => expect((screen.getByLabelText("Nombre y apellido") as HTMLInputElement).value).toBe("Persona de prueba"));
   await userEvent.click(screen.getByRole("button", { name: "Cotizar envío de prueba" }));
-  expect(await screen.findByRole("heading", { name: "Probá el pago de tu cuadro" })).toBeTruthy();
+  expect(await screen.findByRole("heading", { name: "Pago de prueba" })).toBeTruthy();
 }
 describe("PER-132: separate purchase journeys", () => {
   it("PER-133: a retouched grid survives review, backend validation, approval and return to editing", async () => {
@@ -111,7 +111,7 @@ describe("PER-132: separate purchase journeys", () => {
     await payment(); now += demoPurchasePolicy.quoteTtlMs;
     await userEvent.click(screen.getByRole("button", { name: "Simular pago" }));
     expect(await screen.findByRole("alert")).toBeTruthy();
-    expect(screen.getByRole("heading", { name: "¿A dónde iría tu cuadro?" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Datos de envío" })).toBeTruthy();
     expect((screen.getByLabelText("Nombre y apellido") as HTMLInputElement).value).toBe("Persona de prueba");
     expect(screen.queryByLabelText("Total de prueba")).toBeNull();
     await userEvent.click(screen.getByRole("button", { name: "Cotizar envío de prueba" }));
