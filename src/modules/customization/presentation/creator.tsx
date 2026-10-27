@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Cropper from "react-easy-crop";
-import { ArrowLeft, ArrowRight, ImagePlus, RotateCcw, ImageIcon } from "lucide-react";
+import { ArrowLeft, ArrowRight, ImagePlus, RotateCcw, ImageIcon, Paintbrush } from "lucide-react";
 import type { DesignTemplate } from "../application/catalog";
 import { cm, dimensions, materialCounts, recolorDesign, renderMosaic, resizeDesign, type Crop, type WorkshopConfig } from "../domain/design";
 import { loadLocalImage, type LocalImage } from "./local-image";
@@ -11,6 +11,8 @@ import { estimateFrame, formatArs, type PricingPolicy } from "../domain/estimate
 import { FrameReview } from "./frame-review";
 import { FramePurchase } from "./frame-purchase";
 import { MosaicSvg } from "./mosaic-svg";
+import { applyRetouches, emptyRetouches, paintTile, redoRetouch, restoreTile, undoRetouch } from "../domain/retouches";
+import { ConfirmRegeneration, TileEditor } from "./tile-editor";
 import { DemoNotice } from "./gallery";
 import styles from "./customization.module.css";
 
@@ -32,6 +34,14 @@ export function Creator({ config, pricing, template, templateUnavailable, purcha
   const [reviewing, setReviewing] = useState(false);
   const reviewButton = useRef<HTMLButtonElement>(null);
   const wasReviewing = useRef(false);
+  const [history, setHistory] = useState(emptyRetouches);
+  const [editingTiles, setEditingTiles] = useState(false);
+  const editorButton = useRef<HTMLButtonElement>(null);
+  const [pendingChange, setPendingChange] = useState<{ message: string; run: () => void } | null>(null);
+  const hasRetouches = Object.keys(history.present).length > 0;
+  function changeDesign(message: string, run: () => void) {
+    if (hasRetouches) setPendingChange({ message, run }); else run();
+  }
 
   useEffect(() => {
     if (wasReviewing.current && !reviewing) reviewButton.current?.focus();
@@ -48,9 +58,12 @@ export function Creator({ config, pricing, template, templateUnavailable, purcha
     if (resources.current.url) URL.revokeObjectURL(resources.current.url);
     resources.current.url = null;
   }
-  function resetControls() { setCrop({ x: 0, y: 0 }); setZoom(1); setArea(undefined); setReplacements({}); setError(""); setView("mosaic"); }
+  function resetControls() { setHistory(emptyRetouches()); setCrop({ x: 0, y: 0 }); setZoom(1); setArea(undefined); setReplacements({}); setError(""); setView("mosaic"); }
   function reset() { releaseImage(); setSource(null); setSize(config.minCells); setLoading(false); resetControls(); }
-  async function selectFile(file?: File) {
+  function selectFile(file?: File) {
+    if (file) changeDesign("Cambiar la imagen creará un nuevo mosaico.", () => { void loadFile(file); });
+  }
+  async function loadFile(file: File) {
     if (!file) return;
     const generation = ++resources.current.generation;
     setLoading(true); setError("");
@@ -72,7 +85,8 @@ export function Creator({ config, pricing, template, templateUnavailable, purcha
       return { base, design: recolorDesign(base, replacements), error: "" };
     } catch (e) { return { base: null, design: null, error: e instanceof Error ? e.message : "No pudimos generar el mosaico." }; }
   }, [source, config, size, area, replacements]);
-  const design = result?.design, measures = dimensions(config, size);
+  const design = useMemo(() => result?.design ? applyRetouches(result.design, history.present) : null, [result, history.present]);
+  const measures = dimensions(config, size);
   const counts = design ? materialCounts(design) : [];
   const baseColors = result?.base ? materialCounts(result.base) : [];
   const estimate = estimateFrame(config, size, pricing);
@@ -88,7 +102,7 @@ export function Creator({ config, pricing, template, templateUnavailable, purcha
     <div className={styles.workspace}>
       <aside className={styles.controls} aria-label="Herramientas del creador">
         <section className={styles.controlSection}>
-          <div className={styles.controlHeading}><h2>Tu imagen</h2><button className={styles.resetButton} onClick={reset} disabled={!source && !loading}><RotateCcw size={15} aria-hidden="true" /> Empezar de nuevo</button></div>
+          <div className={styles.controlHeading}><h2>Tu imagen</h2><button className={styles.resetButton} onClick={() => changeDesign("Empezar de nuevo quitará la imagen y sus ajustes.", reset)} disabled={!source && !loading}><RotateCcw size={15} aria-hidden="true" /> Empezar de nuevo</button></div>
           <div data-testid="image-dropzone" className={styles.dropzone} onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); void selectFile(e.dataTransfer.files[0]); }}>
             <label className={styles.uploadLabel}><ImagePlus size={22} aria-hidden="true" /><span>{loading ? "Preparando imagen…" : source ? "Cambiar imagen" : "Elegir una imagen"}</span>
               <input ref={input} className={styles.fileInput} type="file" accept="image/jpeg,image/png,image/webp" aria-label="Elegir imagen" onChange={e => { void selectFile(e.target.files?.[0]); e.target.value = ""; }} />
@@ -98,16 +112,16 @@ export function Creator({ config, pricing, template, templateUnavailable, purcha
           {error && <p role="alert" className={styles.error}>{error}</p>}
           {source?.kind === "template" && <p className={styles.templateHint}>Partiste de «{source.template.title}». Ajustá el tamaño o los colores para hacerlo tuyo.</p>}
           {source?.kind === "image" && <div className={styles.cropTools}>
-            <div className={styles.cropper} aria-label="Recortar imagen">
-              <Cropper image={source.image.url} crop={crop} zoom={zoom} aspect={1} onCropChange={setCrop} onZoomChange={setZoom} onCropComplete={(_, pixels) => setArea(pixels)} zoomWithScroll={false} keyboardStep={5} mediaProps={{ alt: "Tu imagen para recortar" }} />
-            </div><p className={styles.hint}>Arrastrá la imagen para encuadrar. También podés usar las flechas del teclado.</p>
+            <div className={styles.cropper} aria-label="Recortar imagen" inert={hasRetouches || loading}>
+              <Cropper image={source.image.url} crop={crop} zoom={zoom} aspect={1} onCropChange={value => { if (!hasRetouches) setCrop(value); }} onZoomChange={value => { if (!hasRetouches) setZoom(value); }} onCropComplete={(_, pixels) => { if (!hasRetouches) setArea(pixels); }} zoomWithScroll={false} keyboardStep={5} mediaProps={{ alt: "Tu imagen para recortar" }} />
+            </div>{hasRetouches ? <><p className={styles.hint}>El encuadre está fijo para conservar tus retoques.</p><button className={styles.textButton} onClick={() => changeDesign("Cambiar el encuadre volverá a generar las venecitas.", () => setHistory(emptyRetouches()))}>Cambiar encuadre</button></> : <p className={styles.hint}>Arrastrá la imagen para encuadrar. También podés usar las flechas del teclado.</p>}
             <label className={styles.rangeLabel} htmlFor="mosaic-zoom">Acercar imagen <span>{zoom.toFixed(1)}×</span></label>
-            <input id="mosaic-zoom" type="range" min={1} max={3} step={0.1} value={zoom} onChange={e => setZoom(Number(e.target.value))} />
+            <input id="mosaic-zoom" disabled={hasRetouches || loading} type="range" min={1} max={3} step={0.1} value={zoom} onChange={e => setZoom(Number(e.target.value))} />
           </div>}
         </section>
         <section className={styles.controlSection}>
           <h2>Tamaño del mosaico</h2><label className={styles.rangeLabel} htmlFor="mosaic-size">Venecitas por lado {design && <output>{size} × {size}</output>}</label>
-          <input id="mosaic-size" disabled={!design || loading} aria-label="Cantidad de venecitas por lado" type="range" min={config.minCells} max={config.maxCells} step={config.step} value={size} onChange={e => setSize(Number(e.target.value))} />
+          <input id="mosaic-size" disabled={!design || loading} aria-label="Cantidad de venecitas por lado" type="range" min={config.minCells} max={config.maxCells} step={config.step} value={size} onChange={e => { const next = Number(e.target.value); if (next !== size) changeDesign("Cambiar el tamaño volverá a distribuir las venecitas.", () => { setHistory(emptyRetouches()); setSize(next); }); }} />
           {design ? <><div className={styles.rangeEnds}><span>{config.minCells} · Menos detalle</span><span>{config.maxCells} · Más detalle</span></div>
           <p className={styles.dimensionText}>{cm(measures.framedMm)} × {cm(measures.framedMm)} cm <span>con marco</span></p>
           <p className={styles.hint}>Mosaico sin marco: {cm(measures.mosaicMm)} × {cm(measures.mosaicMm)} cm. Más piezas dan más detalle y un cuadro más grande.</p>
@@ -128,7 +142,7 @@ export function Creator({ config, pricing, template, templateUnavailable, purcha
             <span className={styles.previewCaption}>Vista orientativa · Los colores reales pueden variar</span>
           </> : <div className={styles.emptyPreview}><ImageIcon size={42} strokeWidth={1} aria-hidden="true" /><h3>Empezá con una imagen</h3><p>Una foto o una idea sencilla.<br />La convertimos en un mosaico, pieza por pieza.</p><button className={styles.primaryButton} onClick={() => input.current?.click()}>Elegir imagen</button></div>}
         </div>
-        {design && <><div className={styles.previewStats} aria-live="polite"><div><strong>{cm(measures.framedMm)} cm</strong><span>por lado, con marco</span></div><div><strong>{size ** 2}</strong><span>venecitas enteras</span></div><div><strong>{counts.length || "—"}</strong><span>colores utilizados</span></div></div>
+        {design && <><div className={styles.retouchBar}><div><button ref={editorButton} className={styles.retouchButton} disabled={loading} onClick={() => setEditingTiles(true)}><Paintbrush size={18} aria-hidden="true" /> Retocar venecitas</button><p>Elegí una pieza y ajustá su color.</p></div>{hasRetouches && <span>{Object.keys(history.present).length} {Object.keys(history.present).length === 1 ? "retoque" : "retoques"}</span>}</div><div className={styles.previewStats} aria-live="polite"><div><strong>{cm(measures.framedMm)} cm</strong><span>por lado, con marco</span></div><div><strong>{size ** 2}</strong><span>venecitas enteras</span></div><div><strong>{counts.length || "—"}</strong><span>colores utilizados</span></div></div>
         <section className={styles.estimateCard} aria-label="Cotización estimada">
           <div><h3 className={styles.estimateLabel}>Estimación de prueba · ARS</h3><p className={styles.estimateAmount} aria-label="Precio estimado del cuadro">{formatArs(estimate.totalCents)}</p><p className={styles.shippingPending}>Cuadro con marco · Envío a cotizar</p></div>
           <button ref={reviewButton} className={styles.primaryButton} disabled={!design || loading} onClick={() => setReviewing(true)}>Revisar mi cuadro <ArrowRight size={18} aria-hidden="true" /></button>
@@ -137,5 +151,7 @@ export function Creator({ config, pricing, template, templateUnavailable, purcha
         {counts.length > 0 && <div className={styles.paletteLegend} aria-label="Colores del cuadro">{counts.map(c => <span key={c.id}><i className={styles.swatch} style={{ backgroundColor: c.hex }} aria-hidden="true" />{c.name}</span>)}</div>}
       </section>
     </div>
+    {editingTiles && design && result?.design && <TileEditor design={design} history={history} returnFocus={editorButton} onClose={() => setEditingTiles(false)} onPaint={(index, color) => setHistory(previous => paintTile(previous, result.design!, index, color))} onRestore={index => setHistory(previous => restoreTile(previous, result.design!, index))} onUndo={() => setHistory(undoRetouch)} onRedo={() => setHistory(redoRetouch)} />}
+    {pendingChange && <ConfirmRegeneration message={pendingChange.message} onCancel={() => setPendingChange(null)} onConfirm={() => { pendingChange.run(); setPendingChange(null); }} />}
   </div>;
 }

@@ -219,3 +219,11 @@ resumen aceptado, domicilio, cotización backend, pago simulado y resultado.
 Se elimina el ejemplo del creador vacío y se ocultan los datos hasta tener un diseño.
 La simulación es local, efímera y no crea pedidos productivos. Los criterios de
 venta real (proveedores, snapshot durable, fabricación y guía del taller) siguen pendientes.
+
+## Retoques individuales (2026-10-26)
+
+Bruno autoriza editar venecitas individuales con zoom, cuidando la experiencia en
+celular y escritorio. [PER-133](../specs/133-editor-venecitas.md) agrega selección,
+paleta, navegación táctil, historial y confirmación antes de regenerar. La grilla
+retocada usa el mismo contrato de validación y compra simulada; no requiere foto
+original ni persistencia entre sesiones. Los datos del taller continúan provisionales.

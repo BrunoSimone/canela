@@ -169,3 +169,11 @@
   .purchaseSteps { gap: 10px 14px; font-size: 11px; }
   .resultActions { align-items: stretch; flex-direction: column; }
 }
+
+.retouchBar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 16px; border-bottom: 1px solid #e0d6c3; }
+.retouchBar p { color: #786453; font-size: 12px; margin: 5px 0 0; }
+.retouchBar > span { color: #786453; font-size: 12px; white-space: nowrap; }
+.retouchButton { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 10px 16px; border: 1px solid #bbaa90; border-radius: 8px; color: #4a3527; background: #faf7ef; font-weight: 750; cursor: pointer; }
+.retouchButton:hover { background: #eee5d3; }
+.retouchButton:focus-visible { outline: 3px solid #996b20; outline-offset: 3px; }
+.retouchButton:disabled { opacity: .5; cursor: default; }

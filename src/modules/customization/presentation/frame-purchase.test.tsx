@@ -10,6 +10,7 @@ import { DemoPurchaseService } from "../application/demo-purchase";
 import { createDemoPurchaseHandler } from "./demo-purchase-http";
 import { demoDesignCatalog } from "../infrastructure/demo-catalog";
 import { demoPurchasePolicy, demoRecipient } from "../infrastructure/demo-purchase-config";
+import { installEditorDom } from "../testing/editor-dom";
 
 vi.mock("react-easy-crop", () => ({ default: () => <div /> }));
 let now: number;
@@ -31,7 +32,7 @@ beforeEach(async () => {
   cart = configureCart(); cart.dispatch(addItem({ id: "real-stock-item", name: "Florero", price: 1000, checkoutEligible: true }));
   render(<Provider store={cart}><Creator config={config} pricing={pricing} template={(await demoDesignCatalog.templates())[0]} templateUnavailable={false} purchaseDemoEnabled /></Provider>);
 });
-afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
+afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 async function review() { await userEvent.click(screen.getByRole("button", { name: "Revisar mi cuadro" })); }
 async function shipping() {
   await review();
@@ -47,6 +48,28 @@ async function payment() {
   expect(await screen.findByRole("heading", { name: "Probá el pago de tu cuadro" })).toBeTruthy();
 }
 describe("PER-132: separate purchase journeys", () => {
+  it("PER-133: a retouched grid survives review, backend validation, approval and return to editing", async () => {
+    installEditorDom(); const before = structuredClone(cart.getState());
+    const original = (await demoDesignCatalog.templates())[0].design;
+    const config = await demoDesignCatalog.configuration(); const color = config.palette.find(c => c.id !== original.cells[0])!;
+    const price = screen.getByLabelText("Precio estimado del cuadro").textContent;
+    await userEvent.click(screen.getByRole("button", { name: "Retocar venecitas" }));
+    fireEvent.keyDown(screen.getByRole("group", { name: "Mosaico editable" }), { key: "Home" });
+    await userEvent.click(screen.getByRole("button", { name: `Usar color ${color.name}` }));
+    await userEvent.click(screen.getByRole("button", { name: "Listo" }));
+    expect(screen.getByLabelText("Precio estimado del cuadro").textContent).toBe(price);
+    expect(requests).not.toHaveBeenCalled();
+    await payment(); await userEvent.click(screen.getByRole("button", { name: "Simular pago" }));
+    expect(await screen.findByRole("heading", { name: "Prueba completada" })).toBeTruthy();
+    const pay = requests.mock.calls.map(([, init]) => init?.body ? JSON.parse(String(init.body)) : {}).find(body => body.action === "pay");
+    const snapshot = service.snapshot(pay.quoteId);
+    expect(snapshot.design.cells).toEqual([color.id, ...original.cells.slice(1)]);
+    expect(cart.getState()).toEqual(before);
+    await userEvent.click(screen.getByRole("button", { name: "Volver a mi diseño" }));
+    expect(screen.getByRole("img", { name: /Tu mosaico/ }).querySelectorAll("rect")[2].getAttribute("fill")).toBe(color.hex);
+    await userEvent.click(screen.getByRole("button", { name: "Retocar venecitas" }));
+    expect((screen.getByRole("button", { name: "Deshacer retoque" }) as HTMLButtonElement).disabled).toBe(false);
+  });
   it("review → address → quote → approved; preserves the stock cart and excludes original images", async () => {
     const before = structuredClone(cart.getState());
     await payment();

@@ -187,8 +187,16 @@ y mantiene deshabilitado el tamaño hasta tener un diseño.
 La paleta provisional tiene 32 colores. El creador público no exporta guías de fabricación.
 Ver [spec PER-130](docs/specs/130-creador-cuadros-demo.md),
 [ampliación PER-131](docs/specs/131-cuadros-paleta-cotizacion.md),
-[compra simulada PER-132](docs/specs/132-cuadros-compra-simulada.md) y
-[evidencia actual](docs/evidence/PER-132.md).
+[compra simulada PER-132](docs/specs/132-cuadros-compra-simulada.md),
+[editor de venecitas PER-133](docs/specs/133-editor-venecitas.md) y
+[evidencia actual](docs/evidence/PER-133.md).
+
+«Retocar venecitas» abre un editor para seleccionar y cambiar una pieza, con zoom
+1–8×, arrastre, pellizco, deshacer/rehacer y restauración del color generado.
+Paleta lateral en escritorio e inferior desplazable en móvil. Los retoques se
+conservan al revisar/comprar y al reabrir el editor. Cambiar imagen, tamaño, encuadre
+o reiniciar requiere confirmación si hay retoques. Flechas y Enter permiten editar
+con teclado; Ctrl/Cmd+Z deshace y Shift+Z rehace. Sin nuevas dependencias.
 
 ```bash
 SITE_MAINTENANCE_MODE=0 CUADROS_PREVIEW_ENABLED=1 pnpm dev --port 3000

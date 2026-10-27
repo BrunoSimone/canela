@@ -1,7 +1,7 @@
-import { useId } from "react";
+import { memo, useId } from "react";
 import { dimensions, type MosaicDesign } from "../domain/design";
 
-export function MosaicSvg({ design, label, className }: { design: MosaicDesign; label: string; className?: string }) {
+export const MosaicSvg = memo(function MosaicSvg({ design, label, className }: { design: MosaicDesign; label: string; className?: string }) {
   const id = useId();
   const { framedMm, mosaicMm } = dimensions(design.config, design.size);
   const { frameMm, tileMm, groutMm } = design.config;
@@ -14,4 +14,4 @@ export function MosaicSvg({ design, label, className }: { design: MosaicDesign; 
       x={frameMm + i % design.size * (tileMm + groutMm)} y={frameMm + Math.floor(i / design.size) * (tileMm + groutMm)}
       width={tileMm} height={tileMm} fill={colors.get(color)} />)}</g>
   </svg>;
-}
+});
