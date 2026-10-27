@@ -14,7 +14,7 @@ export default async function HomePage() {
     customizationEnabled() ? loadGallery(demoDesignCatalog) : Promise.resolve(null),
   ]);
   const photo = slides.find(slide => hasAsset(slide.image));
-  const image = photo && hasAsset(photo.image) ? { src: urlFor(photo.image).width(1200).height(900).fit("crop").url(), alt: photo.name } : null;
+  const image = photo && hasAsset(photo.image) ? { src: urlFor(photo.image).width(3840).fit("max").quality(90).url(), alt: photo.name } : null;
   return <>
     <LegacyCatalogLinks />
     <HomeDestinations image={image} templates={designs?.templates ?? null} />

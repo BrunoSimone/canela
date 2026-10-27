@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { ArrowUpRight, ImagePlus } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
+import { Hero, type HeroSlideView } from "@/components/home/hero";
 import type { DesignTemplate } from "../application/catalog";
 import { cm, dimensions } from "../domain/design";
 import { MosaicSvg } from "./mosaic-svg";
@@ -27,10 +28,24 @@ export function GalleryCards({ templates }: { templates: DesignTemplate[] }) {
 }
 
 export function Gallery({ templates }: { templates: DesignTemplate[] }) {
-  return <div className={styles.page}>
-    <div className={styles.pageHeading}><div><Link href="/" className={styles.backLink}>Volver al inicio</Link><h1>Galería de cuadros</h1><p>Elegí el diseño que más te guste y probá distintos tamaños y colores.</p></div>
-      <Link className={styles.primaryButton} href="/crear-cuadro"><ImagePlus size={19} aria-hidden="true" /> Usar mi imagen</Link></div>
-    <DemoNotice /><GalleryCards templates={templates} />
-    <div className={styles.galleryFooter}><h2>También podés usar tu propia foto</h2><p>Subila al creador y probá cómo quedaría en venecitas.</p><Link href="/crear-cuadro" className={styles.textLink}>Crear con mi foto <ArrowUpRight size={18} aria-hidden="true" /></Link></div>
-  </div>;
+  const slides: HeroSlideView[] = templates.map((template, index) => ({
+    name: template.title,
+    caption: template.demonstration ? "Diseño de ejemplo" : "Cuadro en venecitas",
+    href: `/crear-cuadro?diseno=${encodeURIComponent(template.id)}`,
+    imageUrl: null,
+    artwork: <MosaicSvg design={template.design} label={`Cuadro ${template.title}`} />,
+    tint: ["#e4e7dc", "#eaded5", "#dfe6e3"][index % 3],
+  }));
+  return <>
+    <Hero slides={slides} title="Galería de cuadros"
+      description="Elegí el diseño que más te guste y probá distintos tamaños y colores."
+      action={{ href: "#disenos", label: "Ver diseños" }}
+      secondaryAction={{ href: "/crear-cuadro", label: "Usar mi imagen" }} slideNoun="cuadro" />
+    <div className={styles.page}>
+      <section id="disenos" className="anchor-offset" aria-label="Diseños de cuadros">
+        <DemoNotice /><GalleryCards templates={templates} />
+      </section>
+      <div className={styles.galleryFooter}><h2>También podés usar tu propia foto</h2><p>Subila al creador y probá cómo quedaría en venecitas.</p><Link href="/crear-cuadro" className={styles.textLink}>Crear con mi foto <ArrowUpRight size={18} aria-hidden="true" /></Link></div>
+    </div>
+  </>;
 }

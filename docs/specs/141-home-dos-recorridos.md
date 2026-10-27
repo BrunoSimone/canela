@@ -3,6 +3,11 @@
 2026-10-27 · **Implementado en la rama de cuadros.** [Evidencia](../evidence/PER-141.md).
 Continúa PER-138, PER-139 y [PER-140](140-tono-tienda-y-creador.md).
 
+**Revisión visual posterior:** [PER-142](142-banners-inmersivos-y-cabeceras.md)
+sustituye los banners de dos columnas por imágenes de ancho completo apiladas
+y recupera la cabecera grande, compartida con la galería. El resto del alcance
+y las reglas de navegación de esta spec se mantienen.
+
 ## Idea
 
 La home presenta dos formas de comprar en Canela: elegir una pieza del catálogo

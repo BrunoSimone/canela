@@ -13,12 +13,12 @@ export function HomeDestinations({ image, templates }: {
   const featured = templates?.find(t => t.id === "atardecer") ?? templates?.[0];
   return <section className={styles.home} aria-labelledby="home-title">
     <h1 id="home-title" className="sr-only">{templates === null ? "Canela · Tienda" : "Canela · Tienda y cuadros personalizados"}</h1>
-    <div className={`${styles.destinations} ${templates === null ? styles.single : ""}`}>
+    <div className={styles.destinations}>
       <Link href="/tienda" className={styles.banner} aria-label="Explorar la tienda">
         <div className={styles.photo}>
-          {image ? <Image src={image.src} alt={image.alt} fill priority sizes="(min-width: 900px) 560px, (min-width: 600px) 600px, 100vw" className={styles.productImage} />
+          {/* Tall cover crops need a wider source than the visible mobile viewport. */}
+          {image ? <Image src={image.src} alt={image.alt} fill priority sizes="(max-width: 767px) 1200px, (max-aspect-ratio: 3/2) 150vh, 100vw" quality={90} className={styles.productImage} />
             : <div className={styles.photoFallback}><span>Canela</span><p>Vidrio · Cerámica · Mosaico</p></div>}
-          <span className={styles.imageLabel}>Hechos a mano</span>
         </div>
         <div className={styles.copy}>
           <h2>Tienda</h2>
@@ -30,9 +30,9 @@ export function HomeDestinations({ image, templates }: {
         <div className={styles.scene}>
           {featured ? <MosaicSvg design={featured.design} label={`Cuadro de ejemplo: ${featured.title}`} className={styles.art} />
             : <span className={styles.emptyArt}><ImagePlus size={64} aria-hidden="true" />Tu foto, en venecitas</span>}
-          <span className={styles.imageLabel}>{featured ? "Diseño de ejemplo" : "Probá con tu foto"}</span>
         </div>
         <div className={styles.copy}>
+          <span className={styles.imageLabel}>{featured ? "Diseño de ejemplo" : "Probá con tu foto"}</span>
           <h2>Cuadros personalizados</h2>
           <p>Elegí una foto que te guste y probá cómo quedaría en venecitas.</p>
           <span className={styles.action}>Crear mi cuadro <ArrowUpRight size={20} aria-hidden="true" /></span>

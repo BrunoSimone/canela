@@ -116,7 +116,7 @@ describe("PER-130: creator user journeys", () => {
   it("links gallery templates to their creator and labels demonstration content", () => {
     render(<Gallery templates={[template()]} />);
     expect(screen.getByRole("link", { name: "Crear uno similar" }).getAttribute("href")).toBe("/crear-cuadro?diseno=test");
-    expect(screen.getByText("Diseño de ejemplo")).toBeTruthy();
+    expect(screen.getByRole("region", { name: "Diseños de cuadros" }).textContent).toContain("Diseño de ejemplo");
   });
   it("offers a useful empty gallery", () => {
     render(<Gallery templates={[]} />);

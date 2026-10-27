@@ -5,6 +5,8 @@ import userEvent from "@testing-library/user-event";
 import { Navbar } from "./navbar";
 import { Hero } from "./hero";
 import { CatalogDiscovery } from "./catalog-discovery";
+import { Gallery } from "@/modules/customization/presentation/gallery";
+import { demoDesignCatalog } from "@/modules/customization/infrastructure/demo-catalog";
 
 afterEach(()=>{cleanup();vi.useRealTimers();});
 describe("UX-01 navigation and motion controls",()=>{
@@ -41,6 +43,30 @@ describe("UX-01 navigation and motion controls",()=>{
     expect(screen.getByRole("heading",{name:"Tienda",level:1})).toBeTruthy();
     expect(screen.getByRole("link",{name:"Ver catálogo"}).getAttribute("href")).toBe("#catalogo");
     expect(screen.queryByRole("link",{name:"Crear mi cuadro"})).toBeNull();
+  });
+  it("opens the selected gallery design from the shared hero and keeps photo upload available",async()=>{
+    const templates=await demoDesignCatalog.templates();
+    vi.useFakeTimers();
+    render(<Gallery templates={templates} />);
+    expect(screen.getByRole("heading",{name:"Galería de cuadros",level:1})).toBeTruthy();
+    expect(screen.getByRole("link",{name:"Ver diseños"}).getAttribute("href")).toBe("#disenos");
+    expect(screen.getByRole("region",{name:"Diseños de cuadros"}).id).toBe("disenos");
+    expect(screen.getByRole("link",{name:"Usar mi imagen"}).getAttribute("href")).toBe("/crear-cuadro");
+    fireEvent.click(screen.getByRole("button",{name:"Ver cuadro 2"}));
+    const selected=templates[1];
+    expect(screen.getByRole("link",{name:`Ver ${selected.title}`}).getAttribute("href")).toBe(`/crear-cuadro?diseno=${encodeURIComponent(selected.id)}`);
+    expect(screen.getByRole("img",{name:`Cuadro ${selected.title}`})).toBeTruthy();
+    expect(screen.queryByRole("img",{name:`Cuadro ${templates[0].title}`})).toBeNull();
+    act(()=>vi.advanceTimersByTime(4200));
+    expect(screen.getByRole("link",{name:`Ver ${templates[2].title}`})).toBeTruthy();
+    expect(screen.queryByRole("button",{name:/pausar/i})).toBeNull();
+  });
+  it("keeps the gallery useful without published designs",()=>{
+    render(<Gallery templates={[]} />);
+    expect(screen.getByRole("heading",{name:"Galería de cuadros",level:1})).toBeTruthy();
+    expect(screen.getByRole("link",{name:"Usar mi imagen"}).getAttribute("href")).toBe("/crear-cuadro");
+    expect(screen.getByRole("heading",{name:"No hay diseños disponibles"})).toBeTruthy();
+    expect(screen.queryByRole("button",{name:/Ver cuadro/})).toBeNull();
   });
   it("makes gallery and creator reachable from mobile navigation and closes the menu on selection",async()=>{
     const { rerender }=render(<Navbar customizationEnabled />);
