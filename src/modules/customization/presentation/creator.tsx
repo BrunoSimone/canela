@@ -127,7 +127,7 @@ export function Creator({ config, pricing, template, templateUnavailable, purcha
           <p className={styles.hint}>Mosaico sin marco: {cm(measures.mosaicMm)} × {cm(measures.mosaicMm)} cm. Más piezas dan más detalle y un cuadro más grande.</p>
           <details className={styles.configDetails}><summary>Medidas de prueba utilizadas</summary><p>Venecita: {config.tileMm} mm. Junta: {config.groutMm} mm. Marco: {config.frameMm} mm por lado. Cambiarán cuando el taller confirme las medidas.</p></details></> : <p className={styles.hint}>Subí una imagen para elegir el tamaño.</p>}
         </section>
-        {baseColors.length > 0 && <details className={styles.colorTools}><summary>Personalizar colores</summary><p className={styles.hint}>Reemplazá un color en todo el diseño usando esta paleta de ejemplo.</p><div className={styles.colorRows}>{baseColors.map(color => <label key={color.id} className={styles.colorRow}>
+        {baseColors.length > 0 && <details className={styles.colorTools}><summary>Personalizar colores</summary><p className={styles.hint}>Reemplazá un color en todo el diseño usando la paleta Murvi. Los tonos en pantalla son orientativos; los colores Vitro son transparentes y cambian según la base.</p><div className={styles.colorRows}>{baseColors.map(color => <label key={color.id} className={styles.colorRow}>
           <span className={styles.swatch} style={{ backgroundColor: color.hex }} aria-hidden="true" /><span>{color.name}</span>
           <select aria-label={`Reemplazar ${color.name}`} value={replacements[color.id] ?? color.id} onChange={e => setReplacements(prev => ({ ...prev, [color.id]: e.target.value }))}>
             {config.palette.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}

@@ -8,18 +8,35 @@ import { applyRetouches, emptyRetouches, paintTile, restoreTile, undoRetouch, re
 import { renderMosaic } from "../domain/design";
 import { raster, testWorkshop } from "../testing/workshop";
 import { installEditorDom } from "../testing/editor-dom";
+import { demoDesignCatalog } from "../infrastructure/demo-catalog";
 
 const base = renderMosaic(raster(), testWorkshop, 3);
-function Harness() {
+function Harness({ initial = base }: { initial?: typeof base }) {
   const [history, setHistory] = useState(emptyRetouches), [open, setOpen] = useState(false);
   const button = useRef<HTMLButtonElement>(null);
-  return <><button ref={button} onClick={() => setOpen(true)}>Retocar</button>{open && <TileEditor design={applyRetouches(base, history.present)} history={history} returnFocus={button} onClose={() => setOpen(false)} onPaint={(i, c) => setHistory(h => paintTile(h, base, i, c))} onRestore={i => setHistory(h => restoreTile(h, base, i))} onUndo={() => setHistory(undoRetouch)} onRedo={() => setHistory(redoRetouch)} />}</>;
+  return <><button ref={button} onClick={() => setOpen(true)}>Retocar</button>{open && <TileEditor design={applyRetouches(initial, history.present)} history={history} returnFocus={button} onClose={() => setOpen(false)} onPaint={(i, c) => setHistory(h => paintTile(h, initial, i, c))} onRestore={i => setHistory(h => restoreTile(h, initial, i))} onUndo={() => setHistory(undoRetouch)} onRedo={() => setHistory(redoRetouch)} />}</>;
 }
 const cells = () => [...screen.getByRole("img", { name: "Cuadro en edición" }).querySelectorAll("rect")].slice(2).map(r => r.getAttribute("fill"));
 beforeEach(installEditorDom);
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 async function open() { render(<Harness />); await userEvent.click(screen.getByRole("button", { name: "Retocar" })); return screen.findByRole("group", { name: "Mosaico editable" }); }
 describe("PER-133: editor interaction", () => {
+  it("PER-134: all 62 Murvi materials are accessible and the last color can be painted and undone", async () => {
+    const config = await demoDesignCatalog.configuration();
+    const initial = renderMosaic(raster(), config, 15);
+    render(<Harness initial={initial} />);
+    await userEvent.click(screen.getByRole("button", { name: "Retocar" }));
+    const stage = screen.getByRole("group", { name: "Mosaico editable" });
+    expect(screen.getAllByRole("button", { name: /^Usar color Murvi/ })).toHaveLength(62);
+    expect(screen.getByText(/Vitro es transparente/)).toBeTruthy();
+    fireEvent.keyDown(stage, { key: "ArrowRight" });
+    const target = screen.getByRole("button", { name: "Usar color Murvi DI99 · Nuevo" });
+    target.focus(); await userEvent.keyboard("{Enter}");
+    expect(cells()[0]).toBe("#d8dfd7");
+    expect(screen.getByRole("status", { name: "Venecita seleccionada" }).textContent).toContain("Murvi DI99");
+    await userEvent.click(screen.getByRole("button", { name: "Deshacer retoque" }));
+    expect(cells()[0]).toBe(config.palette.find(c => c.id === initial.cells[0])!.hex);
+  });
   it("keyboard selects one piece, paints, undoes/redoes/restores, keeps edits and returns focus", async () => {
     const stage = await open();
     expect((screen.getByRole("button", { name: "Usar color Blanco" }) as HTMLButtonElement).disabled).toBe(true);

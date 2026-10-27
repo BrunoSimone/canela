@@ -24,7 +24,7 @@ export function validateWorkshop(c: WorkshopConfig): void {
       !Number.isInteger(c.minCells) || c.minCells < 2 || !Number.isInteger(c.maxCells) ||
       c.maxCells > 100 || c.maxCells < c.minCells || !Number.isInteger(c.step) || c.step < 1 ||
       (c.maxCells - c.minCells) % c.step !== 0 ||
-      !c.palette.length || c.palette.length > 32 || new Set(c.palette.map(p => p.id)).size !== c.palette.length ||
+      !c.palette.length || c.palette.length > 128 || new Set(c.palette.map(p => p.id)).size !== c.palette.length ||
       c.palette.some(p => !validId(p.id) || !p.name || p.name.length > 100 || !/^#[\da-f]{6}$/i.test(p.hex)) ||
       !c.palette.some(p => p.id === c.backgroundColorId)) {
     throw new Error("La configuración del taller no es válida.");

@@ -227,3 +227,12 @@ celular y escritorio. [PER-133](../specs/133-editor-venecitas.md) agrega selecci
 paleta, navegación táctil, historial y confirmación antes de regenerar. La grilla
 retocada usa el mismo contrato de validación y compra simulada; no requiere foto
 original ni persistencia entre sesiones. Los datos del taller continúan provisionales.
+
+
+## Actualización 2026-10-27 — Catálogo Murvi
+
+Bruno aporta el PDF de los colores que usará Mariela. [PER-134](../specs/134-paleta-murvi.md)
+incorpora las 62 referencias enlazadas con códigos del fabricante y tonos digitales
+estimados. La elección de catálogo queda resuelta; continúa pendiente la validación
+física de los tonos sobre la base real, especialmente para Vitro transparente.
+No cambia la geometría ni confirma precios o materiales de embalaje.

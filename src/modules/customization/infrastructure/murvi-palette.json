@@ -1,0 +1,1251 @@
+{
+  "version": "murvi-pdf-2026-10-27.1",
+  "manufacturer": "Murvi",
+  "retrievedOn": "2026-10-27",
+  "sourcePdfSha256": "0993836c5b946909015f07acc54e9b57212e359491d656fe9896bcd72efa4824",
+  "colorSpaceAssumption": "sRGB (original 90x90 BMPs have no ICC profile)",
+  "method": "Central 80% crop (9:81 pixels); discard lower/upper 10% OKLab lightness; mean remaining OKLab; convert to sRGB and round to 8-bit. No physical calibration.",
+  "scope": "Only 62 swatches linked by supplied PDF; DI99 identified via source HTML. Other website colors excluded.",
+  "colors": [
+    {
+      "index": 0,
+      "code": "O.22",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/O.22.bmp",
+      "line": "Clasico",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=0&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "9a0916acaca1d714526970878bd4e231d60610f34b9b9dc528d2b28ed01e1cda",
+      "hasIccProfile": false,
+      "id": "murvi-o-22",
+      "hex": "#1bb6e1",
+      "rgb": [
+        27,
+        182,
+        225
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 1,
+      "code": "O.40",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/O.40.bmp",
+      "line": "Clasico",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=1&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "11c39418f6ab10e9d273cb7bef3135d8ea44c0d4a0c439d565ac63ca67ffad35",
+      "hasIccProfile": false,
+      "id": "murvi-o-40",
+      "hex": "#2b741b",
+      "rgb": [
+        43,
+        116,
+        27
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 2,
+      "code": "N.10",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/N.10.bmp",
+      "line": "Clasico",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=2&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "11f826e5cff5b72222e50ed049a67611f668724fdd9983b6ec88cf3515ae9afa",
+      "hasIccProfile": false,
+      "id": "murvi-n-10",
+      "hex": "#101a29",
+      "rgb": [
+        16,
+        26,
+        41
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 3,
+      "code": "O.44",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/O.44.bmp",
+      "line": "Clasico",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=3&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "43f83c0ef16797d853c0e15a6092294d682c6d1018ffc811b721f0bb4b81aeda",
+      "hasIccProfile": false,
+      "id": "murvi-o-44",
+      "hex": "#0b56e4",
+      "rgb": [
+        11,
+        86,
+        228
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 4,
+      "code": "O.17",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/O.17.bmp",
+      "line": "Clasico",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=4&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "c0319255ae81ee2124e2ad256c93573a64d3585755593497c923e990b71e8e3d",
+      "hasIccProfile": false,
+      "id": "murvi-o-17",
+      "hex": "#8cc83a",
+      "rgb": [
+        140,
+        200,
+        58
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 5,
+      "code": "O.48",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/O.48.bmp",
+      "line": "Clasico",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=5&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "4fbcfb9a83b1f7cb48799ae6d3fd41c625a5dd77e262b5977a4b098f935c1dcb",
+      "hasIccProfile": false,
+      "id": "murvi-o-48",
+      "hex": "#106e3d",
+      "rgb": [
+        16,
+        110,
+        61
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 6,
+      "code": "O.42",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/O.42.bmp",
+      "line": "Clasico",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=6&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "8facab7e6b027004a87a4ccd34ddc8fd8bd37942c34805a82932adb3008b4566",
+      "hasIccProfile": false,
+      "id": "murvi-o-42",
+      "hex": "#052ef2",
+      "rgb": [
+        5,
+        46,
+        242
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 7,
+      "code": "O.30",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/O.30.bmp",
+      "line": "Clasico",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=7&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "66b1c8e1b44f8729ea6093f4d8a1a8d6a901b3e0e1bdb880aa7f62ffe8512295",
+      "hasIccProfile": false,
+      "id": "murvi-o-30",
+      "hex": "#645087",
+      "rgb": [
+        100,
+        80,
+        135
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 8,
+      "code": "O.12",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/O.12.bmp",
+      "line": "Clasico",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=8&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "a1f303a3b232573b37b38fe630fc8db814a6419745fae8ae59633f6171f21a95",
+      "hasIccProfile": false,
+      "id": "murvi-o-12",
+      "hex": "#63473c",
+      "rgb": [
+        99,
+        71,
+        60
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 9,
+      "code": "O.04",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/O.04.bmp",
+      "line": "Clasico",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=9&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "21ce7e93c2b24aba05a9d935194453f9b1a0b0f2e2fec17dff992abefb1358a8",
+      "hasIccProfile": false,
+      "id": "murvi-o-04",
+      "hex": "#495158",
+      "rgb": [
+        73,
+        81,
+        88
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 10,
+      "code": "M.16",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/M.16.bmp",
+      "line": "Clasico",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=10&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "c5899647f61e88137821fcee2595289496cc968781d61c9fa1444e64b9474057",
+      "hasIccProfile": false,
+      "id": "murvi-m-16",
+      "hex": "#68e0e5",
+      "rgb": [
+        104,
+        224,
+        229
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 11,
+      "code": "M.20",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/M.20.bmp",
+      "line": "Clasico",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=11&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "b7199c8ee39bf7e2ff3949a3d0b9f6462613e88e6604e17be675b73651bd2690",
+      "hasIccProfile": false,
+      "id": "murvi-m-20",
+      "hex": "#40a31e",
+      "rgb": [
+        64,
+        163,
+        30
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 12,
+      "code": "L.46",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/L.46.bmp",
+      "line": "Clasico",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=12&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "55d311648f381c4bf79206a366eaf728a68a33dc039e5a51264a9e038a8620c5",
+      "hasIccProfile": false,
+      "id": "murvi-l-46",
+      "hex": "#682029",
+      "rgb": [
+        104,
+        32,
+        41
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 13,
+      "code": "M.43",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/M.43.bmp",
+      "line": "Clasico",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=13&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "051aa43744f0d4c22b4d76d042819cf5df11604047625afd5838df34094bbc11",
+      "hasIccProfile": false,
+      "id": "murvi-m-43",
+      "hex": "#1a7ef9",
+      "rgb": [
+        26,
+        126,
+        249
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 14,
+      "code": "C.14",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/C.14.bmp",
+      "line": "Clasico",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=14&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "bd48c4051d14e7d5bce6f2ed1ed758bfcf4c62817908a29066b1b2fa410a2812",
+      "hasIccProfile": false,
+      "id": "murvi-c-14",
+      "hex": "#b6d565",
+      "rgb": [
+        182,
+        213,
+        101
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 15,
+      "code": "M.49",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/M.49.bmp",
+      "line": "Clasico",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=15&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "22a52d158f274858407150fcec3ff3d8d26f88f5da3da57163fb0aba0055e0a6",
+      "hasIccProfile": false,
+      "id": "murvi-m-49",
+      "hex": "#33a380",
+      "rgb": [
+        51,
+        163,
+        128
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 16,
+      "code": "M.24",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/M.24.bmp",
+      "line": "Clasico",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=16&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "a6dc4fb62f15d318e1686dcc044567f37cc19b19f4d48a2cc145ec0c295c9ce4",
+      "hasIccProfile": false,
+      "id": "murvi-m-24",
+      "hex": "#4f79fd",
+      "rgb": [
+        79,
+        121,
+        253
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 17,
+      "code": "M.29",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/M.29.bmp",
+      "line": "Clasico",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=17&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "f9b0764ec67e3d9fd534191d9e9ad7668a563ffff4c24f4dcea8c0fb15bd18b7",
+      "hasIccProfile": false,
+      "id": "murvi-m-29",
+      "hex": "#8873a4",
+      "rgb": [
+        136,
+        115,
+        164
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 18,
+      "code": "M.08",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/M.08.bmp",
+      "line": "Clasico",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=18&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "2c3ef55f493163c6644ffa282d239bd4b007479db3244f22cbbe7db2f82d7152",
+      "hasIccProfile": false,
+      "id": "murvi-m-08",
+      "hex": "#945611",
+      "rgb": [
+        148,
+        86,
+        17
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 19,
+      "code": "M.03",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/M.03.bmp",
+      "line": "Clasico",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=19&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "71bc11beb38587a0490950bb6d654e7bad819d7410adac2758d252f8cc0b7d53",
+      "hasIccProfile": false,
+      "id": "murvi-m-03",
+      "hex": "#8e9c99",
+      "rgb": [
+        142,
+        156,
+        153
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 20,
+      "code": "C.15",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/C.15.bmp",
+      "line": "Clasico",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=20&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "7757d40327f63988840743edf0778dbee8874a9bbc1acaa7f001bf5d8bab65d1",
+      "hasIccProfile": false,
+      "id": "murvi-c-15",
+      "hex": "#b6f7e9",
+      "rgb": [
+        182,
+        247,
+        233
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 21,
+      "code": "C.18",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/C.18.bmp",
+      "line": "Clasico",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=21&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "b8d7a1d818dd30dfac21ecc0ff5719e80f371aca5bede4b80b5fe6f841121c68",
+      "hasIccProfile": false,
+      "id": "murvi-c-18",
+      "hex": "#82e070",
+      "rgb": [
+        130,
+        224,
+        112
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 22,
+      "code": "R.26",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/R.26.bmp",
+      "line": "Clasico",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=22&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "9827013da624b65fc2d72008c11f37e14b751032329b6f457ffa227fed65c1dc",
+      "hasIccProfile": false,
+      "id": "murvi-r-26",
+      "hex": "#e7cade",
+      "rgb": [
+        231,
+        202,
+        222
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 23,
+      "code": "C.41",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/C.41.bmp",
+      "line": "Clasico",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=23&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "e4b984e94f6a51967a2ab442d56833baed0ccb0d887a02b1ffcb3cdaf20de68b",
+      "hasIccProfile": false,
+      "id": "murvi-c-41",
+      "hex": "#96e3fb",
+      "rgb": [
+        150,
+        227,
+        251
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 24,
+      "code": "B.34",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/B.34.bmp",
+      "line": "Clasico",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=24&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "23ab7b67088c505045759bfc60597d3f365c55d721073f529f5d640a838f5dee",
+      "hasIccProfile": false,
+      "id": "murvi-b-34",
+      "hex": "#e5e6e6",
+      "rgb": [
+        229,
+        230,
+        230
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 25,
+      "code": "C.50",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/C.50.bmp",
+      "line": "Clasico",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=25&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "40b027a1d53d12b56423d9e27c6b9fa0b9d6498c610b3c1f07019d8cf67872f9",
+      "hasIccProfile": false,
+      "id": "murvi-c-50",
+      "hex": "#6feaac",
+      "rgb": [
+        111,
+        234,
+        172
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 26,
+      "code": "C.32",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/C.32.bmp",
+      "line": "Clasico",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=26&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "b0417e78c0ee9aa59d60b73a7878a761ad809d0b50a511653d8e6eec79ab44f7",
+      "hasIccProfile": false,
+      "id": "murvi-c-32",
+      "hex": "#8cc1f2",
+      "rgb": [
+        140,
+        193,
+        242
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 27,
+      "code": "C.28",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/C.28.bmp",
+      "line": "Clasico",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=27&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "386f6e666ab0878e4cafc78e1795512cfb8639d0603af5679ba66d632b225885",
+      "hasIccProfile": false,
+      "id": "murvi-c-28",
+      "hex": "#b99fca",
+      "rgb": [
+        185,
+        159,
+        202
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 28,
+      "code": "C.06",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/C.06.bmp",
+      "line": "Clasico",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=28&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "eb87a25f7f35a29e3210c933becb6f398fe129cd119c9d290daaa559a03379a0",
+      "hasIccProfile": false,
+      "id": "murvi-c-06",
+      "hex": "#ccab5d",
+      "rgb": [
+        204,
+        171,
+        93
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 31,
+      "code": "N.21",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/N.21.bmp",
+      "line": "Clasico",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=31&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "cb54deaf3f5975f749912b6c54a91e6dfe649e755e3cc7fd4777ab87f0a34c6d",
+      "hasIccProfile": false,
+      "id": "murvi-n-21",
+      "hex": "#395635",
+      "rgb": [
+        57,
+        86,
+        53
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 32,
+      "code": "N.07",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/N.07.bmp",
+      "line": "Clasico",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=32&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "2a464531ed7f8c0acde06948456e76d7fb8690ecde278017b79687c3847f66e9",
+      "hasIccProfile": false,
+      "id": "murvi-n-07",
+      "hex": "#b95034",
+      "rgb": [
+        185,
+        80,
+        52
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 33,
+      "code": "N.01",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/N.01.bmp",
+      "line": "Clasico",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=33&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "a5b56ed0eb76f8813d3d5b7ec1dbfb3cc3e542cd932ab443a69d9b42cbde504f",
+      "hasIccProfile": false,
+      "id": "murvi-n-01",
+      "hex": "#293e4a",
+      "rgb": [
+        41,
+        62,
+        74
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 34,
+      "code": "N.19",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/N.19.bmp",
+      "line": "Clasico",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=34&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "d6f5fa1c4fdeb0bcf356f18ecffad0560ffd8ad543c18257de118f5ba687f468",
+      "hasIccProfile": false,
+      "id": "murvi-n-19",
+      "hex": "#627737",
+      "rgb": [
+        98,
+        119,
+        55
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 35,
+      "code": "N.05",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/N.05.bmp",
+      "line": "Clasico",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=35&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "8976a9b0916f74c9157a719ef4a25c889be60e05795d6114f4b34108a1c970f8",
+      "hasIccProfile": false,
+      "id": "murvi-n-05",
+      "hex": "#111218",
+      "rgb": [
+        17,
+        18,
+        24
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 36,
+      "code": "N.09",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/N.09.bmp",
+      "line": "Clasico",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=36&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "42367b4402e6d2c6e27ad70655990dce352d4dc3d0528dd50eb6c3fd22875a49",
+      "hasIccProfile": false,
+      "id": "murvi-n-09",
+      "hex": "#4f5db2",
+      "rgb": [
+        79,
+        93,
+        178
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 37,
+      "code": "E.60",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/E.60.bmp",
+      "line": "Clasico",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=37&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "1cae6b450ec64a6618518a8b46f90369b907d038ecf15abb7d32df7e3dfe7127",
+      "hasIccProfile": false,
+      "id": "murvi-e-60",
+      "hex": "#ffd60e",
+      "rgb": [
+        255,
+        214,
+        14
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 38,
+      "code": "E.80",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/E.80.bmp",
+      "line": "Clasico",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=38&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "6b08550363a6299d2ec8b9097345cf194e40e426b40e1a831fe496b08b904391",
+      "hasIccProfile": false,
+      "id": "murvi-e-80",
+      "hex": "#f17b08",
+      "rgb": [
+        241,
+        123,
+        8
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 39,
+      "code": "E.100",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/E.100.bmp",
+      "line": "Clasico",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=39&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "a387e7c7379d84d5be140e4e96826b1ed714b7299ad38946c39bb53b0ab9185d",
+      "hasIccProfile": false,
+      "id": "murvi-e-100",
+      "hex": "#e00704",
+      "rgb": [
+        224,
+        7,
+        4
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 40,
+      "code": "V.3",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/V.3.bmp",
+      "line": "Vitro",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=40&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "ff1cfe9a7f12b10aa647bd713cd94e294df40c615f95cef63312e895244a8763",
+      "hasIccProfile": false,
+      "id": "murvi-v-3",
+      "hex": "#99957c",
+      "rgb": [
+        153,
+        149,
+        124
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 41,
+      "code": "V.11",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/V.11.bmp",
+      "line": "Vitro",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=41&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "9ae3ae74697c48ffd3d166a9ba4ab3a5d0e5bd16767fe361dec0a1e4e2c4fad5",
+      "hasIccProfile": false,
+      "id": "murvi-v-11",
+      "hex": "#38505b",
+      "rgb": [
+        56,
+        80,
+        91
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 42,
+      "code": "V.12",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/V.12.bmp",
+      "line": "Vitro",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=42&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "ea46dcdcc2a6922e2e977ccd70bd9dc5e92488a5ba50cce093377b036c72e674",
+      "hasIccProfile": false,
+      "id": "murvi-v-12",
+      "hex": "#411b1a",
+      "rgb": [
+        65,
+        27,
+        26
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 43,
+      "code": "V.15",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/V.15.bmp",
+      "line": "Vitro",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=43&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "a00e2ae3c970aa1e8afd5c94154898b7611d1fbf4baafc8c6232cd2de980ff11",
+      "hasIccProfile": false,
+      "id": "murvi-v-15",
+      "hex": "#5297ab",
+      "rgb": [
+        82,
+        151,
+        171
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 44,
+      "code": "V.16",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/V.16.bmp",
+      "line": "Vitro",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=44&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "2d996d96ae0dcd43b6b847c59114fc81a1158607f92d2d0b3eff3330313b116f",
+      "hasIccProfile": false,
+      "id": "murvi-v-16",
+      "hex": "#1382a9",
+      "rgb": [
+        19,
+        130,
+        169
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 45,
+      "code": "V.17",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/V.17.bmp",
+      "line": "Vitro",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=45&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "6459aa66d8f465836c5eba657a09e1c1bbf24e0e8e882fb86f92c40b2924492b",
+      "hasIccProfile": false,
+      "id": "murvi-v-17",
+      "hex": "#839f24",
+      "rgb": [
+        131,
+        159,
+        36
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 46,
+      "code": "V.20",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/V.20.bmp",
+      "line": "Vitro",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=46&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "d57e2ae121f42d0ca64842ac96ce13f966a496ad10ddb248112ad19e8c513f72",
+      "hasIccProfile": false,
+      "id": "murvi-v-20",
+      "hex": "#4d8a96",
+      "rgb": [
+        77,
+        138,
+        150
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 47,
+      "code": "V.29",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/V.29.bmp",
+      "line": "Vitro",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=47&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "b92ec54014022ab6b6643412d50e1ad9cdbadef86f8dbae07d5ba29813fc4c99",
+      "hasIccProfile": false,
+      "id": "murvi-v-29",
+      "hex": "#61535d",
+      "rgb": [
+        97,
+        83,
+        93
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 48,
+      "code": "V.30",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/V.30.bmp",
+      "line": "Vitro",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=48&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "0e8555e53c5895b5a521da4b0346664796cbd46dabbce044e3cdecfb1cfc9e06",
+      "hasIccProfile": false,
+      "id": "murvi-v-30",
+      "hex": "#4b3054",
+      "rgb": [
+        75,
+        48,
+        84
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 49,
+      "code": "V.34",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/V.34.bmp",
+      "line": "Vitro",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=49&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "ba9ca19cff4dc739dd7ccbf0b829a5d0d8aa90a3a6e3b3f889912071b2d30a86",
+      "hasIccProfile": false,
+      "id": "murvi-v-34",
+      "hex": "#a4a4a2",
+      "rgb": [
+        164,
+        164,
+        162
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 50,
+      "code": "V.41",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/V.41.bmp",
+      "line": "Vitro",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=50&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "d6ae7ddc0643cb829fa8c65a44c63246a45d7f62b9cca50f673e105506456460",
+      "hasIccProfile": false,
+      "id": "murvi-v-41",
+      "hex": "#28739f",
+      "rgb": [
+        40,
+        115,
+        159
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 51,
+      "code": "V.44",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/V.44.bmp",
+      "line": "Vitro",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=51&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "63c8a6b36ac3273d0be0a70d3061c21567fb1ea73568e85683a8feeab998d2fa",
+      "hasIccProfile": false,
+      "id": "murvi-v-44",
+      "hex": "#00368e",
+      "rgb": [
+        0,
+        54,
+        142
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 52,
+      "code": "V.48",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/V.48.bmp",
+      "line": "Vitro",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=52&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "18dbf45d68f944a639b8ae0d0ee9ed061899f92f6ca07ef718027e0c59dc9a23",
+      "hasIccProfile": false,
+      "id": "murvi-v-48",
+      "hex": "#025441",
+      "rgb": [
+        2,
+        84,
+        65
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 53,
+      "code": "V.50",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/V.50.bmp",
+      "line": "Vitro",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=53&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "24f7c74ebce945feb9be6830a1a0edc6088d5039cfbfde6386d5df6b534ca768",
+      "hasIccProfile": false,
+      "id": "murvi-v-50",
+      "hex": "#79bab0",
+      "rgb": [
+        121,
+        186,
+        176
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 54,
+      "code": "VE.60",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/VE.60.bmp",
+      "line": "Vitro",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=54&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "2ad10e40d7abe5b03d5dcd525ff3e06e7da3c45829e3b512378c32abe7310a1f",
+      "hasIccProfile": false,
+      "id": "murvi-ve-60",
+      "hex": "#a2840e",
+      "rgb": [
+        162,
+        132,
+        14
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 55,
+      "code": "VE.80",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/VE.80.bmp",
+      "line": "Vitro",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=55&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "3db0f0777349ea669eef1862b515d065020883445f2d0ded59617c5099d646f9",
+      "hasIccProfile": false,
+      "id": "murvi-ve-80",
+      "hex": "#925c06",
+      "rgb": [
+        146,
+        92,
+        6
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 56,
+      "code": "VE.100",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/VE.100.bmp",
+      "line": "Vitro",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=56&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "1f2f7410f5a71808b3601716b49ed4cc1d8b69fa462bed8e8f835d64b6fb3a15",
+      "hasIccProfile": false,
+      "id": "murvi-ve-100",
+      "hex": "#871f07",
+      "rgb": [
+        135,
+        31,
+        7
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 57,
+      "code": "ECO03",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/ECO03.bmp",
+      "line": "Nuevo",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=57&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "331ab84f55d3e23cccbe46e01a4ffd8073c089ad9fb45233fd4e71f4b1ab529a",
+      "hasIccProfile": false,
+      "id": "murvi-eco03",
+      "hex": "#6b5f32",
+      "rgb": [
+        107,
+        95,
+        50
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 58,
+      "code": "TG02",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/TG02.bmp",
+      "line": "Nuevo",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=58&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "5dda044ca65835f72dbf0f027cfacd6cb5e308188a4464b8b152eb0d5a9fc78b",
+      "hasIccProfile": false,
+      "id": "murvi-tg02",
+      "hex": "#8b8666",
+      "rgb": [
+        139,
+        134,
+        102
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 59,
+      "code": "DI100",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/DI100.bmp",
+      "line": "Nuevo",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=59&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "823a7dd9783734a1eeeb5bc3b4fd0f88c464a3b5262798b22a4bc5c36effcf16",
+      "hasIccProfile": false,
+      "id": "murvi-di100",
+      "hex": "#b6b9a4",
+      "rgb": [
+        182,
+        185,
+        164
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 60,
+      "code": "DI97",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/DI97.bmp",
+      "line": "Nuevo",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=60&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "cbb9802fc2abf4fab213304a9949e6716c5b7a1925ee6655fc88593e7ca379b7",
+      "hasIccProfile": false,
+      "id": "murvi-di97",
+      "hex": "#757022",
+      "rgb": [
+        117,
+        112,
+        34
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 61,
+      "code": "ECO34",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/ECO34.bmp",
+      "line": "Nuevo",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=61&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "c1985efee4e0d2b9549808ea8962b3800add7bb7727a0c1f414e654490929f11",
+      "hasIccProfile": false,
+      "id": "murvi-eco34",
+      "hex": "#8d9488",
+      "rgb": [
+        141,
+        148,
+        136
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 62,
+      "code": "DI93",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/DI93.bmp",
+      "line": "Nuevo",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=62&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "24a8e1b27dd4b6518727e9af1bd9768ce483bceb1adaca22e8a43a2a47541476",
+      "hasIccProfile": false,
+      "id": "murvi-di93",
+      "hex": "#413e33",
+      "rgb": [
+        65,
+        62,
+        51
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    },
+    {
+      "index": 63,
+      "code": "DI99",
+      "sourceImageUrl": "http://www.murvi.com.ar/venecitas/DI99.bmp",
+      "line": "Nuevo",
+      "sourcePageUrl": "http://www.murvi.com.ar/interactivo/?a=63&l=",
+      "imageWidth": 90,
+      "imageHeight": 90,
+      "imageSha256": "f96215cb50c89d792b91fdea6ef6eefa0ac6054e28dc04b1fdd7291e9a82b865",
+      "hasIccProfile": false,
+      "id": "murvi-di99",
+      "hex": "#d8dfd7",
+      "rgb": [
+        216,
+        223,
+        215
+      ],
+      "status": "estimated-from-manufacturer-texture",
+      "calibrated": false
+    }
+  ]
+}

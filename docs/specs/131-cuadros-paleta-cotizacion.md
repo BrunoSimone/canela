@@ -7,6 +7,9 @@ Extiende y reemplaza los puntos de PER-130 sobre paleta, guía pública y ausenc
 > del precio sin imagen y extiende el resumen con una compra local simulada.
 > Las exclusiones de cobro, envíos y pedidos reales siguen vigentes.
 
+> [PER-134](134-paleta-murvi.md) reemplaza los 32 colores sintéticos por las
+> 62 referencias del catálogo Murvi, con aproximaciones digitales trazables.
+
 ## Problema y alcance
 
 La paleta de diez colores desplaza grises y pieles hacia verdes/azules. El creador

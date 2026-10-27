@@ -184,12 +184,13 @@ Primera versión en `codex/creador-cuadros-personalizados`:
 y recorrer una compra separada simulada (resumen, domicilio, envío, pago y resultado);
 `/cuadros` ofrece ejemplos reutilizables. El creador vacío no muestra precios ni medidas
 y mantiene deshabilitado el tamaño hasta tener un diseño.
-La paleta provisional tiene 32 colores. El creador público no exporta guías de fabricación.
+La paleta usa las 62 referencias del catálogo Murvi aportado, con HEX estimados de las texturas oficiales (sin calibración física). El creador público no exporta guías de fabricación.
 Ver [spec PER-130](docs/specs/130-creador-cuadros-demo.md),
 [ampliación PER-131](docs/specs/131-cuadros-paleta-cotizacion.md),
 [compra simulada PER-132](docs/specs/132-cuadros-compra-simulada.md),
-[editor de venecitas PER-133](docs/specs/133-editor-venecitas.md) y
-[evidencia actual](docs/evidence/PER-133.md).
+[editor de venecitas PER-133](docs/specs/133-editor-venecitas.md),
+[paleta Murvi PER-134](docs/specs/134-paleta-murvi.md) y
+[evidencia actual](docs/evidence/PER-134.md).
 
 «Retocar venecitas» abre un editor para seleccionar y cambiar una pieza, con zoom
 1–8×, arrastre, pellizco, deshacer/rehacer y restauración del color generado.
