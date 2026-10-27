@@ -18,7 +18,10 @@ tienda, galería, creador, footer ni habilitación de cobros.
   `#e7dfcb` y fondo cálido `#f1e2c6`. Mulish para bienvenida y controles.
   Ambas escenas usan texto crema y una capa oscura para mantener el contraste.
   El cuadro conserva el marco completo y las venecitas nítidas en primer plano.
-  La foto de tienda conserva su proporción y encuadre, sin recortar el artículo.
+  La foto de tienda conserva su proporción y encuadre, con bordes que se funden
+  gradualmente con el fondo. Su centro permanece nítido, sin sombras de tarjeta.
+  La foto tiene mayor ancho para compensar su formato apaisado; el cuadro
+  conserva su proporción cuadrada y una sombra suave.
   El fondo desenfocado es decorativo y queda fuera del árbol accesible.
 - Composición centrada: mensaje → acciones → cuadro o producto completo.
   Solo las copias decorativas se amplían para llenar el fondo. Las dos acciones se apilan en móvil pequeño.
@@ -26,7 +29,8 @@ tienda, galería, creador, footer ni habilitación de cobros.
   crecer con ampliación de texto sin superposición.
 - Desvanecimiento de 700 ms; cambio automático cada 6 s. Hover en escritorio
   amplía el producto o inclina/eleva suavemente el cuadro. Ambos conservan una
-  flotación suave; los fondos permanecen quietos. No hay un botón de pausa.
+  flotación de 3 px en 8 s; los fondos permanecen quietos. La inclinación del
+  cuadro va de −1,5° a −0,5° y el zoom del producto es 1,02. No hay un botón de pausa.
 - La rotación sigue aunque el cursor o el foco estén en la apertura. Solo
   espera durante un gesto táctil o cuando la pestaña está oculta. Con movimiento
   reducido no hay avance automático, flotación, zoom ni transición; los dos

@@ -12,8 +12,8 @@ export function HomeDestinations({ image, templates }: {
 }) {
   const featured = templates?.find(t => t.id === "atardecer") ?? templates?.[0];
   return <HomeCarousel creatorEnabled={templates !== null}
-    photo={image ? <div className={styles.photoArt}><Image src={image.src} alt={image.alt} fill priority
-      sizes="(max-width: 767px) 68vw, 470px" quality={90} className={styles.productImage} /></div>
+    photo={image ? <div className={styles.photoArt}><Image src={image.src} alt={image.alt} width={1200} height={800} priority
+      sizes="(max-width: 767px) 84vw, 700px" quality={90} className={styles.productImage} /></div>
       : <div className={styles.photoFallback}><span>Canela</span><p>Vidrio · Cerámica · Mosaico</p></div>}
     photoBackdrop={image ? <Image src={image.src} alt="" fill sizes="100vw" quality={60} className={styles.backdropImage} /> : null}
     frame={featured ? <>
