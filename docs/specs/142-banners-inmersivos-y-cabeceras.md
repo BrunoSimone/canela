@@ -3,6 +3,9 @@
 2026-10-27 · Refinamiento solicitado sobre [PER-141](141-home-dos-recorridos.md).
 **Implementado.** [Evidencia](../evidence/PER-142.md).
 
+La home pasa al carrusel de [PER-143](143-carrusel-de-recorridos-home.md).
+Las cabeceras de tienda/galería y el footer de esta spec siguen vigentes.
+
 ## Alcance y criterio visual
 
 - Home: Tienda y Cuadros personalizados se apilan en todos los tamaños. Cada
