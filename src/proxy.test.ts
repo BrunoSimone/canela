@@ -7,6 +7,23 @@ import { config, proxy } from "./proxy";
 afterEach(() => vi.unstubAllEnvs());
 
 describe("storefront maintenance", () => {
+  it("blocks stock and custom-frame purchases even with production commerce flags enabled", async () => {
+    const flags = { CHECKOUT_MODE: "production", PAYMENT_ENVIRONMENT: "production", COMMERCE_PRODUCTION_APPROVED: "1", SHIPPING_PROVIDER: "zipnova", ZIPNOVA_ACCOUNT_MODE: "operational", ZIPNOVA_FULFILLMENT_MODE: "production", ORDER_EMAIL_MODE: "production" };
+    for (const [key, value] of Object.entries(flags)) vi.stubEnv(key, value);
+    vi.stubEnv("SITE_MAINTENANCE_MODE", "1");
+    vi.stubEnv("CUADROS_CHECKOUT_MODE", "production");
+    for (const path of ["/", "/tienda", "/crear-cuadro", "/cuadros", "/checkout"]) {
+      expect(proxy(new NextRequest(`https://canela.test${path}`)).status).toBe(503);
+    }
+    for (const path of ["/api/checkout", "/api/shipping/quotes", "/api/cuadros/compra", "/api/cuadros/prueba", "/api/cuadros/pedido/token"]) {
+      for (const method of ["GET", "POST"]) {
+        const response = proxy(new NextRequest(`https://canela.test${path}`, { method }));
+        expect(response.status).toBe(503);
+        expect(await response.json()).toEqual({ code: "SITE_MAINTENANCE" });
+        expect(response.headers.has("x-middleware-next")).toBe(false);
+      }
+    }
+  });
   it.each(["/", "/tienda", "/checkout", "/checkout/resultado/example", "/mantenimiento", "/admin-extra", "/sitemap.xml"])("serves maintenance before rendering %s", (path) => {
     vi.stubEnv("SITE_MAINTENANCE_MODE", "1");
     const response = proxy(new NextRequest(`https://canela.test${path}?demo=1`));

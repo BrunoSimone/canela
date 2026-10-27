@@ -2,6 +2,15 @@
 
 ## Estado
 
+**Actualización 27/10/2026:** Enzo confirmó el paso de Canela (22052) a
+producción solicitado por Bruno. Tras renovar la sesión desapareció el aviso
+de pruebas. Los envíos sandbox 31536385 y 31865536 fueron anulados con autorización
+de Bruno: el portal confirmó que no generan cargo y el saldo quedó en ARS 0,00.
+La cuenta requiere saldo para futuros envíos reales. La tienda se mantiene en
+mantenimiento según [OPS-147](../specs/147-produccion-bajo-mantenimiento.md).
+Las referencias a sandbox de las validaciones siguientes son históricas.
+**No ejecutar nuevas altas de prueba con esta cuenta productiva.**
+
 Cotización e integración local del checkout: [spec 060](../specs/060-zipnova-cotizacion.md).
 Soporte confirmó el sandbox para Canela el 2026-10-13, según la respuesta
 compartida por Bruno. Se mantienen URL y credenciales; los envíos de prueba no se
@@ -36,8 +45,8 @@ de Zipnova fue retirada y no se mantiene como bloqueo de apertura. Ver
 1. Aplicar `0008_shipping_quote.sql`, `0009_order_shipment.sql` y `0010_dispatch_notifications.sql` mediante `pnpm db:migrate` **antes** de ejecutar
    esta versión sobre una base. Primero usar una base de desarrollo independiente;
    comprobar el destino de `DATABASE_URL_UNPOOLED` además de `DATABASE_URL`.
-2. Conservar `CHECKOUT_MODE=test` y las credenciales `MP_TEST_ACCESS_TOKEN`.
-   Producción exige los gates de la spec 080 y permanece desactivada. `CHECKOUT_MODE=disabled` desactiva también
+2. En desarrollo conservar `CHECKOUT_MODE=test` y las credenciales `MP_TEST_ACCESS_TOKEN`.
+   Producción exige los gates de la spec 080 y la configuración de OPS-147. `CHECKOUT_MODE=disabled` desactiva también
    la ruta de cotización. `SITE_MAINTENANCE_MODE=1` mantiene el sitio pausado.
 3. Configurar `SHIPPING_PROVIDER=zipnova`, `ZIPNOVA_API_TOKEN`, `ZIPNOVA_API_SECRET`,
    `ZIPNOVA_ACCOUNT_ID`, `ZIPNOVA_ORIGIN_ID`, `CHECKOUT_SIGNING_SECRET` (32+ caracteres).
@@ -49,9 +58,9 @@ de Zipnova fue retirada y no se mantiene como bloqueo de apertura. Ver
    para OCA está pendiente de aclaración.
 5. Configurar `ZIPNOVA_ACCOUNT_MODE=operational` o `sandbox` según el modo confirmado
    por soporte. **Esta variable no cambia la cuenta remota.** Localhost tampoco
-   activa sandbox. **Estado confirmado de Canela: `sandbox`.** Se conservan la
-   URL y credenciales actuales. Volver a solicitar modo operativo al terminar
-   las pruebas, coordinando la apertura comercial.
+   activa sandbox. **Estado confirmado de Canela desde el 27/10: `operational`.**
+   Se conservan URL y credenciales. Para repetir altas sandbox se necesita otra
+   cuenta de pruebas confirmada; nunca basta con cambiar esta variable.
 6. En Sanity completar peso (mínimo 10 g) y medidas de UNA unidad protegida,
    sin caja exterior. Cargar aparte las cajas compartidas. Seleccionar explícitamente
    clasificación según la [referencia oficial](https://docs.zipnova.com/envios/referencia/clasificaciones-de-producto):
@@ -60,10 +69,12 @@ de Zipnova fue retirada y no se mantiene como bloqueo de apertura. Ver
    `3` bachas. La lista publicada en Studio no asigna valores por defecto.
    La caja mixta General + vidrio conserva clasificación `6`; otras mezclas
    siguen bloqueadas. La clasificación no sustituye un embalaje adecuado.
-7. Solo en el entorno aislado de pruebas, activar `ZIPNOVA_FULFILLMENT_MODE=sandbox`.
+7. Solo con una cuenta remota confirmada de pruebas y un entorno aislado, activar `ZIPNOVA_FULFILLMENT_MODE=sandbox`.
    Sin esta flag el alta permanece cerrada. Exige cuenta sandbox y despacho en
    sucursal; el código rechaza cuenta operativa. La flag no fue activada en el
-   `.env.local` compartido ni en Vercel durante la validación. Las migraciones se
+   `.env.local` compartido ni en Vercel durante la validación inicial. Desde el
+   27/10 el archivo local declara cuenta operativa y fulfillment deshabilitado.
+   Las migraciones de aquella validación se
    aplicaron exclusivamente a PostgreSQL local descartable.
 
 `CHECKOUT_TEST_SHIPPING_CENTS` se utiliza exclusivamente cuando

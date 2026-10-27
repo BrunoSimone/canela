@@ -2,6 +2,12 @@
 
 ## Fuente y estado
 
+**Estado posterior, 27/10/2026:** soporte confirmó el regreso a producción y se
+verificó la desaparición del aviso de pruebas con una sesión renovada. Ambos
+envíos usados en las validaciones fueron anulados con autorización de Bruno;
+el saldo quedó en cero. Este documento conserva el historial de pruebas; no
+habilita nuevas altas sandbox con la cuenta 22052. Ver [OPS-147](../specs/147-produccion-bajo-mantenimiento.md).
+
 El 2026-10-13 Bruno compartió la respuesta de Enzo, soporte de Zipnova, a la
 solicitud de integración. Evidencia específica de la cuenta Canela:
 

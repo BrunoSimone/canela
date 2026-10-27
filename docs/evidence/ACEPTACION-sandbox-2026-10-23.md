@@ -2,6 +2,13 @@
 
 Plan: [aceptación integral](../plans/003-aceptacion-integral-sandbox.md).
 
+**Cierre del entorno de logística, 27/10/2026:** Zipnova pasó a producción.
+El envío 31865536 se anuló con autorización de Bruno, sin cargo. Se conservaron
+las evidencias y referencias históricas. Tanto `.env.local` como el runtime
+temporal de esta ejecución declaran ahora cuenta operativa y creación de envíos
+deshabilitada. Esta receta ya no reproduce altas sandbox con esa cuenta; requiere
+otro entorno remoto de pruebas confirmado. Ver [OPS-147](OPS-147.md).
+
 ## Preparado y comprobado
 
 - PostgreSQL 17 nuevo, contenedor `canela-sandbox-20261023`, puerto local 55434,
