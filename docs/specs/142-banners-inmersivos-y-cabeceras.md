@@ -30,6 +30,8 @@
   del recorrido de personalización. Footer compacto: marca pequeña, enlaces
   repartidos horizontalmente (dos columnas en móvil), copyright e Instagram.
   Sin descripción de marca repetida ni encabezados de columnas.
+  Tras la revisión visual, usar un espaciado intermedio: 32/24 px de margen
+  vertical principal y 8 px entre filas, para evitar comprimir los enlaces.
 
 Esta revisión sustituye la distribución de dos columnas, los textos fuera de
 la imagen y la cabecera compacta descritos en PER-141.
