@@ -14,7 +14,7 @@ vi.mock("react-easy-crop", () => ({ default: ({ onCropComplete }: { onCropComple
 beforeEach(() => { installEditorDom(); vi.stubGlobal("URL", { revokeObjectURL: vi.fn() }); });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.clearAllMocks(); vi.unstubAllGlobals(); });
 const setup = () => render(<Creator config={testWorkshop} pricing={testPricing} template={{ id: "test", title: "Flor", description: "", published: true, demonstration: true, design: renderMosaic(raster(), testWorkshop, 3) }} templateUnavailable={false} />);
-const cells = () => [...screen.getByRole("img", { name: /Tu mosaico/ }).querySelectorAll("rect")].slice(2).map(r => r.getAttribute("fill"));
+const cells = () => [...screen.getByRole("img", { name: /Tu mosaico/ }).querySelectorAll("[data-cell]")].map(r => r.getAttribute("fill"));
 async function retouch() {
   await userEvent.click(screen.getByRole("button", { name: "Retocar venecitas" }));
   fireEvent.keyDown(screen.getByRole("group", { name: "Mosaico editable" }), { key: "Home" });
@@ -30,7 +30,8 @@ describe("PER-133: preserve corrections through regeneration and review", () => 
     expect(cells()).toEqual(["#ffffff", ...Array(8).fill("#000000")]);
     expect(screen.getByLabelText("Precio estimado del cuadro").textContent).toBe(price);
     await userEvent.click(screen.getByRole("button", { name: "Revisar mi cuadro" }));
-    expect(screen.getByRole("img").querySelectorAll("rect")[2].getAttribute("fill")).toBe("#ffffff");
+    expect(screen.getByRole("img").querySelector("[data-cell]")?.getAttribute("fill")).toBe("#ffffff");
+    expect(screen.getByRole("img").querySelector("[data-material-surface]")).toBeTruthy();
     await userEvent.click(screen.getByRole("button", { name: "Seguir editando" })); expect(cells()[0]).toBe("#ffffff");
     expect(fetch).not.toHaveBeenCalled();
   });

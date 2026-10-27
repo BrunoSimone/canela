@@ -66,7 +66,7 @@ describe("PER-132: separate purchase journeys", () => {
     expect(snapshot.design.cells).toEqual([color.id, ...original.cells.slice(1)]);
     expect(cart.getState()).toEqual(before);
     await userEvent.click(screen.getByRole("button", { name: "Volver a mi diseño" }));
-    expect(screen.getByRole("img", { name: /Tu mosaico/ }).querySelectorAll("rect")[2].getAttribute("fill")).toBe(color.hex);
+    expect(screen.getByRole("img", { name: /Tu mosaico/ }).querySelector("[data-cell]")?.getAttribute("fill")).toBe(color.hex);
     await userEvent.click(screen.getByRole("button", { name: "Retocar venecitas" }));
     expect((screen.getByRole("button", { name: "Deshacer retoque" }) as HTMLButtonElement).disabled).toBe(false);
   });

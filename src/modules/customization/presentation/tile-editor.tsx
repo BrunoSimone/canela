@@ -111,7 +111,7 @@ export function TileEditor({ design, history, onPaint, onRestore, onUndo, onRedo
           <aside className={styles.palettePanel} aria-label="Colores para la venecita">
             <div className={styles.selectionInfo}><div role="status" aria-label="Venecita seleccionada" aria-live="polite"><h3>{selected === null ? "Elegí una venecita" : `Fila ${Math.floor(selected / design.size) + 1} · Columna ${selected % design.size + 1}`}</h3><p>{color ? color.name : "Después, tocá un color para cambiarla."}</p></div><button className={styles.restore} aria-label="Restaurar color de esta venecita" title="Restaurar color generado" disabled={selected === null || history.present[selected] === undefined} onClick={() => { if (selected !== null) onRestore(selected); }}><RotateCcw size={17} aria-hidden="true" /><span>Restaurar</span></button></div>
             <div className={styles.palette} ref={palette} role="group" aria-label="Paleta de venecitas">{design.config.palette.map(c => <button key={c.id} aria-label={`Usar color ${c.name}`} title={c.name} aria-pressed={color?.id === c.id} disabled={selected === null} onClick={() => { if (selected !== null) onPaint(selected, c.id); }}><span style={{ backgroundColor: c.hex }} /></button>)}</div>
-            <p className={styles.paletteHint}>Tonos orientativos · Vitro es transparente y cambia según la base. Podés volver atrás con Deshacer.</p>
+            <p className={styles.paletteHint}>Colores y acabado orientativos · Vitro es transparente y cambia según la base. Podés volver atrás con Deshacer.</p>
           </aside>
         </div>
       </Dialog.Popup>

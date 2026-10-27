@@ -130,6 +130,7 @@ export function FramePurchase({ design, estimate, onEdit }: { design: MosaicDesi
       </div>
       <aside className={styles.purchaseSummary} aria-label="Resumen de esta compra">
         <MosaicSvg design={quote?.design ?? design} label="Diseño para esta compra" className={styles.purchaseArt} />
+        <p className={styles.hint}>Simulación de material · Los colores y el acabado reales pueden variar.</p>
         <h2>Tu cuadro personalizado</h2>
         <dl className={styles.priceBreakdown}><div><dt>Cuadro con marco</dt><dd>{formatArs(quote?.frame.totalCents ?? estimate.totalCents)}</dd></div><div><dt>Envío de prueba</dt><dd>{quote ? formatArs(quote.shipping.cents) : "Por cotizar"}</dd></div></dl>
         {quote && <><p className={styles.estimateLabel}>Total de prueba · ARS</p><p className={styles.estimateAmount} aria-label="Total de prueba">{formatArs(quote.totalCents)}</p><p className={styles.hint}>{quote.productionDays} días estimados de fabricación + {quote.shipping.transitDays} días de transporte. Plazos ilustrativos.</p><div className={styles.deliverySummary}><h3>Entrega a domicilio</h3><p>{quote.recipient.delivery.recipientName}<br />{quote.recipient.delivery.streetName} {quote.recipient.delivery.streetNumber}{quote.recipient.delivery.floor && ` · Piso ${quote.recipient.delivery.floor}`}{quote.recipient.delivery.apartment && ` · Depto. ${quote.recipient.delivery.apartment}`}<br />{quote.recipient.delivery.city}, {provinceName(quote.recipient.delivery.provinceCode)} · {quote.recipient.delivery.postalCode}</p></div></>}

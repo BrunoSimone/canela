@@ -1,5 +1,6 @@
 import { memo, useId } from "react";
 import { dimensions, type MosaicDesign } from "../domain/design";
+import { MosaicMaterial } from "./mosaic-material";
 
 export const MosaicSvg = memo(function MosaicSvg({ design, label, className }: { design: MosaicDesign; label: string; className?: string }) {
   const id = useId();
@@ -10,8 +11,9 @@ export const MosaicSvg = memo(function MosaicSvg({ design, label, className }: {
     <title id={id}>{label}</title>
     <rect width={framedMm} height={framedMm} fill="#72523c" />
     <rect x={frameMm} y={frameMm} width={mosaicMm} height={mosaicMm} fill="#e8dfcc" />
-    <g aria-hidden="true">{design.cells.map((color, i) => <rect key={i}
+    <g aria-hidden="true">{design.cells.map((color, i) => <rect key={i} data-cell={i} data-color={color}
       x={frameMm + i % design.size * (tileMm + groutMm)} y={frameMm + Math.floor(i / design.size) * (tileMm + groutMm)}
-      width={tileMm} height={tileMm} fill={colors.get(color)} />)}</g>
+      width={tileMm} height={tileMm} rx={tileMm * .0275} fill={colors.get(color)} />)}</g>
+    <MosaicMaterial id={id} tileMm={tileMm} groutMm={groutMm} frameMm={frameMm} mosaicMm={mosaicMm} />
   </svg>;
 });

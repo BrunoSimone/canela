@@ -16,11 +16,44 @@ function Harness({ initial = base }: { initial?: typeof base }) {
   const button = useRef<HTMLButtonElement>(null);
   return <><button ref={button} onClick={() => setOpen(true)}>Retocar</button>{open && <TileEditor design={applyRetouches(initial, history.present)} history={history} returnFocus={button} onClose={() => setOpen(false)} onPaint={(i, c) => setHistory(h => paintTile(h, initial, i, c))} onRestore={i => setHistory(h => restoreTile(h, initial, i))} onUndo={() => setHistory(undoRetouch)} onRedo={() => setHistory(redoRetouch)} />}</>;
 }
-const cells = () => [...screen.getByRole("img", { name: "Cuadro en edición" }).querySelectorAll("rect")].slice(2).map(r => r.getAttribute("fill"));
+const cells = () => [...screen.getByRole("img", { name: "Cuadro en edición" }).querySelectorAll("[data-cell]")].map(r => r.getAttribute("fill"));
 beforeEach(installEditorDom);
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 async function open() { render(<Harness />); await userEvent.click(screen.getByRole("button", { name: "Retocar" })); return screen.findByRole("group", { name: "Mosaico editable" }); }
 describe("PER-133: editor interaction", () => {
+  it("PER-136: dense Murvi material stays unchanged during pinch/pan/zoom, then edits only the selected piece", async () => {
+    const config = await demoDesignCatalog.configuration();
+    const initial = renderMosaic(raster(), config, 45);
+    render(<Harness initial={initial} />);
+    await userEvent.click(screen.getByRole("button", { name: "Retocar" }));
+    const stage = screen.getByRole("group", { name: "Mosaico editable" });
+    const svg = screen.getByRole("img", { name: "Cuadro en edición" });
+    const before = svg.innerHTML, originalCells = cells();
+    const mutations: MutationRecord[] = [];
+    const observer = new MutationObserver(records => mutations.push(...records));
+    observer.observe(svg, { subtree: true, childList: true, attributes: true });
+    const pointer = (id: number, x: number) => ({ pointerId: id, clientX: x, clientY: 200, button: 0, pointerType: "touch" });
+    fireEvent.pointerDown(stage, pointer(1, 120)); fireEvent.pointerDown(stage, pointer(2, 280));
+    for (let n = 1; n <= 40; n++) fireEvent.pointerMove(stage, pointer(2, 280 + n * 4));
+    fireEvent.pointerUp(stage, pointer(2, 440)); fireEvent.pointerMove(stage, pointer(1, 100)); fireEvent.pointerUp(stage, pointer(1, 100));
+    await waitFor(() => expect(screen.getByLabelText("Zoom del mosaico").textContent).toBe("200%"));
+    fireEvent.pointerDown(stage, pointer(3, 200)); fireEvent.pointerMove(stage, pointer(3, 240)); fireEvent.pointerCancel(stage, pointer(3, 240));
+    await userEvent.click(screen.getByRole("button", { name: "Acercar mosaico" }));
+    expect(screen.getByRole("status", { name: "Venecita seleccionada" }).textContent).toContain("Elegí");
+    expect(svg.innerHTML).toBe(before);
+    expect(mutations).toHaveLength(0); observer.disconnect();
+    await userEvent.click(screen.getByRole("button", { name: "Ver cuadro completo" }));
+    await userEvent.click(screen.getByRole("button", { name: "Acercar mosaico" }));
+    fireEvent.pointerDown(stage, pointer(4, 200)); fireEvent.pointerUp(stage, pointer(4, 200));
+    expect(screen.getByRole("status", { name: "Venecita seleccionada" }).textContent).toContain("Fila 23 · Columna 23");
+    const target = config.palette.find(c => c.id !== initial.cells[1012])!;
+    await userEvent.click(screen.getByRole("button", { name: `Usar color ${target.name}` }));
+    expect(cells()).toEqual(originalCells.map((c, i) => i === 1012 ? target.hex : c));
+    expect(svg.querySelectorAll("[data-material-surface]")).toHaveLength(1);
+    await userEvent.click(screen.getByRole("button", { name: "Deshacer retoque" })); expect(cells()).toEqual(originalCells);
+    await userEvent.click(screen.getByRole("button", { name: "Rehacer retoque" })); expect(cells()[1012]).toBe(target.hex);
+    await userEvent.click(screen.getByRole("button", { name: "Restaurar color de esta venecita" })); expect(cells()).toEqual(originalCells);
+  });
   it("PER-134: all 62 Murvi materials are accessible and the last color can be painted and undone", async () => {
     const config = await demoDesignCatalog.configuration();
     const initial = renderMosaic(raster(), config, 15);

@@ -15,7 +15,7 @@ vi.mock("./local-image", () => ({ loadLocalImage: mocks.load }));
 vi.mock("react-easy-crop", () => ({ default: () => <div>Recortador de imagen</div> }));
 const template = (): DesignTemplate => ({ id: "test", title: "Flor de prueba", description: "Ejemplo", published: true, demonstration: true, design: renderMosaic(raster(), testWorkshop, 3) });
 const setup = (selected = true) => render(<Creator config={testWorkshop} pricing={testPricing} template={selected ? template() : null} templateUnavailable={false} />);
-const visibleCells = () => [...screen.getByRole("img", { name: /Tu mosaico/ }).querySelectorAll("rect")].slice(2).map(cell => cell.getAttribute("fill"));
+const visibleCells = () => [...screen.getByRole("img", { name: /Tu mosaico/ }).querySelectorAll("[data-cell]")].map(cell => cell.getAttribute("fill"));
 beforeEach(() => { vi.stubGlobal("URL", { revokeObjectURL: vi.fn() }); });
 afterEach(() => { cleanup(); vi.clearAllMocks(); vi.unstubAllGlobals(); });
 
