@@ -5,10 +5,9 @@ import { CatalogJsonLd } from "@/components/seo/catalog-json-ld";
 import { CategorySection } from "@/components/catalog/category-section";
 import { ComoComprar } from "@/components/home/como-comprar";
 import { CATEGORIES } from "@/content/catalog";
-import { getHeroSlides, getProducts, groupByCategory } from "@/lib/api";
-import { buildStorefrontCatalog } from "@/modules/inventory/domain/catalog-visibility";
+import { getHeroSlides, groupByCategory } from "@/lib/api";
+import { loadStorefrontProducts } from "@/lib/storefront-catalog";
 import { CartAvailabilitySync } from "@/modules/cart/presentation/cart-availability-sync";
-import { inventoryStore } from "@/modules/inventory/infrastructure/sanity-documents";
 import { CatalogDiscovery } from "@/components/home/catalog-discovery";
 
 export const dynamic = "force-dynamic";
@@ -20,15 +19,10 @@ export const metadata: Metadata = {
 };
 
 export default async function StorePage() {
-  const availability = inventoryStore();
-  const [products, heroSlides] = await Promise.all([
-    getProducts(),
+  const [visibleProducts, heroSlides] = await Promise.all([
+    loadStorefrontProducts(),
     getHeroSlides(),
   ]);
-  const visibleProducts = buildStorefrontCatalog(
-    products,
-    await availability.list(products.map(p => ({ id: p._id, name: p.name, price: p.price }))),
-  );
   const byCategory = groupByCategory(visibleProducts);
 
   const heroViews: HeroSlideView[] = heroSlides.map((s) => ({

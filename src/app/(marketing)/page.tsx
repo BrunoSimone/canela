@@ -1,5 +1,5 @@
-import { hasAsset, urlFor } from "@/sanity/client";
-import { getHeroSlides } from "@/lib/api";
+import { loadStorefrontProducts } from "@/lib/storefront-catalog";
+import { selectCatalogPreview } from "@/components/home/catalog-preview";
 import { customizationEnabled } from "@/modules/customization/infrastructure/availability";
 import { demoDesignCatalog } from "@/modules/customization/infrastructure/demo-catalog";
 import { loadGallery } from "@/modules/customization/application/catalog";
@@ -9,14 +9,13 @@ import { LegacyCatalogLinks } from "@/components/home/legacy-catalog-links";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [slides, designs] = await Promise.all([
-    getHeroSlides(),
+  const [products, designs] = await Promise.all([
+    // An unavailable preview must not prevent entry to either journey.
+    loadStorefrontProducts().catch(() => []),
     customizationEnabled() ? loadGallery(demoDesignCatalog) : Promise.resolve(null),
   ]);
-  const photo = slides.find(slide => hasAsset(slide.image));
-  const image = photo && hasAsset(photo.image) ? { src: urlFor(photo.image).width(3840).fit("max").quality(90).url(), alt: photo.name } : null;
   return <>
     <LegacyCatalogLinks />
-    <HomeDestinations image={image} templates={designs?.templates ?? null} />
+    <HomeDestinations products={selectCatalogPreview(products)} templates={designs?.templates ?? null} />
   </>;
 }

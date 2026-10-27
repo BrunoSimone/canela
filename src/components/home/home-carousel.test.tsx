@@ -7,8 +7,7 @@ const { reduced } = vi.hoisted(() => ({ reduced: vi.fn(() => false) }));
 vi.mock("motion/react", () => ({ useReducedMotion: reduced }));
 const props = {
   creatorEnabled: true,
-  photo: <span role="img" aria-label="Productos de Canela" />,
-  photoBackdrop: <span role="img" aria-label="Fondo del producto" />,
+  catalogBackdrop: <span role="img" aria-label="Fondo del catálogo" />,
   frame: <span role="img" aria-label="Cuadro de ejemplo" />,
   frameBackdrop: <span role="img" aria-label="Fondo decorativo" />,
 };
@@ -24,15 +23,14 @@ describe("PER-143: home visual carousel", () => {
   it("opens on the frame and keeps both routes fixed through automatic changes", () => {
     render(<HomeCarousel {...props} />);
     expect(screen.getByRole("img", { name: "Cuadro de ejemplo" })).toBeTruthy();
-    expect(screen.queryByRole("img", { name: "Productos de Canela" })).toBeNull();
+    expect(screen.queryByRole("img", { name: "Fondo del catálogo" })).toBeNull();
     expect(activeVisual()).toBe("frames");
     expect(screen.getByRole("heading", { level: 1 }).closest("a")).toBeNull();
     const routes = within(screen.getByRole("navigation", { name: "Elegí tu recorrido" }));
     const creator = routes.getByRole("link", { name: "Crear mi cuadro" });
     const store = routes.getByRole("link", { name: "Explorar la tienda" });
     act(() => vi.advanceTimersByTime(6000));
-    expect(screen.getByRole("img", { name: "Productos de Canela" })).toBeTruthy();
-    expect(screen.queryByRole("img", { name: "Fondo del producto" })).toBeNull();
+    expect(screen.queryByRole("img", { name: "Fondo del catálogo" })).toBeNull();
     expect(screen.queryByRole("img", { name: "Cuadro de ejemplo" })).toBeNull();
     expect(activeVisual()).toBe("store");
     expect(creator.getAttribute("href")).toBe("/crear-cuadro");
@@ -118,7 +116,8 @@ describe("PER-143: home visual carousel", () => {
     const { rerender } = render(<HomeCarousel {...props} />);
     const rotation = scheduled.mock.results[scheduled.mock.calls.findIndex(([, delay]) => delay === 6000)].value;
     rerender(<HomeCarousel {...props} creatorEnabled={false} />);
-    expect(screen.getByRole("img", { name: "Productos de Canela" })).toBeTruthy();
+    expect(activeVisual()).toBe("store");
+    expect(screen.queryByRole("img", { name: "Fondo del catálogo" })).toBeNull();
     expect(screen.queryByRole("img", { name: "Cuadro de ejemplo" })).toBeNull();
     expect(screen.getAllByRole("link")).toHaveLength(1);
     expect(screen.getByRole("link").getAttribute("href")).toBe("/tienda");

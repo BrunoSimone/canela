@@ -9,13 +9,14 @@ import { BuyingGuideLink } from "./buying-guide-link";
 import { demoDesignCatalog } from "@/modules/customization/infrastructure/demo-catalog";
 
 const { replace, pathname } = vi.hoisted(() => ({ replace: vi.fn(), pathname: vi.fn(() => "/") }));
+vi.mock("next/image", () => ({ default: ({ alt, src }: { alt: string; src: string }) => <span role="img" aria-label={alt} data-src={src} /> }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ replace }), usePathname: pathname }));
 afterEach(() => { cleanup(); vi.clearAllMocks(); pathname.mockReturnValue("/"); window.history.replaceState({}, "", "/"); });
 
 describe("PER-141: two storefront journeys", () => {
   it("offers both journeys beside the welcome without making the photo a store link", async () => {
     const templates = await demoDesignCatalog.templates();
-    const { container, rerender } = render(<HomeDestinations image={null} templates={templates} />);
+    const { container, rerender } = render(<HomeDestinations products={[]} templates={templates} />);
     const opening = screen.getByRole("navigation", { name: "Elegí tu recorrido" });
     const routes = within(opening);
     expect(routes.getByRole("link", { name: "Explorar la tienda" }).getAttribute("href")).toBe("/tienda");
@@ -27,12 +28,25 @@ describe("PER-141: two storefront journeys", () => {
     expect(screen.getAllByRole("link", { name: "Crear mi cuadro" })).toHaveLength(1);
     expect(screen.getByText("Diseño de ejemplo")).toBeTruthy();
     expect(container.innerHTML).not.toMatch(/murvi|Vitro|DI99|Nuestro taller/i);
-    rerender(<HomeDestinations image={null} templates={[]} />);
+    rerender(<HomeDestinations products={[]} templates={[]} />);
     expect(within(screen.getByRole("navigation", { name: "Elegí tu recorrido" })).getByRole("link", { name: "Crear mi cuadro" })).toBeTruthy();
-    rerender(<HomeDestinations image={null} templates={null} />);
+    rerender(<HomeDestinations products={[]} templates={null} />);
     expect(screen.getAllByRole("link")).toHaveLength(1);
     expect(screen.queryByRole("link", { name: "Crear mi cuadro" })).toBeNull();
     expect(screen.getByRole("heading", { name: "Explorá nuestro catálogo." })).toBeTruthy();
+  });
+  it("uses real photos only as a decorative background, keeping exactly two destinations", async () => {
+    const { container, rerender } = render(<HomeDestinations products={[{ id: "cuenco", src: "/cuenco.jpg" }, { id: "vaso", src: "/vaso.jpg" }]}
+      templates={await demoDesignCatalog.templates()} />);
+    const photos = [...container.querySelectorAll('[data-src]')];
+    expect(photos).toHaveLength(25);
+    expect(new Set(photos.map(p => p.getAttribute("data-src")))).toEqual(new Set(["/cuenco.jpg", "/vaso.jpg"]));
+    for (const photo of photos) expect(photo.closest('[aria-hidden="true"]')).toBeTruthy();
+    expect(screen.getAllByRole("link").map(link => link.getAttribute("href"))).toEqual(["/crear-cuadro", "/tienda"]);
+    expect(screen.queryByRole("button")).toBeNull();
+    rerender(<HomeDestinations products={[]} templates={null} />);
+    expect(container.querySelector('[data-src]')).toBeNull();
+    expect(screen.getByRole("link", { name: "Explorar la tienda" })).toBeTruthy();
   });
   it("explains the appropriate checkout and only offers simulation where available", () => {
     const { rerender } = render(<ComoComprar variant="store" />);

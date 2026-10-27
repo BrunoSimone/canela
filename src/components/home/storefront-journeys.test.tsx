@@ -39,10 +39,14 @@ beforeEach(() => {
 afterEach(() => { cleanup(); localStorage.clear(); vi.clearAllMocks(); vi.unstubAllEnvs(); });
 
 describe("PER-141: public routes and shared cart", () => {
-  it("loads only the two destinations on home and omits gated links in production", async () => {
+  it("loads the available catalog preview and both destinations, honoring production gates", async () => {
     const { rerender, container } = render(<MarketingLayout>{await HomePage()}</MarketingLayout>);
-    expect(getProducts).not.toHaveBeenCalled();
-    expect(stockList).not.toHaveBeenCalled();
+    expect(getProducts).toHaveBeenCalledOnce();
+    expect(stockList).toHaveBeenCalledOnce();
+    expect(container.querySelectorAll("main [data-src]")).toHaveLength(25);
+    expect(screen.queryByRole("link", { name: "Ver Cuenco de prueba en la tienda" })).toBeNull();
+    expect(screen.queryByText("Maceta agotada")).toBeNull();
+    expect(screen.queryByText("Pieza oculta")).toBeNull();
     const opening = within(screen.getByRole("navigation", { name: "Elegí tu recorrido" }));
     expect(opening.getByRole("link", { name: "Crear mi cuadro" }).getAttribute("href")).toBe("/crear-cuadro");
     expect(opening.getByRole("link", { name: "Explorar la tienda" }).getAttribute("href")).toBe("/tienda");
@@ -55,6 +59,15 @@ describe("PER-141: public routes and shared cart", () => {
     expect(screen.queryByRole("link", { name: "Crear mi cuadro" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Galería de cuadros" })).toBeNull();
     expect(within(screen.getByRole("main")).getAllByRole("link")).toHaveLength(1);
+  });
+  it("keeps both home journeys usable if stock cannot be confirmed, without advertising products", async () => {
+    stockList.mockRejectedValueOnce(new Error("Inventory unavailable"));
+    render(<MarketingLayout>{await HomePage()}</MarketingLayout>);
+    const main = within(screen.getByRole("main"));
+    expect(main.getByRole("link", { name: "Explorar la tienda" })).toBeTruthy();
+    expect(main.getByRole("link", { name: "Crear mi cuadro" })).toBeTruthy();
+    expect(screen.getByRole("main").querySelector("[data-src]")).toBeNull();
+    expect(main.queryByText("$1.500")).toBeNull();
   });
   it("filters the store, opens a photo, adds to cart and retains the purchase across sections", async () => {
     const user = userEvent.setup();

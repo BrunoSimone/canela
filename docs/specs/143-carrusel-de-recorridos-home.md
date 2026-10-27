@@ -5,6 +5,8 @@ tienda, galería, creador, footer ni habilitación de cobros.
 
 **Implementado.** [Evidencia](../evidence/PER-143.md).
 
+> La escena de tienda se actualiza en PER-144 con una grilla de catálogo desenfocada.
+
 ## Diseño
 
 - Una apertura de ancho completo alterna fotografía de productos y un cuadro

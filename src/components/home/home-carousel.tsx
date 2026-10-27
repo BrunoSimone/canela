@@ -8,10 +8,9 @@ import styles from "./home-destinations.module.css";
 
 type Visual = "frames" | "store";
 
-export function HomeCarousel({ creatorEnabled, photo, photoBackdrop, frame, frameBackdrop }: {
+export function HomeCarousel({ creatorEnabled, catalogBackdrop, frame, frameBackdrop }: {
   creatorEnabled: boolean;
-  photo: ReactNode;
-  photoBackdrop: ReactNode;
+  catalogBackdrop: ReactNode;
   frame: ReactNode;
   frameBackdrop: ReactNode;
 }) {
@@ -59,7 +58,7 @@ export function HomeCarousel({ creatorEnabled, photo, photoBackdrop, frame, fram
     onTouchStart={startTouch} onTouchEnd={endTouch}
     onTouchCancel={() => { touch.current = null; setTouching(false); }}>
     {creatorEnabled && <div className={styles.frameBackdrop} aria-hidden="true">{frameBackdrop}</div>}
-    <div className={styles.photoBackdrop} aria-hidden="true">{photoBackdrop}</div>
+    <div className={styles.catalogBackdrop} aria-hidden="true">{catalogBackdrop}</div>
     <div className={styles.intro}>
       <h1 id="home-title">{creatorEnabled ? <>Creá tu cuadro personalizado <span>o explorá nuestro catálogo.</span></> : "Explorá nuestro catálogo."}</h1>
       <nav className={styles.journeys} aria-label="Elegí tu recorrido">
@@ -72,9 +71,6 @@ export function HomeCarousel({ creatorEnabled, photo, photoBackdrop, frame, fram
       </nav>
     </div>
     <div className={styles.stage}>
-      <div className={styles.photoPresentation} aria-hidden={active !== "store"}>
-        <div className={styles.floatingVisual}>{photo}</div>
-      </div>
       {creatorEnabled && <div className={styles.framePresentation} aria-hidden={active !== "frames"}>
         <div className={styles.floatingVisual}>{frame}</div>
       </div>}
