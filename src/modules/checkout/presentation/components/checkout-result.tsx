@@ -193,7 +193,7 @@ function ResultShell({ children }: { children: React.ReactNode }) {
 function ReturnToStore() {
   return (
     <Link
-      href="/#catalogo"
+      href="/tienda"
       className="mt-8 inline-flex items-center gap-2 border-b border-[var(--canela-ochre)] pb-1 font-bold text-[var(--canela-ochre-dark)]"
     >
       <ArrowLeft className="size-4" />

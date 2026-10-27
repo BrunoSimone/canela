@@ -14,7 +14,7 @@ export default function MarketingLayout({
     <StoreProvider>
       <Navbar customizationEnabled={customizationEnabled()} />
       <main id="contenido" tabIndex={-1} className="flex-1">{children}</main>
-      <Footer />
+      <Footer customizationEnabled={customizationEnabled()} />
       <FloatingCart checkoutEnabled={isCheckoutReady()} />
     </StoreProvider>
   );

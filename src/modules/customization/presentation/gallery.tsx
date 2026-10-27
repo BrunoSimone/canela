@@ -28,7 +28,7 @@ export function GalleryCards({ templates }: { templates: DesignTemplate[] }) {
 
 export function Gallery({ templates }: { templates: DesignTemplate[] }) {
   return <div className={styles.page}>
-    <div className={styles.pageHeading}><div><Link href="/" className={styles.backLink}>Volver a la tienda</Link><h1>Galería de cuadros</h1><p>Elegí el diseño que más te guste y probá distintos tamaños y colores.</p></div>
+    <div className={styles.pageHeading}><div><Link href="/" className={styles.backLink}>Volver al inicio</Link><h1>Galería de cuadros</h1><p>Elegí el diseño que más te guste y probá distintos tamaños y colores.</p></div>
       <Link className={styles.primaryButton} href="/crear-cuadro"><ImagePlus size={19} aria-hidden="true" /> Usar mi imagen</Link></div>
     <DemoNotice /><GalleryCards templates={templates} />
     <div className={styles.galleryFooter}><h2>También podés usar tu propia foto</h2><p>Subila al creador y probá cómo quedaría en venecitas.</p><Link href="/crear-cuadro" className={styles.textLink}>Crear con mi foto <ArrowUpRight size={18} aria-hidden="true" /></Link></div>

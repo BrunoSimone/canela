@@ -177,7 +177,7 @@ export function CheckoutConfirmation({ shipping: shippingConfig, environment }: 
             Elegí las piezas que te gusten y volvé cuando quieras confirmar la compra.
           </p>
           <Link
-            href="/#catalogo"
+            href="/tienda"
             className="mt-7 inline-flex items-center gap-2 border-b border-[var(--canela-ochre)] pb-1 font-bold text-[var(--canela-ochre-dark)]"
           >
             <ArrowLeft className="size-4" />
@@ -193,7 +193,7 @@ export function CheckoutConfirmation({ shipping: shippingConfig, environment }: 
       <div className="mb-10 flex items-end justify-between gap-6 border-b border-[rgba(184,132,42,.25)] pb-7">
         <div>
           <Link
-            href="/#catalogo"
+            href="/tienda"
             className="mb-5 inline-flex items-center gap-2 text-sm font-bold text-[#6E4E38] hover:text-[var(--canela-ochre-dark)]"
           >
             <ArrowLeft className="size-4" />

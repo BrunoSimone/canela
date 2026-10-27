@@ -4,16 +4,16 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 
-import { NAV_LINKS } from "@/content/catalog";
 import { CanelaBadge } from "@/components/brand/canela-badge";
 
 export function Navbar({ customizationEnabled = false }: { customizationEnabled?: boolean }) {
-  const links = customizationEnabled ? [
-    { label: "Tienda", href: "/#catalogo" },
-    { label: "Galería de cuadros", href: "/cuadros" },
-    ...NAV_LINKS.slice(3),
-    { label: "Crear mi cuadro", href: "/crear-cuadro" },
-  ] : NAV_LINKS;
+  const links = [
+    { label: "Tienda", href: "/tienda" },
+    ...(customizationEnabled ? [
+      { label: "Galería de cuadros", href: "/cuadros" },
+      { label: "Crear mi cuadro", href: "/crear-cuadro" },
+    ] : [{ label: "Cómo comprar", href: "/tienda#como-comprar" }]),
+  ];
   const [mobileOpen, setMobileOpen] = useState(false);
   const menuButton = useRef<HTMLButtonElement>(null);
 

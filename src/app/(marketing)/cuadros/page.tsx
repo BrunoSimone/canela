@@ -1,3 +1,5 @@
+import { ComoComprar } from "@/components/home/como-comprar";
+import { demoPurchaseEnabled } from "@/modules/customization/infrastructure/demo-purchase-availability";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { loadGallery } from "@/modules/customization/application/catalog";
@@ -10,5 +12,5 @@ export const metadata: Metadata = { title: "Diseños de cuadros", robots: { inde
 export default async function GalleryPage() {
   if (!customizationEnabled()) notFound();
   const { templates } = await loadGallery(demoDesignCatalog);
-  return <Gallery templates={templates} />;
+  return <><Gallery templates={templates} /><ComoComprar variant="frames" purchaseDemoEnabled={demoPurchaseEnabled()} /></>;
 }

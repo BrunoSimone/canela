@@ -7,7 +7,7 @@ import { config, proxy } from "./proxy";
 afterEach(() => vi.unstubAllEnvs());
 
 describe("storefront maintenance", () => {
-  it.each(["/", "/checkout", "/checkout/resultado/example", "/mantenimiento", "/admin-extra", "/sitemap.xml"])("serves maintenance before rendering %s", (path) => {
+  it.each(["/", "/tienda", "/checkout", "/checkout/resultado/example", "/mantenimiento", "/admin-extra", "/sitemap.xml"])("serves maintenance before rendering %s", (path) => {
     vi.stubEnv("SITE_MAINTENANCE_MODE", "1");
     const response = proxy(new NextRequest(`https://canela.test${path}?demo=1`));
     expect(response.status).toBe(503);
@@ -38,7 +38,7 @@ describe("storefront maintenance", () => {
 
   it.each(["0", ""])("restores normal routing with flag %j", (value) => {
     vi.stubEnv("SITE_MAINTENANCE_MODE", value);
-    for (const path of ["/", "/checkout", "/api/checkout"]) {
+    for (const path of ["/", "/tienda", "/checkout", "/api/checkout"]) {
       expect(proxy(new NextRequest(`https://canela.test${path}`)).headers.get("x-middleware-next")).toBe("1");
     }
   });
@@ -47,7 +47,7 @@ describe("storefront maintenance", () => {
     for (const url of ["/_next/static/chunks/app.js", "/_next/image?url=%2Fcanela-logo.png&w=96&q=75", "/canela-logo.png", "/icon.png"]) {
       expect(unstable_doesMiddlewareMatch({ config, url })).toBe(false);
     }
-    for (const url of ["/", "/checkout", "/api/checkout", "/mantenimiento"]) {
+    for (const url of ["/", "/tienda", "/checkout", "/api/checkout", "/mantenimiento"]) {
       expect(unstable_doesMiddlewareMatch({ config, url })).toBe(true);
     }
   });

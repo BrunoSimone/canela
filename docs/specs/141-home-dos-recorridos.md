@@ -1,6 +1,6 @@
-# PER-141 — Propuesta de home con dos accesos
+# PER-141 — Home con dos accesos y ayuda por recorrido
 
-2026-10-27 · **Plan para revisar; distribución todavía no implementada.**
+2026-10-27 · **Implementado en la rama de cuadros.** [Evidencia](../evidence/PER-141.md).
 Continúa PER-138, PER-139 y [PER-140](140-tono-tienda-y-creador.md).
 
 ## Idea
@@ -10,12 +10,12 @@ o crear un cuadro. Dos banners con imágenes grandes ocupan la primera pantalla;
 cada uno lleva directamente a su recorrido. El catálogo completo vive en
 `/tienda`. El creador conserva `/crear-cuadro` y su compra separada.
 
-## Distribución propuesta
+## Distribución
 
 ### Escritorio
 
 ```text
-CANELA                 Tienda   Crear mi cuadro   Nosotros   Carrito
+CANELA                 Tienda   Galería   Crear mi cuadro   Carrito
 
 ┌─────────────────────────────┐  ┌─────────────────────────────┐
 │                             │  │                             │
@@ -28,11 +28,10 @@ CANELA                 Tienda   Crear mi cuadro   Nosotros   Carrito
 │   [Explorar la tienda]      │  │   [Crear mi cuadro]          │
 └─────────────────────────────┘  └─────────────────────────────┘
 
-Foto de Mariela / breve presentación del taller
 Footer: categorías, galería, cómo comprar, Instagram
 ```
 
-- Dos banners del mismo ancho, unos 500–560 px de alto en escritorio amplio.
+- Dos banners del mismo ancho, unos 540–600 px de alto en escritorio amplio.
   Sin otro hero encima: los dos destinos se ven juntos al entrar.
 - Fotografía protagonista, título breve y una sola acción principal por banner.
   El texto va en una zona de fondo uniforme o con contraste controlado, sin tapar
@@ -40,8 +39,8 @@ Footer: categorías, galería, cómo comprar, Instagram
 - Alineación izquierda, márgenes y alturas compartidos. La superficie completa
   de cada banner es un enlace; el botón visual pertenece a ese mismo enlace,
   sin enlaces anidados ni focos duplicados.
-- Debajo, una presentación corta de Mariela y el taller. La explicación de
-  compra acompaña al catálogo; el creador ya explica sus propios pasos.
+- No incluir la sección del taller ni enlaces a Nosotros. Ese contenido queda
+  para redes sociales. La home termina con el footer después de los banners.
 
 ### Celular y tablet
 
@@ -65,7 +64,7 @@ Se conserva la identidad que ya tiene Canela:
 | Marrón / títulos y texto | `#4A3527` |
 | Ocre / acentos de tienda | `#8A621D` |
 | Oliva / acentos del creador | `#606839` |
-| Fondo del taller | `#EFE4CE` |
+| Fondo secundario | `#EFE4CE` |
 
 - **Grand Hotel** para los títulos grandes; **Mulish** para cuerpo y controles.
   Títulos de 40–56 px en escritorio y 32–40 px en celular, según el espacio.
@@ -87,17 +86,18 @@ Se conserva la identidad que ya tiene Canela:
 
 | Ruta | Contenido |
 | --- | --- |
-| `/` | Dos banners, taller y footer |
+| `/` | Dos banners y footer |
 | `/tienda` — nueva | Categorías, catálogo, filtros, fotos ampliadas, carrito y cómo comprar |
-| `/crear-cuadro` | Foto, encuadre, tamaño, colores, retoques y compra separada |
-| `/cuadros` | Galería; acceso desde el creador y el footer |
+| `/crear-cuadro` | Foto, encuadre, tamaño, colores, retoques, compra separada y cómo comprar |
+| `/cuadros` | Galería y cómo comprar cuadros; acceso desde el creador y el footer |
 | `/checkout` | Compra habitual de productos del catálogo |
 
-El menú ofrece Tienda, Crear mi cuadro y Nosotros; el logo vuelve a Inicio.
+El menú ofrece Tienda, Galería de cuadros y Crear mi cuadro; el logo vuelve a Inicio.
 Los enlaces de categoría apuntan a `/tienda#vidrio`, `/tienda#ceramica` y
-`/tienda#espejos`. Cómo comprar pasa a `/tienda#como-comprar`.
+`/tienda#espejos`. La ayuda de tienda apunta a `/tienda#como-comprar`; la de cuadros, a
+`/crear-cuadro#como-comprar`.
 
-## Trabajo técnico previsto
+## Implementación
 
 1. Trasladar la carga de productos, disponibilidad, `CartAvailabilitySync`,
    `CatalogJsonLd`, `CatalogDiscovery` y `CategorySection` desde la home a
@@ -111,7 +111,7 @@ Los enlaces de categoría apuntan a `/tienda#vidrio`, `/tienda#ceramica` y
 5. Compatibilidad con enlaces viejos: `/#catalogo`, `/#vidrio`, `/#ceramica`,
    `/#espejos` y `/#como-comprar` pasan al ancla equivalente de `/tienda`. Los
    fragmentos no llegan al servidor: resolver esa migración en el cliente y
-   conservar un enlace alternativo. `/#nosotros` permanece en la home.
+   conservar un enlace alternativo. No recrear la sección Nosotros.
 6. Dar a `/tienda` título, descripción y canonical propios, e incluirla en el
    sitemap. La home mantiene datos de marca; los datos de productos quedan en
    la ruta del catálogo. Respetar los controles de mantenimiento.
@@ -121,7 +121,20 @@ Los enlaces de categoría apuntan a `/tienda#vidrio`, `/tienda#ceramica` y
    una decisión separada de esta reorganización. Los cobros de cuadros siguen
    deshabilitados.
 
-## Pruebas de aceptación al implementarlo
+## Ayuda contextual antes del footer
+
+- Tienda: armar carrito, revisar envío y total, pagar con Mercado Pago.
+- Creador y galería: elegir foto/diseño, ajustar cuadro y revisar resumen;
+  explicar que la compra de cuadros es independiente del carrito.
+- La ayuda de cuadros debe reflejar la disponibilidad real: simulación de envío
+  y pago solo en desarrollo local; en preview, solo diseño y resumen. Siempre
+  aclarar que son valores de prueba y que no se cobra dinero.
+- Ubicar la ayuda como última sección de cada página, inmediatamente antes del
+  footer, incluso al avanzar a resumen o compra de prueba dentro del creador.
+- Si el usuario ya está en ese recorrido, el enlace de ayuda es un ancla local:
+  conserva el diseño en memoria, el paso actual y los parámetros de la URL.
+
+## Pruebas de aceptación
 
 - Home → tienda → filtro → foto ampliada → carrito → checkout; el carrito sigue
   presente al cambiar de ruta y el total no cambia por la navegación.
@@ -129,6 +142,9 @@ Los enlaces de categoría apuntan a `/tienda#vidrio`, `/tienda#ceramica` y
 - Galería → diseño elegido en el creador y acceso de vuelta a la galería.
 - Enlaces de categoría nuevos y antiguos, navegación móvil y teclado.
 - Feature del creador activo e inactivo, mantenimiento y productos agotados.
+- Ayuda distinta por recorrido, última antes del footer, sin prometer cobros
+  reales de cuadros. No mostrar destinos deshabilitados en navbar, home o footer.
+- La home no consulta inventario ni carga el catálogo completo.
 - Metadatos y sitemap de la tienda; no indexar la compra simulada ni sus datos.
 - Capturas móvil/escritorio para verificar imágenes, textos, foco, contraste,
   ausencia de desborde y acceso cercano a los dos banners.

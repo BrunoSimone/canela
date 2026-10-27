@@ -27,7 +27,7 @@ export function CatalogJsonLd({ products }: { products: StorefrontProduct[] }) {
           priceCurrency: "ARS",
           price: p.price,
           availability: p.available ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-          url: `${siteConfig.url}/#${p.category}`,
+          url: `${siteConfig.url}/tienda#${p.category}`,
           seller: { "@id": `${siteConfig.url}/#organization` },
         },
       },

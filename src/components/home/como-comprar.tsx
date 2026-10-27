@@ -1,4 +1,4 @@
-import { CreditCard, PackageCheck, ShieldCheck, ShoppingBag } from "lucide-react";
+import { CreditCard, ImagePlus, Palette, PackageCheck, ShieldCheck, ShoppingBag, SquareCheck } from "lucide-react";
 
 interface Step {
   n: number;
@@ -9,7 +9,7 @@ interface Step {
   text: string;
 }
 
-const STEPS: Step[] = [
+const STORE_STEPS: Step[] = [
   {
     n: 1,
     icon: <ShoppingBag className="size-[22px]" strokeWidth={1.9} />,
@@ -36,21 +36,28 @@ const STEPS: Step[] = [
   },
 ];
 
-export function ComoComprar() {
+export function ComoComprar({ variant = "store", purchaseDemoEnabled = false }: { variant?: "store" | "frames"; purchaseDemoEnabled?: boolean }) {
+  const frames = variant === "frames";
+  const steps: Step[] = frames ? [
+    { n: 1, icon: <ImagePlus size={22} />, iconBg: "#e5e7d4", iconColor: "#606839", title: "Elegí tu imagen", text: "Subí una foto que te guste o empezá con un diseño de la galería." },
+    { n: 2, icon: <Palette size={22} />, iconBg: "#e5e7d4", iconColor: "#606839", title: "Dale tu toque", text: "Probá tamaños, ajustá el encuadre y cambiá las venecitas que quieras." },
+    { n: 3, icon: <SquareCheck size={22} />, iconBg: "#e5e7d4", iconColor: "#606839", title: purchaseDemoEnabled ? "Probá la compra" : "Revisá tu cuadro", text: purchaseDemoEnabled ? "Revisá el diseño y el precio. Después podés probar el envío y el pago con datos de prueba." : "Mirá el diseño, el tamaño y el precio orientativo en el resumen. Podés volver a editarlo antes de decidir." },
+  ] : STORE_STEPS;
+
   return (
-    <section id="como-comprar" className="anchor-offset mx-auto max-w-[1180px] px-[22px] pb-11 pt-16">
+    <section id="como-comprar" aria-labelledby="buying-guide-title" className="anchor-offset mx-auto max-w-[1180px] px-[22px] pb-11 pt-16">
       <div className="mb-10 text-center">
-        <h2 className="my-2 font-heading text-[clamp(32px,4.5vw,48px)] font-normal text-[var(--canela-brown)]">
-          Cómo comprar
+        <h2 id="buying-guide-title" className="my-2 font-heading text-[clamp(32px,4.5vw,48px)] font-normal text-[var(--canela-brown)]">
+          {frames ? "Cómo comprar tu cuadro" : "Cómo comprar en la tienda"}
         </h2>
         <p className="mx-auto max-w-[520px] text-base leading-relaxed text-[#6E4E38]">
-          El envío se calcula antes de pasar a Mercado Pago.
+          {frames ? "Tu cuadro tiene su propia compra, separada del carrito de la tienda." : "El envío se calcula antes de pasar a Mercado Pago."}
         </p>
       </div>
 
-      <div className="grid gap-5 [grid-template-columns:repeat(auto-fit,minmax(230px,1fr))]">
-        {STEPS.map((s) => (
-          <div
+      <ol className="grid list-none grid-cols-1 gap-5 md:grid-cols-3">
+        {steps.map((s) => (
+          <li
             key={s.n}
             className="flex flex-col gap-3 rounded-[18px] border border-[rgba(184,132,42,.18)] bg-[var(--canela-cream-card)] px-5 pb-6 pt-6"
           >
@@ -65,22 +72,25 @@ export function ComoComprar() {
                 {s.n}
               </span>
             </div>
-            <div className="text-[17px] font-extrabold leading-tight text-[var(--canela-brown)]">
+            <h3 className="text-[17px] font-extrabold leading-tight text-[var(--canela-brown)]">
               {s.title}
-            </div>
+            </h3>
             <p className="text-[14.5px] leading-relaxed text-[#6E4E38]">{s.text}</p>
-          </div>
+          </li>
         ))}
-      </div>
+      </ol>
 
-      <div className="mt-6 flex flex-wrap items-center justify-center gap-3.5 rounded-2xl border border-dashed border-[rgba(184,132,42,.4)] bg-[#EFE4CE] px-6 py-5">
+      {frames ? <p className="mt-6 rounded-2xl border border-[#c7c9ae] bg-[#eeeedd] px-5 py-4 text-sm leading-relaxed text-[#4a3527]">
+        {purchaseDemoEnabled ? "Estás probando el recorrido de compra. " : "Por ahora podés diseñar y revisar tu cuadro; la compra todavía no está habilitada. "}
+        Medidas, colores y precios orientativos. No se cobra dinero.
+      </p> : <div className="mt-6 flex flex-wrap items-center justify-center gap-3.5 rounded-2xl border border-dashed border-[rgba(184,132,42,.4)] bg-[#EFE4CE] px-6 py-5">
         <div className="flex size-[78px] flex-none items-center justify-center rounded-xl border border-[rgba(184,132,42,.25)] bg-[var(--canela-cream-card)]">
           <ShieldCheck
             className="size-[42px] text-[var(--canela-brown)]"
             strokeWidth={1.6}
           />
         </div>
-        <div className="min-w-[220px] flex-1">
+        <div className="min-w-0 flex-1 basis-[220px]">
           <div className="mb-1 text-base font-extrabold text-[var(--canela-brown)]">
             Pago con Mercado Pago
           </div>
@@ -89,7 +99,7 @@ export function ComoComprar() {
             almacena los datos de tu tarjeta.
           </p>
         </div>
-      </div>
+      </div>}
     </section>
   );
 }

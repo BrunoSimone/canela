@@ -4,9 +4,7 @@ import { act, cleanup, fireEvent, render, screen, within } from "@testing-librar
 import userEvent from "@testing-library/user-event";
 import { Navbar } from "./navbar";
 import { Hero } from "./hero";
-import { CreatorSpotlight } from "./creator-spotlight";
 import { CatalogDiscovery } from "./catalog-discovery";
-import { demoDesignCatalog } from "@/modules/customization/infrastructure/demo-catalog";
 
 afterEach(()=>{cleanup();vi.useRealTimers();});
 describe("UX-01 navigation and motion controls",()=>{
@@ -38,19 +36,18 @@ describe("UX-01 navigation and motion controls",()=>{
     act(()=>vi.advanceTimersByTime(4200));
     expect(screen.getByRole("link",{name:"Ver Pieza A"})).toBeTruthy();
   });
-  it("promotes the creator and keeps a direct catalog path only when enabled",()=>{
-    const { rerender }=render(<Hero slides={[]} customizationEnabled />);
-    expect(screen.getByRole("link",{name:"Crear mi cuadro"}).getAttribute("href")).toBe("/crear-cuadro");
-    expect(screen.getByRole("link",{name:"Explorar la tienda"}).getAttribute("href")).toBe("#catalogo");
-    rerender(<Hero slides={[]} />);
-    expect(screen.queryByRole("link",{name:"Crear mi cuadro"})).toBeNull();
+  it("keeps the store hero focused on its catalog",()=>{
+    render(<Hero slides={[]} />);
+    expect(screen.getByRole("heading",{name:"Tienda",level:1})).toBeTruthy();
     expect(screen.getByRole("link",{name:"Ver catálogo"}).getAttribute("href")).toBe("#catalogo");
+    expect(screen.queryByRole("link",{name:"Crear mi cuadro"})).toBeNull();
   });
   it("makes gallery and creator reachable from mobile navigation and closes the menu on selection",async()=>{
     const { rerender }=render(<Navbar customizationEnabled />);
     await userEvent.click(screen.getByRole("button",{name:"Menú"}));
     const mobile=within(screen.getByRole("navigation",{name:"Navegación móvil"}));
     expect(mobile.getByRole("link",{name:"Galería de cuadros"}).getAttribute("href")).toBe("/cuadros");
+    expect(mobile.getByRole("link",{name:"Tienda"}).getAttribute("href")).toBe("/tienda");
     const creator=mobile.getByRole("link",{name:"Crear mi cuadro"});
     expect(creator.getAttribute("href")).toBe("/crear-cuadro");
     creator.addEventListener("click",event=>event.preventDefault());
@@ -59,16 +56,6 @@ describe("UX-01 navigation and motion controls",()=>{
     rerender(<Navbar />);
     expect(screen.queryByRole("link",{name:"Crear mi cuadro"})).toBeNull();
     expect(screen.queryByRole("link",{name:"Galería de cuadros"})).toBeNull();
-  });
-  it("offers a complete creation path, marks examples and works without gallery entries",async()=>{
-    const templates=await demoDesignCatalog.templates();
-    const { container, rerender }=render(<CreatorSpotlight templates={templates} />);
-    expect(screen.getByRole("link",{name:"Empezar mi cuadro"}).getAttribute("href")).toBe("/crear-cuadro");
-    expect(screen.getByRole("link",{name:"Ver galería de diseños"}).getAttribute("href")).toBe("/cuadros");
-    expect(screen.getByText("Diseños de ejemplo")).toBeTruthy();
-    expect(container.innerHTML).not.toMatch(/murvi|Vitro|DI99/i);
-    rerender(<CreatorSpotlight templates={[]} />);
-    expect(screen.getByRole("link",{name:"Abrir el creador de cuadros"})).toBeTruthy();
   });
   it("links directly to all three catalog sections",()=>{
     render(<CatalogDiscovery />);

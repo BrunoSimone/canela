@@ -1,10 +1,16 @@
 import Link from "next/link";
 
-import { NAV_LINKS } from "@/content/catalog";
+import { STORE_LINKS } from "@/content/catalog";
 import { CanelaBadge } from "@/components/brand/canela-badge";
 import { siteConfig } from "@/lib/config";
+import { BuyingGuideLink } from "./buying-guide-link";
 
-export function Footer() {
+export function Footer({ customizationEnabled = false }: { customizationEnabled?: boolean }) {
+  const links = [...STORE_LINKS, ...(customizationEnabled ? [
+    { label: "Crear mi cuadro", href: "/crear-cuadro" },
+    { label: "Galería de cuadros", href: "/cuadros" },
+    { label: "Cómo comprar tu cuadro", href: "/crear-cuadro#como-comprar" },
+  ] : [])];
   return (
     <footer className="bg-[var(--canela-footer)] text-[#EADFCA]">
       <div className="mx-auto grid max-w-[1180px] gap-9 px-[22px] pb-8 pt-14 md:grid-cols-[1.4fr_1fr_1fr]">
@@ -28,7 +34,7 @@ export function Footer() {
             href={siteConfig.instagramUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[15px] text-[#EADFCA] hover:text-white"
+            className="inline-flex min-h-11 items-center text-[15px] text-[#EADFCA] hover:text-white"
           >
             Instagram · {siteConfig.instagram}
           </a>
@@ -38,15 +44,16 @@ export function Footer() {
           <span className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--canela-ochre)]">
             Explorar
           </span>
-          {NAV_LINKS.map((link) => (
-            <Link
+          {links.map((link) => {
+            const Component = link.href.endsWith("#como-comprar") ? BuyingGuideLink : Link;
+            return <Component
               key={link.href}
               href={link.href}
-              className="text-[15px] text-[#EADFCA] hover:text-white"
+              className="inline-flex min-h-11 items-center text-[15px] text-[#EADFCA] hover:text-white"
             >
               {link.label}
-            </Link>
-          ))}
+            </Component>;
+          })}
         </div>
       </div>
       <div className="border-t border-[rgba(234,223,202,.15)] px-[22px] py-5 text-center text-[13px] text-[#bca57f]">

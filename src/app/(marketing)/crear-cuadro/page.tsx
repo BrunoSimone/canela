@@ -1,3 +1,4 @@
+import { ComoComprar } from "@/components/home/como-comprar";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { loadCreator } from "@/modules/customization/application/catalog";
@@ -12,5 +13,6 @@ export default async function CreatorPage({ searchParams }: { searchParams: Prom
   if (!customizationEnabled()) notFound();
   const query = await searchParams;
   const data = await loadCreator(demoDesignCatalog, typeof query.diseno === "string" ? query.diseno : query.diseno ? "invalid" : undefined);
-  return <Creator key={typeof query.diseno === "string" ? query.diseno : "new"} {...data} purchaseDemoEnabled={demoPurchaseEnabled()} />;
+  const purchaseDemo = demoPurchaseEnabled();
+  return <><Creator key={typeof query.diseno === "string" ? query.diseno : "new"} {...data} purchaseDemoEnabled={purchaseDemo} /><ComoComprar variant="frames" purchaseDemoEnabled={purchaseDemo} /></>;
 }

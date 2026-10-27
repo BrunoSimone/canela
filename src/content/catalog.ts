@@ -32,10 +32,9 @@ export const CATEGORIES: CategoryMeta[] = [
   },
 ];
 
-export const NAV_LINKS = [
-  { label: "Vidrio", href: "/#vidrio" },
-  { label: "Cerámica", href: "/#ceramica" },
-  { label: "Espejos y Cuadros", href: "/#espejos" },
-  { label: "Nosotros", href: "/#nosotros" },
-  { label: "Cómo comprar", href: "/#como-comprar" },
+export const STORE_LINKS = [
+  { label: "Vidrio", href: "/tienda#vidrio" },
+  { label: "Cerámica", href: "/tienda#ceramica" },
+  { label: "Espejos y Cuadros", href: "/tienda#espejos" },
+  { label: "Cómo comprar en la tienda", href: "/tienda#como-comprar" },
 ] as const;
