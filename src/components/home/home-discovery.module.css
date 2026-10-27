@@ -1,0 +1,45 @@
+.spotlight { max-width: 1136px; margin: 48px auto 56px; display: grid; grid-template-columns: 1.06fr 1fr; overflow: hidden; border: 1px solid rgba(96,104,57,.2); border-radius: 26px; background: #f0eddc; }
+.spotlightCopy { padding: clamp(28px,4vw,48px); }
+.eyebrow { margin: 0 0 14px; color: #606839; font-size: 11px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
+.spotlight h2, .catalogIntro h2 { margin: 0; font-family: var(--font-heading); font-size: clamp(40px,4.6vw,58px); font-weight: 400; line-height: 1.05; }
+.intro { max-width: 430px; margin: 20px 0; font-size: 15px; line-height: 1.8; color: #5a4130; }
+.steps { padding: 0; margin: 24px 0; display: grid; gap: 12px; list-style: none; font-size: 14px; font-weight: 600; }
+.steps li { display: flex; align-items: center; gap: 12px; }
+.steps span { color: #606839; font-size: 11px; letter-spacing: .08em; border-bottom: 1px solid #b6bb96; padding-bottom: 2px; }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; }
+.primary, .secondary { display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 48px; font-size: 14px; font-weight: 800; }
+.primary { border-radius: 999px; background: #606839; color: #fbf7ee; padding: 12px 22px; transition: transform .2s, background .2s; }
+.primary:hover { background: #50572f; transform: translateY(-2px); }
+.secondary { text-underline-offset: 5px; }
+.secondary:hover { text-decoration: underline; }
+.previewNote { margin: 14px 0 0; max-width: 390px; color: #6e4e38; font-size: 11px; line-height: 1.7; }
+.artScene { position: relative; display: block; min-width: 0; min-height: 440px; overflow: hidden; background: radial-gradient(ellipse at 45% 35%, #eeead7, #d7d5b8); }
+.artScene::before { content: ""; position: absolute; width: 75%; aspect-ratio: 1; border: 1px solid rgba(96,104,57,.18); border-radius: 50%; top: 12%; left: 12%; }
+.artScene::after { content: ""; position: absolute; inset: auto 0 0; height: 17%; background: linear-gradient(#c3bea0,#d8d0b3); box-shadow: 0 -1px 0 rgba(96,104,57,.12); }
+.artEyebrow { position: absolute; top: 28px; left: 28px; color: #50572f; font-size: 10px; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
+.mainArt { position: absolute; width: 65%; height: auto; top: 19%; left: 12%; z-index: 1; transform: rotate(-5deg); box-shadow: 8px 18px 24px rgba(62,44,32,.23); transition: transform .5s ease; }
+.companionArt { position: absolute; width: 35%; height: auto; bottom: 16%; right: 5%; z-index: 2; transform: rotate(7deg); box-shadow: 5px 12px 22px rgba(62,44,32,.22); transition: transform .5s ease; }
+.artScene:hover .mainArt { transform: rotate(-3deg) translateY(-4px); }
+.artScene:hover .companionArt { transform: rotate(4deg) translateY(-3px); }
+.artCaption { position: absolute; z-index: 3; bottom: 25px; left: 28px; right: 28px; display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 12px; color: #4a3527; }
+.emptyArt { position: absolute; inset: 24%; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 20px; text-align: center; line-height: 1.7; color: #606839; }
+.catalogIntro { max-width: 1180px; margin: 0 auto; padding: 12px 22px 22px; display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; }
+.catalogIntro h2 { font-size: clamp(36px,4vw,46px); }
+.categoryLinks { display: flex; flex-wrap: wrap; gap: 8px; }
+.categoryLinks a { display: inline-flex; min-height: 44px; align-items: center; gap: 10px; padding: 10px 16px; border-radius: 999px; border: 1px solid rgba(184,132,42,.3); font-size: 13px; font-weight: 700; transition: background .2s; }
+.categoryLinks a:hover { background: #efe4ce; }
+@media(max-width: 1180px) { .spotlight { margin-left: 22px; margin-right: 22px; } }
+@media(max-width: 900px) { .spotlightCopy { padding: 30px 26px; } .catalogIntro { align-items: flex-start; flex-direction: column; } .artScene { min-height: 430px; } .mainArt { width: 72%; left: 8%; top: 23%; } .companionArt { width: 42%; bottom: 20%; } }
+@media(max-width: 640px) {
+  .spotlight { grid-template-columns: 1fr; margin-top: 28px; margin-bottom: 36px; border-radius: 20px; }
+  .spotlightCopy { padding: 28px 24px 24px; }
+  .intro { margin: 16px 0; }
+  .steps { margin: 20px 0; }
+  .artScene { min-height: 0; aspect-ratio: 1.08; grid-row: 1; }
+  .artEyebrow { top: 20px; left: 22px; }
+  .mainArt { width: 59%; left: 13%; top: 18%; }
+  .companionArt { width: 33%; bottom: 16%; right: 9%; }
+  .artCaption { bottom: 17px; left: 22px; right: 22px; }
+  .catalogIntro { gap: 20px; }
+  .categoryLinks a { padding: 10px 13px; }
+}

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { motion, useReducedMotion, type Variants } from "motion/react";
+import { ArrowRight, ImagePlus, Pause, Play } from "lucide-react";
 
 import { CanelaBadge } from "@/components/brand/canela-badge";
 import { siteConfig } from "@/lib/config";
@@ -62,7 +63,7 @@ const item: Variants = {
   show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
 };
 
-export function Hero({ slides }: { slides: HeroSlideView[] }) {
+export function Hero({ slides, customizationEnabled = false }: { slides: HeroSlideView[]; customizationEnabled?: boolean }) {
   const [slide, setSlide] = useState(0);
   const [paused, setPaused] = useState(false);
   const reduce = useReducedMotion() ?? false;
@@ -95,10 +96,10 @@ export function Hero({ slides }: { slides: HeroSlideView[] }) {
         }}
       />
 
-      <div className="relative z-[2] mx-auto grid max-w-[1180px] items-center gap-11 px-[22px] pb-12 pt-14 md:grid-cols-[1.05fr_0.95fr]">
-        <motion.div className="flex flex-col items-start gap-5" {...motionProps}>
+      <div className="relative z-[2] mx-auto grid max-w-[1180px] items-center gap-11 px-[22px] pb-10 pt-9 md:grid-cols-[1.05fr_0.95fr] md:gap-14 md:py-14">
+        <motion.div className="flex flex-col items-start gap-4 md:gap-5" {...motionProps}>
           <motion.span {...itemProps}>
-            <CanelaBadge size={190} priority />
+            <CanelaBadge size={customizationEnabled ? 72 : 190} priority />
           </motion.span>
           <motion.div
             className="text-[12.5px] font-bold uppercase tracking-[0.22em] text-[var(--canela-ochre)]"
@@ -107,31 +108,31 @@ export function Hero({ slides }: { slides: HeroSlideView[] }) {
             {siteConfig.tagline}
           </motion.div>
           <motion.h1
-            className="m-0 font-heading text-[clamp(42px,6vw,66px)] font-normal leading-[1.02] text-[var(--canela-brown)] text-balance"
+            className="m-0 font-heading text-[clamp(44px,5.5vw,68px)] font-normal leading-[1.05] text-[var(--canela-brown)] text-balance"
             {...itemProps}
           >
-            Canela Store
+            {customizationEnabled ? <>Objetos para tu casa.<br /><span className="text-[#606839]">Un cuadro con tu historia.</span></> : "Canela Store"}
           </motion.h1>
           <motion.p
             className="m-0 max-w-[460px] text-base leading-relaxed text-[#5a4130]"
             {...itemProps}
           >
-            En Canela trabajamos con vidrio reciclado, cerámica y espejos.
-            Diseñamos y elaboramos piezas decorativas y utilitarias en
-            Mar del Plata.
+            {customizationEnabled
+              ? "Piezas en vidrio, cerámica y mosaico, hechas en Mar del Plata. Elegí una del taller o transformá tu imagen en un cuadro propio."
+              : "En Canela trabajamos con vidrio reciclado, cerámica y espejos. Diseñamos y elaboramos piezas decorativas y utilitarias en Mar del Plata."}
           </motion.p>
-          <motion.a
-            href="#catalogo"
-            className="mt-1 inline-flex items-center gap-2.5 rounded-full bg-[var(--canela-ochre)] px-7 py-3.5 text-[15px] font-bold text-[var(--canela-cream-card)] transition-transform hover:scale-[1.03]"
-            {...itemProps}
-          >
-            Ver catálogo →
-          </motion.a>
+          <motion.div className="flex flex-wrap items-center gap-3" {...itemProps}>
+            {customizationEnabled && <a href="/crear-cuadro" className="inline-flex min-h-12 items-center gap-2.5 rounded-full bg-[var(--canela-brown)] px-6 py-3.5 text-[15px] font-bold text-[var(--canela-cream-card)] transition-transform hover:scale-[1.03]"><ImagePlus size={19} aria-hidden="true" />Crear mi cuadro</a>}
+            <a href="#catalogo" className={`inline-flex min-h-12 items-center gap-2.5 rounded-full px-6 py-3.5 text-[15px] font-bold transition-transform hover:scale-[1.03] ${customizationEnabled ? "border border-[rgba(74,53,39,.35)] text-[var(--canela-brown)]" : "bg-[var(--canela-ochre)] text-[var(--canela-cream-card)]"}`}>
+              {customizationEnabled ? "Explorar la tienda" : "Ver catálogo"}<ArrowRight size={17} aria-hidden="true" />
+            </a>
+          </motion.div>
+          {customizationEnabled && <motion.p className="m-0 text-xs leading-relaxed text-[#6E4E38]" {...itemProps}>Probá el creador con tu foto · Sin cobros reales por ahora.</motion.p>}
         </motion.div>
 
         {active && (
           <motion.div
-            className="flex flex-col items-center gap-4"
+            className="relative isolate flex flex-col items-center gap-4 max-md:overflow-hidden max-md:py-8"
             initial={reduce ? undefined : { opacity: 0, scale: 0.9 }}
             animate={reduce ? undefined : { opacity: 1, scale: 1 }}
             transition={{ duration: 0.7, delay: 0.25, ease: "easeOut" }}
@@ -197,7 +198,7 @@ export function Hero({ slides }: { slides: HeroSlideView[] }) {
                     className="flex size-11 items-center justify-center"
                   ><span className="h-2 rounded-full" style={{width: i === slide ? 22 : 8, background: i === slide ? "var(--canela-ochre)" : "rgba(184,132,42,.4)"}} /></button>
                 ))}
-                {!reduce && <button type="button" onClick={() => setPaused(value => !value)} className="min-h-11 px-3 text-sm font-bold text-[#6E4E38]">{paused ? "Reanudar carrusel" : "Pausar carrusel"}</button>}
+                {!reduce && <button type="button" onClick={() => setPaused(value => !value)} aria-label={paused ? "Reanudar carrusel" : "Pausar carrusel"} className="inline-flex size-11 items-center justify-center rounded-full text-[#6E4E38] transition-colors hover:bg-[rgba(251,247,238,.5)]">{paused ? <Play size={17} aria-hidden="true" /> : <Pause size={17} aria-hidden="true" />}</button>}
               </div>
             )}
           </motion.div>

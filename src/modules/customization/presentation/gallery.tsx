@@ -6,7 +6,7 @@ import { MosaicSvg } from "./mosaic-svg";
 import styles from "./customization.module.css";
 
 export function DemoNotice() {
-  return <p className={styles.notice}><span className={styles.noticeDot} aria-hidden="true" />Versión de prueba · Medidas y precios de ejemplo. Colores Murvi orientativos. Sin cobros reales.</p>;
+  return <p className={styles.notice}><span className={styles.noticeDot} aria-hidden="true" />Versión de prueba · Medidas y precios de ejemplo. Colores orientativos. Sin cobros reales.</p>;
 }
 
 export function GalleryCards({ templates }: { templates: DesignTemplate[] }) {
@@ -33,9 +33,4 @@ export function Gallery({ templates }: { templates: DesignTemplate[] }) {
     <DemoNotice /><GalleryCards templates={templates} />
     <div className={styles.galleryFooter}><h2>Tu imagen también puede ser un mosaico</h2><p>Probá con una foto, una ilustración o una forma simple. Vos elegís cuánto detalle darle.</p><Link href="/crear-cuadro" className={styles.textLink}>Abrir el creador <ArrowUpRight size={18} aria-hidden="true" /></Link></div>
   </div>;
-}
-
-export function FeaturedDesigns({ templates }: { templates: DesignTemplate[] }) {
-  if (!templates.length) return null;
-  return <section className={styles.page} aria-labelledby="featured-designs"><div className={styles.pageHeading}><div><h2 id="featured-designs" className={styles.sectionTitle}>Imaginá tu próximo cuadro</h2><p>Probá nuestros diseños de ejemplo o empezá con tu propia imagen.</p></div><Link className={styles.textLink} href="/cuadros">Explorar diseños <ArrowUpRight size={18} aria-hidden="true" /></Link></div><DemoNotice /><GalleryCards templates={templates.slice(0, 3)} /></section>;
 }

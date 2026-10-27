@@ -1,21 +1,17 @@
 import type { DesignCatalog, DesignTemplate } from "../application/catalog";
 import type { MosaicDesign, WorkshopConfig } from "../domain/design";
 import type { PricingPolicy } from "../domain/estimate";
-import murvi from "./murvi-palette.json";
+import { storefrontColorId, storefrontPalette } from "./storefront-palette";
 
 // Server repository fixture. UI receives the same DTO contract a future Sanity
 // adapter will supply. Designs are synthetic; material codes come from Murvi.
 const config: WorkshopConfig = {
-  id: "canela-demo", version: "2026-10-27.murvi-1", provisional: true,
+  id: "canela-demo", version: "2026-10-27.palette-2", provisional: true,
   tileMm: 20, groutMm: 1, frameMm: 10, minCells: 15, maxCells: 45, step: 1,
-  backgroundColorId: "murvi-b-34",
+  backgroundColorId: storefrontColorId("murvi-b-34"),
   // Digital estimates from manufacturer textures, not physically calibrated HEX.
   // Keep provenance on the server; the browser only needs the palette DTO.
-  palette: murvi.colors.map(color => ({
-    id: color.id,
-    name: `Murvi ${color.code} · ${color.line === "Vitro" ? "Vitro transparente" : color.line === "Clasico" ? "Clásico" : color.line}`,
-    hex: color.hex,
-  })),
+  palette: storefrontPalette,
 };
 
 // PER-131: indexed Mercado Libre reference (225 tiles / ARS 13,917.50),
@@ -33,7 +29,7 @@ const pricing: PricingPolicy = {
 function example(id: string, title: string, description: string, paint: (x: number, y: number) => string): DesignTemplate {
   const size = 25;
   const design: MosaicDesign = { version: 1, algorithm: "mosaic-oklab-v1", size,
-    cells: Array.from({ length: size * size }, (_, i) => paint(i % size, Math.floor(i / size))), config: structuredClone(config) };
+    cells: Array.from({ length: size * size }, (_, i) => storefrontColorId(paint(i % size, Math.floor(i / size)))), config: structuredClone(config) };
   return { id, title, description, published: true, demonstration: true, design };
 }
 

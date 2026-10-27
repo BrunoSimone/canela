@@ -26,6 +26,7 @@ describe("PER-132: isolated purchase simulation", () => {
     expect(quote.design.config.tileMm).toBe(20);
     expect(quote.shipping.package).toEqual({ widthCm: 59, heightCm: 59, depthCm: 8, weightGrams: 6000 });
     expect(quote.mode).toBe("demo");
+    expect(JSON.stringify(quote)).not.toMatch(/murvi|Vitro|DI99|sourceImageUrl/i);
     input.design.cells.fill("negro"); quote.design.cells.fill("negro");
     const order = s.pay(quote.id);
     expect(order.production).toBe("simulated");
@@ -39,6 +40,13 @@ describe("PER-132: isolated purchase simulation", () => {
     if (field === "accepted") Object.assign(input, { accepted: false });
     if (field === "recipient") input.recipient.delivery.postalCode = "0000";
     expect(() => s.service.quote(input)).toThrow();
+  });
+  it("PER-138: asks old palette sessions to reload and rejects private material IDs", async () => {
+    const s = await setup(); const input = s.input();
+    input.design.configurationVersion = "2026-10-27.murvi-1";
+    expect(() => s.service.quote(input)).toThrow("recargá la página");
+    const current = s.input(); current.design.cells[0] = "murvi-b-34";
+    expect(() => s.service.quote(current)).toThrow("Revisá los datos");
   });
   it.each(["email", "phone", "recipientDocument"])("requires valid %s", async field => {
     const s = await setup(); const input = s.input();

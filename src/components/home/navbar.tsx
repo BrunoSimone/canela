@@ -8,7 +8,12 @@ import { NAV_LINKS } from "@/content/catalog";
 import { CanelaBadge } from "@/components/brand/canela-badge";
 
 export function Navbar({ customizationEnabled = false }: { customizationEnabled?: boolean }) {
-  const links = customizationEnabled ? [...NAV_LINKS, { label: "Crear un cuadro", href: "/crear-cuadro" }] : NAV_LINKS;
+  const links = customizationEnabled ? [
+    { label: "Tienda", href: "/#catalogo" },
+    { label: "Galería de cuadros", href: "/cuadros" },
+    ...NAV_LINKS.slice(3),
+    { label: "Crear mi cuadro", href: "/crear-cuadro" },
+  ] : NAV_LINKS;
   const [mobileOpen, setMobileOpen] = useState(false);
   const menuButton = useRef<HTMLButtonElement>(null);
 
@@ -28,7 +33,7 @@ export function Navbar({ customizationEnabled = false }: { customizationEnabled?
             <Link
               key={link.href}
               href={link.href}
-              className="inline-flex min-h-11 items-center text-[15px] font-semibold text-[var(--canela-brown)] transition-colors hover:text-[var(--canela-ochre-dark)]"
+              className={`inline-flex min-h-11 items-center text-[14px] font-semibold transition-colors ${link.href === "/crear-cuadro" ? "rounded-full bg-[var(--canela-brown)] px-5 text-[var(--canela-cream-card)] hover:bg-[#6e4e38]" : "text-[var(--canela-brown)] hover:text-[var(--canela-ochre-dark)]"}`}
             >
               {link.label}
             </Link>
@@ -55,7 +60,7 @@ export function Navbar({ customizationEnabled = false }: { customizationEnabled?
               key={link.href}
               href={link.href}
               onClick={() => setMobileOpen(false)}
-              className="border-b border-[rgba(184,132,42,.12)] py-2.5 text-base font-semibold text-[var(--canela-brown)] last:border-0"
+              className={`min-h-11 border-b border-[rgba(184,132,42,.12)] py-2.5 text-base font-semibold last:border-0 ${link.href === "/crear-cuadro" ? "mt-3 rounded-full bg-[var(--canela-brown)] px-5 text-center text-[var(--canela-cream-card)]" : "text-[var(--canela-brown)]"}`}
             >
               {link.label}
             </Link>

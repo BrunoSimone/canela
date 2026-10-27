@@ -1,6 +1,6 @@
 .page { max-width: 1180px; margin: 0 auto; padding: 38px 22px 64px; }
 .pageHeading { display: flex; align-items: center; justify-content: space-between; gap: 28px; margin: 12px 0 24px; }
-.pageHeading h1, .sectionTitle { font-size: clamp(28px, 3.5vw, 40px); font-weight: 750; line-height: 1.16; letter-spacing: -.035em; margin: 10px 0 12px; }
+.pageHeading h1 { font-size: clamp(28px, 3.5vw, 40px); font-weight: 750; line-height: 1.16; letter-spacing: -.035em; margin: 10px 0 12px; }
 .pageHeading p { max-width: 610px; color: var(--muted-foreground); line-height: 1.65; font-size: 16px; }
 .backLink { display: inline-flex; align-items: center; gap: 7px; min-height: 32px; font-size: 13px; color: var(--muted-foreground); }
 .backLink:hover, .textLink:hover { text-decoration: underline; }

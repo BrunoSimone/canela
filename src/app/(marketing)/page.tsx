@@ -12,7 +12,8 @@ import { inventoryStore } from "@/modules/inventory/infrastructure/sanity-docume
 import { customizationEnabled } from "@/modules/customization/infrastructure/availability";
 import { demoDesignCatalog } from "@/modules/customization/infrastructure/demo-catalog";
 import { loadGallery } from "@/modules/customization/application/catalog";
-import { FeaturedDesigns } from "@/modules/customization/presentation/gallery";
+import { CreatorSpotlight } from "@/components/home/creator-spotlight";
+import { CatalogDiscovery } from "@/components/home/catalog-discovery";
 
 export const dynamic = "force-dynamic";
 
@@ -44,13 +45,9 @@ export default async function HomePage() {
     <>
       <CartAvailabilitySync availableProductIds={visibleProducts.filter(p => p.available).map(p => p._id)} />
       <CatalogJsonLd products={visibleProducts} />
-      <Hero slides={heroViews} />
-
-      <div id="catalogo" className="anchor-offset px-[22px] pb-2 pt-6 text-center">
-        <span className="text-xs font-bold uppercase tracking-[0.24em] text-[#606839]">
-          Nuestro catálogo
-        </span>
-      </div>
+      <Hero slides={heroViews} customizationEnabled={!!designs} />
+      {designs && <CreatorSpotlight templates={designs.templates} />}
+      <CatalogDiscovery />
 
       {CATEGORIES.map((meta) => (
         <CategorySection
@@ -60,7 +57,6 @@ export default async function HomePage() {
         />
       ))}
 
-      {designs && <FeaturedDesigns templates={designs.templates} />}
       <Nosotros />
       <ComoComprar />
     </>

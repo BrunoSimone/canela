@@ -60,13 +60,14 @@ describe("PER-133: editor interaction", () => {
     render(<Harness initial={initial} />);
     await userEvent.click(screen.getByRole("button", { name: "Retocar" }));
     const stage = screen.getByRole("group", { name: "Mosaico editable" });
-    expect(screen.getAllByRole("button", { name: /^Usar color Murvi/ })).toHaveLength(62);
-    expect(screen.getByText(/Vitro es transparente/)).toBeTruthy();
+    expect(screen.getAllByRole("button", { name: /^Usar color / })).toHaveLength(62);
+    expect(screen.getByText(/Los tonos transparentes cambian/)).toBeTruthy();
     fireEvent.keyDown(stage, { key: "ArrowRight" });
-    const target = screen.getByRole("button", { name: "Usar color Murvi DI99 · Nuevo" });
+    const target = screen.getByRole("button", { name: "Usar color Blanco niebla" });
     target.focus(); await userEvent.keyboard("{Enter}");
     expect(cells()[0]).toBe("#d8dfd7");
-    expect(screen.getByRole("status", { name: "Venecita seleccionada" }).textContent).toContain("Murvi DI99");
+    expect(screen.getByRole("dialog").outerHTML).not.toMatch(/murvi|DI99|Vitro|Clasico/i);
+    expect(screen.getByRole("status", { name: "Venecita seleccionada" }).textContent).toContain("Blanco niebla");
     await userEvent.click(screen.getByRole("button", { name: "Deshacer retoque" }));
     expect(cells()[0]).toBe(config.palette.find(c => c.id === initial.cells[0])!.hex);
   });
