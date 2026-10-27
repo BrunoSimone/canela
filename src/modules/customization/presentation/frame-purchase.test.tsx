@@ -78,6 +78,9 @@ describe("PER-132: separate purchase journeys", () => {
     await userEvent.click(screen.getByRole("button", { name: "Simular pago" }));
     expect(await screen.findByRole("heading", { name: "Prueba completada" })).toBeTruthy();
     expect(service.activeCount()).toBe(1); expect(cart.getState()).toEqual(before);
+    expect(screen.queryByText(/Venecitas estimadas|Mano de obra|insumos estimados|Redondeo de la estimación/)).toBeNull();
+    expect(screen.getByText("Cuadro con marco")).toBeTruthy();
+    expect(screen.getByLabelText("Total de prueba").textContent).toContain("108.000");
     for (const [, init] of requests.mock.calls) if (init?.body) {
       const body = JSON.parse(String(init.body));
       expect(body).not.toHaveProperty("image"); expect(body).not.toHaveProperty("photo"); expect(body).not.toHaveProperty("totalCents");

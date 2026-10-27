@@ -22,13 +22,7 @@ export function FrameReview({ design, estimate, onEdit, onContinue }: { design: 
       <section className={styles.reviewDetails} aria-label="Resumen del cuadro">
         <h2>Un cuadro hecho para vos</h2>
         <p>{side} × {side} cm con marco · Medidas de prueba</p>
-        <dl className={styles.priceBreakdown}>
-          <div><dt>Venecitas estimadas</dt><dd>{formatArs(estimate.tilesCents)}</dd></div>
-          <div><dt>Mano de obra estimada</dt><dd>{formatArs(estimate.laborCents)}</dd></div>
-          <div><dt>Base, marco e insumos estimados</dt><dd>{formatArs(estimate.suppliesCents)}</dd></div>
-          {estimate.roundingCents > 0 && <div><dt>Redondeo de la estimación</dt><dd>{formatArs(estimate.roundingCents)}</dd></div>}
-        </dl>
-        <p className={styles.estimateLabel}>Estimación de prueba · ARS</p>
+        <p className={`${styles.estimateLabel} ${styles.reviewPriceLabel}`}>Precio del cuadro con marco · ARS · De prueba</p>
         <p className={styles.estimateAmount} aria-label="Precio estimado del cuadro">{formatArs(estimate.totalCents)}</p>
         <p className={styles.shippingPending}>Envío a cotizar</p>
         <p className={styles.hint}>El precio final se confirmará con los materiales y las tarifas del taller.</p>

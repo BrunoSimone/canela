@@ -99,7 +99,7 @@ export function Creator({ config, pricing, template, templateUnavailable, purcha
     <div className={styles.pageHeading}><div><h1>Tu imagen, hecha mosaico</h1><p>Encontrá el encuadre, elegí el tamaño y mirá cómo toma forma tu cuadro.</p></div></div>
     <DemoNotice />
     {templateUnavailable && !source && <p role="alert" className={styles.error}>Ese diseño no está disponible. Podés elegir otro en la galería o usar tu propia imagen.</p>}
-    <div className={styles.workspace}>
+    <div className={`${styles.workspace} ${design ? styles.activeWorkspace : ""}`}>
       <aside className={styles.controls} aria-label="Herramientas del creador">
         <section className={styles.controlSection}>
           <div className={styles.controlHeading}><h2>Tu imagen</h2><button className={styles.resetButton} onClick={() => changeDesign("Empezar de nuevo quitará la imagen y sus ajustes.", reset)} disabled={!source && !loading}><RotateCcw size={15} aria-hidden="true" /> Empezar de nuevo</button></div>
@@ -113,15 +113,15 @@ export function Creator({ config, pricing, template, templateUnavailable, purcha
           {source?.kind === "template" && <p className={styles.templateHint}>Partiste de «{source.template.title}». Ajustá el tamaño o los colores para hacerlo tuyo.</p>}
           {source?.kind === "image" && <div className={styles.cropTools}>
             <div className={styles.cropper} aria-label="Recortar imagen" inert={hasRetouches || loading}>
-              <Cropper image={source.image.url} crop={crop} zoom={zoom} aspect={1} onCropChange={value => { if (!hasRetouches) setCrop(value); }} onZoomChange={value => { if (!hasRetouches) setZoom(value); }} onCropComplete={(_, pixels) => { if (!hasRetouches) setArea(pixels); }} zoomWithScroll={false} keyboardStep={5} mediaProps={{ alt: "Tu imagen para recortar" }} />
+              <Cropper image={source.image.url} crop={crop} zoom={zoom} aspect={1} onCropChange={value => { if (!hasRetouches) { setCrop(value); setView("mosaic"); } }} onZoomChange={value => { if (!hasRetouches) { setZoom(value); setView("mosaic"); } }} onCropComplete={(_, pixels) => { if (!hasRetouches) setArea(pixels); }} zoomWithScroll={false} keyboardStep={5} mediaProps={{ alt: "Tu imagen para recortar" }} />
             </div>{hasRetouches ? <><p className={styles.hint}>El encuadre está fijo para conservar tus retoques.</p><button className={styles.textButton} onClick={() => changeDesign("Cambiar el encuadre volverá a generar las venecitas.", () => setHistory(emptyRetouches()))}>Cambiar encuadre</button></> : <p className={styles.hint}>Arrastrá la imagen para encuadrar. También podés usar las flechas del teclado.</p>}
             <label className={styles.rangeLabel} htmlFor="mosaic-zoom">Acercar imagen <span>{zoom.toFixed(1)}×</span></label>
-            <input id="mosaic-zoom" disabled={hasRetouches || loading} type="range" min={1} max={3} step={0.1} value={zoom} onChange={e => setZoom(Number(e.target.value))} />
+            <input id="mosaic-zoom" disabled={hasRetouches || loading} type="range" min={1} max={3} step={0.1} value={zoom} onChange={e => { setZoom(Number(e.target.value)); setView("mosaic"); }} />
           </div>}
         </section>
         <section className={styles.controlSection}>
           <h2>Tamaño del mosaico</h2><label className={styles.rangeLabel} htmlFor="mosaic-size">Venecitas por lado {design && <output>{size} × {size}</output>}</label>
-          <input id="mosaic-size" disabled={!design || loading} aria-label="Cantidad de venecitas por lado" type="range" min={config.minCells} max={config.maxCells} step={config.step} value={size} onChange={e => { const next = Number(e.target.value); if (next !== size) changeDesign("Cambiar el tamaño volverá a distribuir las venecitas.", () => { setHistory(emptyRetouches()); setSize(next); }); }} />
+          <input id="mosaic-size" disabled={!design || loading} aria-label="Cantidad de venecitas por lado" type="range" min={config.minCells} max={config.maxCells} step={config.step} value={size} onChange={e => { const next = Number(e.target.value); if (next !== size) changeDesign("Cambiar el tamaño volverá a distribuir las venecitas.", () => { setHistory(emptyRetouches()); setSize(next); setView("mosaic"); }); }} />
           {design ? <><div className={styles.rangeEnds}><span>{config.minCells} · Menos detalle</span><span>{config.maxCells} · Más detalle</span></div>
           <p className={styles.dimensionText}>{cm(measures.framedMm)} × {cm(measures.framedMm)} cm <span>con marco</span></p>
           <p className={styles.hint}>Mosaico sin marco: {cm(measures.mosaicMm)} × {cm(measures.mosaicMm)} cm. Más piezas dan más detalle y un cuadro más grande.</p>
@@ -142,15 +142,17 @@ export function Creator({ config, pricing, template, templateUnavailable, purcha
             <span className={styles.previewCaption}>{view === "source" ? "Recorte de tu imagen" : "Simulación de material · Los colores y el acabado reales pueden variar"}</span>
           </> : <div className={styles.emptyPreview}><ImageIcon size={42} strokeWidth={1} aria-hidden="true" /><h3>Empezá con una imagen</h3><p>Una foto o una idea sencilla.<br />La convertimos en un mosaico, pieza por pieza.</p><button className={styles.primaryButton} onClick={() => input.current?.click()}>Elegir imagen</button></div>}
         </div>
-        {design && <><div className={styles.retouchBar}><div><button ref={editorButton} className={styles.retouchButton} disabled={loading} onClick={() => setEditingTiles(true)}><Paintbrush size={18} aria-hidden="true" /> Retocar venecitas</button><p>Elegí una pieza y ajustá su color.</p></div>{hasRetouches && <span>{Object.keys(history.present).length} {Object.keys(history.present).length === 1 ? "retoque" : "retoques"}</span>}</div><div className={styles.previewStats} aria-live="polite"><div><strong>{cm(measures.framedMm)} cm</strong><span>por lado, con marco</span></div><div><strong>{size ** 2}</strong><span>venecitas enteras</span></div><div><strong>{counts.length || "—"}</strong><span>colores utilizados</span></div></div>
+      </section>
+    </div>
+    {design && <section className={styles.creatorSummary} aria-label="Tu cuadro y su precio">
+        <div className={styles.retouchBar}><div><button ref={editorButton} className={styles.retouchButton} disabled={loading} onClick={() => setEditingTiles(true)}><Paintbrush size={18} aria-hidden="true" /> Retocar venecitas</button><p>Elegí una pieza y ajustá su color.</p></div>{hasRetouches && <span>{Object.keys(history.present).length} {Object.keys(history.present).length === 1 ? "retoque" : "retoques"}</span>}</div><div className={styles.previewStats} aria-live="polite"><div><strong>{cm(measures.framedMm)} cm</strong><span>por lado, con marco</span></div><div><strong>{size ** 2}</strong><span>venecitas enteras</span></div><div><strong>{counts.length || "—"}</strong><span>colores utilizados</span></div></div>
         <section className={styles.estimateCard} aria-label="Cotización estimada">
           <div><h3 className={styles.estimateLabel}>Estimación de prueba · ARS</h3><p className={styles.estimateAmount} aria-label="Precio estimado del cuadro">{formatArs(estimate.totalCents)}</p><p className={styles.shippingPending}>Cuadro con marco · Envío a cotizar</p></div>
           <button ref={reviewButton} className={styles.primaryButton} disabled={!design || loading} onClick={() => setReviewing(true)}>Revisar mi cuadro <ArrowRight size={18} aria-hidden="true" /></button>
-          <p className={styles.estimateHint}>Incluye venecitas, armado, base y marco. Valores ilustrativos pendientes de confirmación del taller. Sin cobros reales.</p>
-        </section></>}
+          <p className={styles.estimateHint}>Precio del cuadro terminado con marco. Valor de prueba pendiente de confirmación del taller. Sin cobros reales.</p>
+        </section>
         {counts.length > 0 && <div className={styles.paletteLegend} aria-label="Colores del cuadro">{counts.map(c => <span key={c.id}><i className={styles.swatch} style={{ backgroundColor: c.hex }} aria-hidden="true" />{c.name}</span>)}</div>}
-      </section>
-    </div>
+      </section>}
     {editingTiles && design && result?.design && <TileEditor design={design} history={history} returnFocus={editorButton} onClose={() => setEditingTiles(false)} onPaint={(index, color) => setHistory(previous => paintTile(previous, result.design!, index, color))} onRestore={index => setHistory(previous => restoreTile(previous, result.design!, index))} onUndo={() => setHistory(undoRetouch)} onRedo={() => setHistory(redoRetouch)} />}
     {pendingChange && <ConfirmRegeneration message={pendingChange.message} onCancel={() => setPendingChange(null)} onConfirm={() => { pendingChange.run(); setPendingChange(null); }} />}
   </div>;

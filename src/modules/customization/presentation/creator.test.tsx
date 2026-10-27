@@ -12,7 +12,7 @@ import { testPricing } from "../testing/pricing";
 
 const mocks = vi.hoisted(() => ({ load: vi.fn() }));
 vi.mock("./local-image", () => ({ loadLocalImage: mocks.load }));
-vi.mock("react-easy-crop", () => ({ default: () => <div>Recortador de imagen</div> }));
+vi.mock("react-easy-crop", () => ({ default: ({ onCropChange }: { onCropChange: (crop: { x: number; y: number }) => void }) => <div>Recortador de imagen<button onClick={() => onCropChange({ x: 10, y: 0 })}>Mover recorte de prueba</button></div> }));
 const template = (): DesignTemplate => ({ id: "test", title: "Flor de prueba", description: "Ejemplo", published: true, demonstration: true, design: renderMosaic(raster(), testWorkshop, 3) });
 const setup = (selected = true) => render(<Creator config={testWorkshop} pricing={testPricing} template={selected ? template() : null} templateUnavailable={false} />);
 const visibleCells = () => [...screen.getByRole("img", { name: /Tu mosaico/ }).querySelectorAll("[data-cell]")].map(cell => cell.getAttribute("fill"));
@@ -20,6 +20,21 @@ beforeEach(() => { vi.stubGlobal("URL", { revokeObjectURL: vi.fn() }); });
 afterEach(() => { cleanup(); vi.clearAllMocks(); vi.unstubAllGlobals(); });
 
 describe("PER-130: creator user journeys", () => {
+  it("PER-137: photo zoom, size and crop adjustments show the live mosaic after comparing the original", async () => {
+    mocks.load.mockResolvedValue({ url: "blob:photo", raster: raster() }); setup(false);
+    await userEvent.upload(screen.getByLabelText("Elegir imagen"), new File(["x"], "foto.png", { type: "image/png" }));
+    await userEvent.click(screen.getByRole("button", { name: "Recorte" }));
+    expect(screen.getByRole("img", { name: "Recorte de tu imagen" })).toBeTruthy();
+    fireEvent.change(screen.getByRole("slider", { name: /Acercar imagen/ }), { target: { value: "1.5" } });
+    expect(screen.getByRole("img", { name: /Tu mosaico/ })).toBeTruthy();
+    await userEvent.click(screen.getByRole("button", { name: "Recorte" }));
+    fireEvent.change(screen.getByRole("slider", { name: "Cantidad de venecitas por lado" }), { target: { value: "5" } });
+    expect(visibleCells()).toHaveLength(25);
+    await userEvent.click(screen.getByRole("button", { name: "Recorte" }));
+    await userEvent.click(screen.getByRole("button", { name: "Mover recorte de prueba" }));
+    expect(screen.getByRole("img", { name: /Tu mosaico/ })).toBeTruthy();
+    expect(screen.queryByRole("img", { name: "Recorte de tu imagen" })).toBeNull();
+  });
   it("PER-132: starts empty without examples, price or dimensions; enables after a valid photo", async () => {
     setup(false);
     expect((screen.getByRole("slider", { name: "Cantidad de venecitas por lado" }) as HTMLInputElement).disabled).toBe(true);
@@ -127,6 +142,9 @@ describe("PER-130: creator user journeys", () => {
     expect(screen.getByRole("heading", { name: "Revisá tu cuadro" })).toBeTruthy();
     expect(screen.getByText(/No se creó un pedido/)).toBeTruthy();
     expect(screen.getByText("Envío a cotizar")).toBeTruthy();
+    expect(screen.getByLabelText("Precio estimado del cuadro").textContent).toBe(updated);
+    expect(screen.getByText("Precio del cuadro con marco · ARS · De prueba")).toBeTruthy();
+    expect(screen.queryByText(/Venecitas estimadas|Mano de obra|insumos estimados|Redondeo de la estimación/)).toBeNull();
     expect(screen.queryByRole("button", { name: /pagar|comprar|agregar al carrito/i })).toBeNull();
     expect(visibleCells()).toEqual(Array(900).fill("#000000"));
     await userEvent.click(screen.getByRole("button", { name: "Seguir editando" }));
