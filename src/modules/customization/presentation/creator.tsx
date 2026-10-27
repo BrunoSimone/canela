@@ -13,7 +13,6 @@ import { FramePurchase } from "./frame-purchase";
 import { MosaicSvg } from "./mosaic-svg";
 import { applyRetouches, emptyRetouches, paintTile, redoRetouch, restoreTile, undoRetouch } from "../domain/retouches";
 import { ConfirmRegeneration, TileEditor } from "./tile-editor";
-import { DemoNotice } from "./gallery";
 import styles from "./customization.module.css";
 
 type Source = { kind: "image"; image: LocalImage } | { kind: "template"; template: DesignTemplate };
@@ -97,7 +96,6 @@ export function Creator({ config, pricing, template, templateUnavailable, purcha
   return <div className={styles.page}>
     <Link className={styles.backLink} href="/cuadros"><ArrowLeft size={16} aria-hidden="true" /> Explorar diseños</Link>
     <div className={styles.pageHeading}><div><h1>Crear un cuadro en mosaico</h1><p>Elegí una foto que te guste y probá tamaños y colores para tu cuadro.</p></div></div>
-    <DemoNotice />
     {templateUnavailable && !source && <p role="alert" className={styles.error}>Ese diseño no está disponible. Podés elegir otro en la galería o usar tu propia imagen.</p>}
     <div className={`${styles.workspace} ${design ? styles.activeWorkspace : ""}`}>
       <aside className={styles.controls} aria-label="Herramientas del creador">
@@ -125,7 +123,7 @@ export function Creator({ config, pricing, template, templateUnavailable, purcha
           {design ? <><div className={styles.rangeEnds}><span>{config.minCells} · Menos detalle</span><span>{config.maxCells} · Más detalle</span></div>
           <p className={styles.dimensionText}>{cm(measures.framedMm)} × {cm(measures.framedMm)} cm <span>con marco</span></p>
           <p className={styles.hint}>Mosaico sin marco: {cm(measures.mosaicMm)} × {cm(measures.mosaicMm)} cm. Con más venecitas vas a ver más detalle y el cuadro será más grande.</p>
-          <details className={styles.configDetails}><summary>Medidas de prueba</summary><p>Para esta prueba usamos venecitas de {config.tileMm} mm, separadas por {config.groutMm} mm, y un marco de {config.frameMm} mm por lado. Las medidas definitivas todavía no están confirmadas.</p></details></> : <p className={styles.hint}>Subí una imagen para elegir el tamaño.</p>}
+          <details className={styles.configDetails}><summary>Sobre las medidas</summary><p>El cálculo usa venecitas de {config.tileMm} mm, separadas por {config.groutMm} mm, y un marco de {config.frameMm} mm por lado. Las medidas definitivas todavía no están confirmadas.</p></details></> : <p className={styles.hint}>Subí una imagen para elegir el tamaño.</p>}
         </section>
         {baseColors.length > 0 && <details className={styles.colorTools}><summary>Personalizar colores</summary><p className={styles.hint}>Elegí qué color querés cambiar y con cuál reemplazarlo en todo el cuadro. Los colores pueden variar en la pieza real, sobre todo los transparentes.</p><div className={styles.colorRows}>{baseColors.map(color => <label key={color.id} className={styles.colorRow}>
           <span className={styles.swatch} style={{ backgroundColor: color.hex }} aria-hidden="true" /><span>{color.name}</span>
@@ -147,9 +145,9 @@ export function Creator({ config, pricing, template, templateUnavailable, purcha
     {design && <section className={styles.creatorSummary} aria-label="Tu cuadro y su precio">
         <div className={styles.retouchBar}><div><button ref={editorButton} className={styles.retouchButton} disabled={loading} onClick={() => setEditingTiles(true)}><Paintbrush size={18} aria-hidden="true" /> Retocar venecitas</button><p>Elegí una pieza y ajustá su color.</p></div>{hasRetouches && <span>{Object.keys(history.present).length} {Object.keys(history.present).length === 1 ? "retoque" : "retoques"}</span>}</div><div className={styles.previewStats} aria-live="polite"><div><strong>{cm(measures.framedMm)} cm</strong><span>por lado, con marco</span></div><div><strong>{size ** 2}</strong><span>venecitas enteras</span></div><div><strong>{counts.length || "—"}</strong><span>colores utilizados</span></div></div>
         <section className={styles.estimateCard} aria-label="Cotización estimada">
-          <div><h3 className={styles.estimateLabel}>Precio de prueba · ARS</h3><p className={styles.estimateAmount} aria-label="Precio estimado del cuadro">{formatArs(estimate.totalCents)}</p><p className={styles.shippingPending}>Incluye el marco. El envío se calcula después.</p></div>
+          <div><h3 className={styles.estimateLabel}>Precio estimado · ARS</h3><p className={styles.estimateAmount} aria-label="Precio estimado del cuadro">{formatArs(estimate.totalCents)}</p><p className={styles.shippingPending}>Incluye el marco. El envío se calcula después.</p></div>
           <button ref={reviewButton} className={styles.primaryButton} disabled={!design || loading} onClick={() => setReviewing(true)}>Revisar mi cuadro <ArrowRight size={18} aria-hidden="true" /></button>
-          <p className={styles.estimateHint}>Este precio es de prueba y todavía puede cambiar. No se cobra dinero.</p>
+          <p className={styles.estimateHint}>El precio es orientativo y se confirma antes de comprar.</p>
         </section>
         {counts.length > 0 && <div className={styles.paletteLegend} aria-label="Colores del cuadro">{counts.map(c => <span key={c.id}><i className={styles.swatch} style={{ backgroundColor: c.hex }} aria-hidden="true" />{c.name}</span>)}</div>}
       </section>}

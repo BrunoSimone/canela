@@ -29,10 +29,8 @@ export function HomeDestinations({ products, templates }: {
         </div>;
       })}
     </div> : null}
-    frame={featured ? <>
-      <MosaicSvg design={featured.design} label={`Cuadro de ejemplo: ${featured.title}`} className={styles.art} />
-      <p className={styles.imageLabel}>Diseño de ejemplo</p>
-    </> : <div className={styles.emptyArt}><ImagePlus size={48} aria-hidden="true" /><span>Tu foto, en venecitas</span></div>}
+    frame={featured ? <MosaicSvg design={featured.design} label={`Cuadro en mosaico: ${featured.title}`} className={styles.art} />
+      : <div className={styles.emptyArt}><ImagePlus size={48} aria-hidden="true" /><span>Tu foto, en venecitas</span></div>}
     frameBackdrop={featured ? <MosaicSvg design={featured.design} label="" /> : null}
   />;
 }

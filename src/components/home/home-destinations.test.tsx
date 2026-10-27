@@ -26,7 +26,8 @@ describe("PER-141: two storefront journeys", () => {
     expect(welcome.closest("a")).toBeNull();
     expect(welcome.nextElementSibling).toBe(opening);
     expect(screen.getAllByRole("link", { name: "Crear mi cuadro" })).toHaveLength(1);
-    expect(screen.getByText("Diseño de ejemplo")).toBeTruthy();
+    expect(screen.getByRole("img", { name: /Cuadro en mosaico:/ })).toBeTruthy();
+    expect(container.textContent).not.toMatch(/diseño de ejemplo|versión de prueba/i);
     expect(container.innerHTML).not.toMatch(/murvi|Vitro|DI99|Nuestro taller/i);
     rerender(<HomeDestinations products={[]} templates={[]} />);
     expect(within(screen.getByRole("navigation", { name: "Elegí tu recorrido" })).getByRole("link", { name: "Crear mi cuadro" })).toBeTruthy();

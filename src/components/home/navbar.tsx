@@ -2,11 +2,15 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 
 import { CanelaBadge } from "@/components/brand/canela-badge";
+import styles from "./navbar.module.css";
 
 export function Navbar({ customizationEnabled = false }: { customizationEnabled?: boolean }) {
+  const pathname = usePathname();
+  const isCurrent = (href: string) => !href.includes("#") && (pathname === href || pathname?.startsWith(`${href}/`));
   const links = [
     { label: "Tienda", href: "/tienda" },
     ...(customizationEnabled ? [
@@ -28,12 +32,14 @@ export function Navbar({ customizationEnabled = false }: { customizationEnabled?
           </span>
         </Link>
 
-        <nav aria-label="Navegación principal" className={`hidden items-center gap-7 ${customizationEnabled ? "lg:flex" : "md:flex"}`}>
+        <nav aria-label="Navegación principal" className={`hidden items-center gap-2 ${customizationEnabled ? "lg:flex" : "md:flex"}`}>
           {links.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className={`inline-flex min-h-11 items-center text-[14px] font-semibold transition-colors ${link.href === "/crear-cuadro" ? "rounded-full bg-[var(--canela-brown)] px-5 text-[var(--canela-cream-card)] hover:bg-[#6e4e38]" : "text-[var(--canela-brown)] hover:text-[var(--canela-ochre-dark)]"}`}
+              aria-current={isCurrent(link.href) ? "page" : undefined}
+              data-cta={link.href === "/crear-cuadro" || undefined}
+              className={styles.navLink}
             >
               {link.label}
             </Link>
@@ -60,7 +66,9 @@ export function Navbar({ customizationEnabled = false }: { customizationEnabled?
               key={link.href}
               href={link.href}
               onClick={() => setMobileOpen(false)}
-              className={`min-h-11 border-b border-[rgba(184,132,42,.12)] py-2.5 text-base font-semibold last:border-0 ${link.href === "/crear-cuadro" ? "mt-3 rounded-full bg-[var(--canela-brown)] px-5 text-center text-[var(--canela-cream-card)]" : "text-[var(--canela-brown)]"}`}
+              aria-current={isCurrent(link.href) ? "page" : undefined}
+              data-cta={link.href === "/crear-cuadro" || undefined}
+              className={`${styles.navLink} ${styles.mobileLink}`}
             >
               {link.label}
             </Link>

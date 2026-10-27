@@ -3,6 +3,10 @@
 2026-10-27 · Rama `codex/creador-cuadros-personalizados`.
 Estado: implementado localmente. [Evidencia](../evidence/PER-140.md).
 
+Actualización: [PER-145](145-textos-publicos-y-navegacion-activa.md) retira las
+leyendas generales de prueba y ejemplo. Los importes siguen siendo estimados
+y la compra simulada mantiene explícita la ausencia de cobros y pedidos reales.
+
 ## Objetivo
 
 Extender el tono aprobado en PER-139 al recorrido público completo. Invitar a

@@ -5,6 +5,8 @@
 
 La home pasa al carrusel de [PER-143](143-carrusel-de-recorridos-home.md).
 Las cabeceras de tienda/galería y el footer de esta spec siguen vigentes.
+Las leyendas de ejemplo/prueba y el acceso desde galería se actualizan en
+[PER-145](145-textos-publicos-y-navegacion-activa.md).
 
 ## Alcance y criterio visual
 

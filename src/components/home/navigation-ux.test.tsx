@@ -8,7 +8,9 @@ import { CatalogDiscovery } from "./catalog-discovery";
 import { Gallery } from "@/modules/customization/presentation/gallery";
 import { demoDesignCatalog } from "@/modules/customization/infrastructure/demo-catalog";
 
-afterEach(()=>{cleanup();vi.useRealTimers();});
+const { pathname } = vi.hoisted(() => ({ pathname: vi.fn(() => "/") }));
+vi.mock("next/navigation", () => ({ usePathname: pathname }));
+afterEach(()=>{cleanup();vi.useRealTimers();pathname.mockReturnValue("/");});
 describe("UX-01 navigation and motion controls",()=>{
   it("closes the mobile menu with Escape and restores focus",async()=>{
     render(<Navbar />);const user=userEvent.setup();
@@ -21,6 +23,27 @@ describe("UX-01 navigation and motion controls",()=>{
     expect(screen.queryByRole("navigation",{name:"Navegación móvil"})).toBeNull();
     expect(document.activeElement).toBe(menu);
     expect(menu.getAttribute("aria-expanded")).toBe("false");
+  });
+  it("updates the current section across desktop and mobile without confusing other paths", async () => {
+    const { rerender } = render(<Navbar customizationEnabled />);
+    const desktop = () => screen.getByRole("navigation", { name: "Navegación principal" });
+    expect(desktop().querySelector('[aria-current="page"]')).toBeNull();
+    for (const [path, label] of [["/tienda", "Tienda"], ["/cuadros", "Galería de cuadros"], ["/crear-cuadro", "Crear mi cuadro"], ["/crear-cuadro/resumen", "Crear mi cuadro"]]) {
+      pathname.mockReturnValue(path);
+      rerender(<Navbar customizationEnabled />);
+      expect([...desktop().querySelectorAll('[aria-current="page"]')].map(a => a.textContent)).toEqual([label]);
+      await userEvent.click(screen.getByRole("button", { name: "Menú" }));
+      const mobile = screen.getByRole("navigation", { name: "Navegación móvil" });
+      expect([...mobile.querySelectorAll('[aria-current="page"]')].map(a => a.textContent)).toEqual([label]);
+      await userEvent.keyboard("{Escape}");
+    }
+    pathname.mockReturnValue("/cuadros-extra");
+    rerender(<Navbar customizationEnabled />);
+    expect(desktop().querySelector('[aria-current="page"]')).toBeNull();
+    pathname.mockReturnValue("/tienda");
+    rerender(<Navbar />);
+    expect([...desktop().querySelectorAll('[aria-current="page"]')].map(a => a.textContent)).toEqual(["Tienda"]);
+    expect(screen.getByRole("link", { name: "Cómo comprar" }).getAttribute("aria-current")).toBeNull();
   });
   it("rotates without a pause control, including after selecting or focusing a slide",()=>{
     vi.useFakeTimers();
@@ -51,7 +74,7 @@ describe("UX-01 navigation and motion controls",()=>{
     expect(screen.getByRole("heading",{name:"Galería de cuadros",level:1})).toBeTruthy();
     expect(screen.getByRole("link",{name:"Ver diseños"}).getAttribute("href")).toBe("#disenos");
     expect(screen.getByRole("region",{name:"Diseños de cuadros"}).id).toBe("disenos");
-    expect(screen.getByRole("link",{name:"Usar mi imagen"}).getAttribute("href")).toBe("/crear-cuadro");
+    expect(screen.getByRole("link",{name:"Crear mi diseño"}).getAttribute("href")).toBe("/crear-cuadro");
     fireEvent.click(screen.getByRole("button",{name:"Ver cuadro 2"}));
     const selected=templates[1];
     expect(screen.getByRole("link",{name:`Ver ${selected.title}`}).getAttribute("href")).toBe(`/crear-cuadro?diseno=${encodeURIComponent(selected.id)}`);
@@ -64,7 +87,7 @@ describe("UX-01 navigation and motion controls",()=>{
   it("keeps the gallery useful without published designs",()=>{
     render(<Gallery templates={[]} />);
     expect(screen.getByRole("heading",{name:"Galería de cuadros",level:1})).toBeTruthy();
-    expect(screen.getByRole("link",{name:"Usar mi imagen"}).getAttribute("href")).toBe("/crear-cuadro");
+    expect(screen.getByRole("link",{name:"Crear mi diseño"}).getAttribute("href")).toBe("/crear-cuadro");
     expect(screen.getByRole("heading",{name:"No hay diseños disponibles"})).toBeTruthy();
     expect(screen.queryByRole("button",{name:/Ver cuadro/})).toBeNull();
   });

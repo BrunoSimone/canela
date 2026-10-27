@@ -113,10 +113,10 @@ describe("PER-130: creator user journeys", () => {
     expect(screen.getByRole("alert").textContent).toContain("no está disponible");
     expect(screen.getByLabelText("Elegir imagen")).toBeTruthy();
   });
-  it("links gallery templates to their creator and labels demonstration content", () => {
+  it("links gallery templates to their creator without development labels", () => {
     render(<Gallery templates={[template()]} />);
     expect(screen.getByRole("link", { name: "Crear uno similar" }).getAttribute("href")).toBe("/crear-cuadro?diseno=test");
-    expect(screen.getByRole("region", { name: "Diseños de cuadros" }).textContent).toContain("Diseño de ejemplo");
+    expect(screen.getByRole("region", { name: "Diseños de cuadros" }).textContent).not.toMatch(/diseño de ejemplo|versión de prueba/i);
   });
   it("offers a useful empty gallery", () => {
     render(<Gallery templates={[]} />);
@@ -143,7 +143,7 @@ describe("PER-130: creator user journeys", () => {
     expect(screen.getByText(/no encarga el cuadro ni reserva un lugar/)).toBeTruthy();
     expect(screen.getByText("Envío a cotizar")).toBeTruthy();
     expect(screen.getByLabelText("Precio estimado del cuadro").textContent).toBe(updated);
-    expect(screen.getByText("Precio del cuadro con marco · ARS · De prueba")).toBeTruthy();
+    expect(screen.getByText("Precio estimado del cuadro con marco · ARS")).toBeTruthy();
     expect(screen.queryByText(/Venecitas estimadas|Mano de obra|insumos estimados|Redondeo de la estimación/)).toBeNull();
     expect(screen.queryByRole("button", { name: /pagar|comprar|agregar al carrito/i })).toBeNull();
     expect(visibleCells()).toEqual(Array(900).fill("#000000"));

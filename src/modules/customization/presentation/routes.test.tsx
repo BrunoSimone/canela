@@ -11,7 +11,8 @@ describe("PER-130: route gates and server data", () => {
   it("renders the demonstration gallery from its server repository", async () => {
     vi.stubEnv("NODE_ENV", "development");
     const html = renderToStaticMarkup(await GalleryPage());
-    expect(html).toContain("Diseño de ejemplo");
+    expect(html).toContain("Crear mi diseño");
+    expect(html).not.toMatch(/Diseño de ejemplo|Versión de prueba/);
     expect(html).toContain("/crear-cuadro?diseno=palmera");
     expect(html).not.toContain("Comprar");
   });

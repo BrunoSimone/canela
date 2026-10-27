@@ -22,7 +22,6 @@
 .stage [aria-hidden="true"] .floatingVisual { animation-play-state: paused; }
 .art { display: block; width: 100%; height: auto; aspect-ratio: 1; transform: rotate(-1.5deg); box-shadow: 0 18px 40px #24170f2b; transition: transform 1s ease; }
 .productArt { display: block; width: auto; height: var(--visual-size); margin: 0 auto; object-fit: contain; transform: rotate(-1.5deg); filter: drop-shadow(0 18px 20px #24170f40); transition: transform 1s ease; }
-.imageLabel { margin: 20px 0 0; text-align: center; font-size: 11px; line-height: 16px; color: #fbf7eecf; }
 .emptyArt { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; aspect-ratio: 1; border: 8px solid #72523c; background: #fbf7ee; color: #4a3527; text-align: center; font-size: 14px; padding: 12px; }
 @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
 @media (hover: hover) and (pointer: fine) {
@@ -40,7 +39,6 @@
   .intro h1 { max-width: 520px; font-size: clamp(27px, 6.7vw, 32px); line-height: 1.35; }
   .journeys { margin-top: 24px; }
   .home { --visual-size: min(68vw, clamp(120px, calc(100svh - 390px), 400px)); }
-  .imageLabel { margin-top: 14px; }
   .catalogBackdrop::after, .frameBackdrop::after { background: linear-gradient(180deg, #24170fa6, #24170f91 35%, #24170f1a 72%, #24170f66); }
 }
 @media (max-width: 480px) {
@@ -53,7 +51,6 @@
   .journeys { margin-top: 16px; gap: 8px; }
   .home { --visual-size: min(62vw, clamp(120px, calc(100svh - 420px), 220px)); }
   .stage { padding: 8px 24px 24px; }
-  .imageLabel { margin-top: 8px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .home, .catalogBackdrop, .frameBackdrop, .catalogGrid, .productPresentation, .framePresentation, .productArt, .art, .action, .action svg { transition: none; }
