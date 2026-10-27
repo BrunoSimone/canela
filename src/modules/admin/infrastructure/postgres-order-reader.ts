@@ -6,6 +6,7 @@ import { describeOrderStatus, makeOrderCursor, readOrderCursor } from "../domain
 import { provinceName } from "../../checkout/domain/delivery";
 
 type OrderRow = {
+  frame: AdminOrder["frame"];
   environment: "test" | "production";
   id: string;
   status: string;
@@ -76,6 +77,7 @@ export class PostgresAdminOrderReader {
 
     const rows = await this.sql<OrderRow[]>`
       SELECT
+        CASE WHEN f.order_id IS NULL THEN NULL ELSE json_build_object('state',f.production_state,'version',f.version,'productionDays',f.snapshot->'productionDays','galleryConsent',f.snapshot->'acceptance'->'gallery','galleryDraftCreated',f.gallery_draft_created) END AS frame,
         o.id, o.environment, o.status, o.currency, o.subtotal_cents, o.shipping_cents, o.shipping_quote_snapshot,
         o.total_cents, o.buyer_email, o.created_at, o.updated_at,
         d.buyer_name, d.recipient_name, d.recipient_phone, d.street_name,
@@ -101,6 +103,7 @@ export class PostgresAdminOrderReader {
       LEFT JOIN order_delivery d ON d.order_id = o.id
       LEFT JOIN order_preparation p ON p.order_id = o.id
       LEFT JOIN order_shipment s ON s.order_id = o.id
+      LEFT JOIN custom_frame_order f ON f.order_id = o.id
       WHERE ${searchCondition} AND ${cursorCondition}
       ORDER BY ${ordering}
       LIMIT ${query.limit + 1}
@@ -119,6 +122,7 @@ export class PostgresAdminOrderReader {
     if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) return null;
     const [row] = await this.sql<OrderRow[]>`
       SELECT
+        CASE WHEN f.order_id IS NULL THEN NULL ELSE json_build_object('state',f.production_state,'version',f.version,'design',f.snapshot->'design','productionDays',f.snapshot->'productionDays','galleryConsent',f.snapshot->'acceptance'->'gallery','galleryDraftCreated',f.gallery_draft_created) END AS frame,
         o.id, o.environment, o.status, o.currency, o.subtotal_cents, o.shipping_cents, o.shipping_quote_snapshot,
         o.total_cents, o.buyer_email, o.created_at, o.updated_at,
         d.buyer_name, d.recipient_name, d.recipient_phone, d.street_name,
@@ -144,6 +148,7 @@ export class PostgresAdminOrderReader {
       LEFT JOIN order_delivery d ON d.order_id = o.id
       LEFT JOIN order_preparation p ON p.order_id = o.id
       LEFT JOIN order_shipment s ON s.order_id = o.id
+      LEFT JOIN custom_frame_order f ON f.order_id = o.id
       WHERE o.id = ${id}
     `;
     return row ? mapOrder(row) : null;
@@ -166,6 +171,7 @@ function mapOrder(row: OrderRow): AdminOrder {
     : null;
   return {
     id: row.id,
+    frame: row.frame,
     environment: row.environment,
     reference: `ID ${row.id.slice(0, 8).toUpperCase()}`,
     createdAt: row.created_at.toISOString(),
@@ -182,6 +188,9 @@ function mapOrder(row: OrderRow): AdminOrder {
             : "Usá «Consultar envío y etiqueta» para comprobar si Zipnova recibió el envío. La consulta no crea otro envío."}
           : {status:"ready_to_ship" as const,statusLabel:"Etiqueta en preparación",nextAction:"Consultar la etiqueta sin crear otro envío."}
       : {}),
+    ...(row.status === "paid" && row.frame && row.frame.state !== "ready" ? {status:"prepare" as const,statusLabel:row.frame.state === "making" ? "En fabricación" : "Cuadro por fabricar",nextAction:row.frame.state === "making" ? "Terminá el cuadro antes de confirmar el embalaje." : "Abrí la guía del diseño comprado e iniciá la fabricación."} : {}),
+    ...(row.frame?.state==='awaiting_payment' && ['created','payment_pending'].includes(row.status) && Date.now()-row.created_at.getTime()>3_600_000 ? {status:'attention' as const,statusLabel:'Necesita revisión',nextAction:'El pago sigue pendiente hace más de una hora. Consultalo en Mercado Pago antes de liberar el cupo o fabricar.'} : {}),
+    ...(row.frame && row.status==='review_required' ? {nextAction:'Consultá el pago en Mercado Pago y revisá el cupo del taller antes de fabricar. No repitas el cobro.'} : {}),
     buyer: { name: row.buyer_name, email: row.buyer_email, phone: row.recipient_phone },
     recipientName: row.recipient_name,
     destination: row.city && row.province_code

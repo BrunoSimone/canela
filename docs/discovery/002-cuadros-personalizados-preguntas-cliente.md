@@ -236,3 +236,16 @@ incorpora las 62 referencias enlazadas con códigos del fabricante y tonos digit
 estimados. La elección de catálogo queda resuelta; continúa pendiente la validación
 física de los tonos sobre la base real, especialmente para Vitro transparente.
 No cambia la geometría ni confirma precios o materiales de embalaje.
+
+
+## Actualización 2026-10-27 — Operación persistente sandbox
+
+[PER-146](../specs/146-cuadros-operacion-persistente.md) implementa la persistencia
+del mosaico aceptado, reserva de cupos, pago sandbox, fabricación y guía privada,
+preparación/envío, notificaciones y exportación consentida a una galería editorial.
+La configuración interna puede administrarse en un dataset privado de Sanity;
+los precios finales y colores públicos se proyectan sin referencias ni costos.
+La validación del circuito se realiza con PostgreSQL aislado y proveedores falsos.
+Ver [evidencia](../evidence/PER-146.md) y [operación](../runbooks/cuadros-personalizados.md).
+Los datos físicos/comerciales siguen provisionales: el código rechaza cobros reales
+incluso si se activan las flags generales del checkout de stock. No se desplegó.

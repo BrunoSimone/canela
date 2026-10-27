@@ -1,3 +1,4 @@
+import { isDeepStrictEqual } from 'node:util';
 import { createHash } from "node:crypto";
 import type { DeliverySnapshot } from "../../checkout/domain/delivery";
 import type { OrderPreparation } from "../../admin/domain/preparation";
@@ -15,6 +16,7 @@ export type ShipmentRequest = {
   originalQuote?: CourierQuoteSnapshot;
 };
 export type ShipmentOrder = {
+  productionState?: string;
   environment?: "test" | "production";
   id: string; status: string; currency: string; buyerEmail: string;
   subtotalCents: number; shippingCents: number;
@@ -44,6 +46,7 @@ export class FulfillmentError extends Error {
 }
 export type FulfillmentContext = { accountMode: string; contextFingerprint: string; maxParcels: number };
 export function validateShipmentOrder(order: ShipmentOrder, version: number, context: FulfillmentContext, allowPreparedChanges = false): void {
+  if (order.productionState && order.productionState !== "ready") throw new FulfillmentError("SHIPMENT_PRODUCTION_REQUIRED");
   if (!["paid", "fulfillment_pending"].includes(order.status)) throw new FulfillmentError("SHIPMENT_PAYMENT_REQUIRED");
   if (!order.preparation || order.preparation.version !== version) throw new FulfillmentError("SHIPMENT_PREPARATION_CHANGED");
   const quote = order.quote;
@@ -92,7 +95,7 @@ export function validatePreparedQuote(order: ShipmentOrder, quote: CourierQuoteS
   const original = order.quote!;
   const keys = ["provider", "accountMode", "contextFingerprint", "cartFingerprint", "merchandiseCents", "carrierId", "serviceCode", "dispatchType"] as const;
   if (keys.some(key => original[key] !== quote[key]) || !sameDestination(original.destination, quote.destination) ||
-      quote.planFingerprint !== preparedQuoteFingerprint(order) || JSON.stringify(quote.parcels) !== JSON.stringify(preparedParcels(order))) {
+      quote.planFingerprint !== preparedQuoteFingerprint(order) || !isDeepStrictEqual(quote.parcels,preparedParcels(order))) {
     throw new FulfillmentError("SHIPMENT_PREPARATION_CHANGED");
   }
 }

@@ -1,6 +1,6 @@
 import type { DeliverySnapshot } from "@/modules/checkout/domain/delivery";
 import type { MosaicDesign } from "./design";
-import type { FrameEstimate } from "./estimate";
+import type { PublicFrameEstimate } from "./public-pricing";
 
 export type DemoOutcome = "approved" | "pending" | "rejected";
 export type DemoRecipient = { email: string; delivery: DeliverySnapshot };
@@ -10,7 +10,7 @@ export function selectDesign(design: MosaicDesign): DesignSelection {
 }
 export type DemoQuote = {
   mode: "demo"; id: string; expiresAt: string; design: MosaicDesign;
-  recipient: DemoRecipient; frame: FrameEstimate;
+  recipient: DemoRecipient; frame: PublicFrameEstimate;
   shipping: { cents: number; name: string; transitDays: number; package: { weightGrams: number; widthCm: number; heightCm: number; depthCm: number } };
   totalCents: number; productionDays: number;
 };

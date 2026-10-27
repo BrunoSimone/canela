@@ -34,7 +34,7 @@ const FAILED_ORDER_STATES = new Set(["rejected", "expired"]);
 export class PostgresPaymentConfirmationRepository
   implements PaymentConfirmationRepository
 {
-  constructor(private readonly sql: Sql, private readonly inventory: InventoryStore = inventoryStore()) {}
+  constructor(private readonly sql: Sql, private readonly inventory?: InventoryStore) {}
 
   async findByProviderOrderId(
     providerOrderId: string,
@@ -125,7 +125,9 @@ export class PostgresPaymentConfirmationRepository
           await markReview(transaction, input);
           return { kind: "applied" };
         }
-        return applyApproved(transaction, input, this.inventory);
+        const [frame] = await transaction`SELECT reservation_state FROM custom_frame_order WHERE order_id=${input.orderId} FOR UPDATE`;
+        if (frame) return applyFramePayment(transaction, input, frame.reservation_state);
+        return applyApproved(transaction, input, this.inventory ?? inventoryStore());
       }
 
       if (
@@ -136,7 +138,9 @@ export class PostgresPaymentConfirmationRepository
         if (FAILED_ORDER_STATES.has(current.order_status)) {
           return { kind: "unchanged" };
         }
-        return applyFailure(transaction, input, this.inventory);
+        const [frame] = await transaction`SELECT reservation_state FROM custom_frame_order WHERE order_id=${input.orderId} FOR UPDATE`;
+        if (frame) return applyFramePayment(transaction, input, frame.reservation_state);
+        return applyFailure(transaction, input, this.inventory ?? inventoryStore());
       }
 
       if (input.state === "review_required") {
@@ -332,4 +336,15 @@ function mapTarget(
     currency: "ARS",
     ...(row.environment === "production" ? { environment: row.environment } : {}),
   };
+}
+
+async function applyFramePayment(tx: TransactionSql, input: ApplyPaymentConfirmationInput, reservation: string): Promise<ApplyPaymentConfirmationResult> {
+  const approved=input.state==='approved';
+  if (reservation!=='active') { await markReview(tx,input); return {kind:'applied'}; }
+  await tx`UPDATE custom_frame_order SET reservation_state=${approved?'consumed':'released'}, production_state=${approved?'queued':'awaiting_payment'}, version=version+1, updated_at=now() WHERE order_id=${input.orderId}`;
+  await tx`UPDATE orders SET status=${approved?'paid':input.state==='expired'?'expired':'rejected'}::order_status,updated_at=now() WHERE id=${input.orderId}`;
+  await tx`UPDATE payment_attempt SET status=${approved?'approved':input.state}::payment_attempt_status,provider_status=${input.providerStatus},provider_status_detail=${input.providerStatusDetail},verified_at=now(),updated_at=now() WHERE order_id=${input.orderId}`;
+  await tx`INSERT INTO custom_frame_event(order_id,event,actor) VALUES(${input.orderId},${approved?'payment_approved':'payment_failed'},'mercado_pago')`;
+  if(approved) await enqueueOrderNotice(tx,input.orderId,'owner_paid');
+  return {kind:'applied'};
 }

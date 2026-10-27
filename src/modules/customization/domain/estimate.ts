@@ -1,13 +1,13 @@
 import { dimensions, validateWorkshop, type WorkshopConfig } from "./design";
 
-/** Preview pricing only. A future purchase must be priced again by the server. */
+/** All purchases are priced again by the server using the versioned workshop policy. */
 export type PricingPolicy = {
-  version: string; currency: "ARS"; provisional: true;
+  version: string; currency: "ARS"; provisional: boolean;
   tilePackCents: number; tilePackQuantity: number; roundToCents: number;
   sizes: { cells: number; laborCents: number; suppliesCents: number }[];
 };
 export type FrameEstimate = {
-  currency: "ARS"; provisional: true; pricingVersion: string; size: number;
+  currency: "ARS"; provisional: boolean; pricingVersion: string; size: number;
   tilesCents: number; laborCents: number; suppliesCents: number;
   roundingCents: number; totalCents: number; shippingCents: null;
 };
@@ -16,7 +16,7 @@ const amount = (v: number) => Number.isSafeInteger(v) && v >= 0 && v <= 100_000_
 
 export function validatePricing(config: WorkshopConfig, policy: PricingPolicy): void {
   validateWorkshop(config);
-  if (!policy.version || policy.version.length > 80 || policy.currency !== "ARS" || policy.provisional !== true ||
+  if (!policy.version || policy.version.length > 80 || policy.currency !== "ARS" || typeof policy.provisional !== "boolean" ||
     !amount(policy.tilePackCents) || policy.tilePackCents === 0 ||
     !Number.isSafeInteger(policy.tilePackQuantity) || policy.tilePackQuantity < 1 || policy.tilePackQuantity > 1_000_000 ||
     !amount(policy.roundToCents) || policy.roundToCents === 0 ||
@@ -25,7 +25,7 @@ export function validatePricing(config: WorkshopConfig, policy: PricingPolicy): 
     policy.sizes.some((entry, i, all) => !Number.isInteger(entry.cells) || entry.cells < 2 || entry.cells > 100 ||
       !amount(entry.laborCents) || !amount(entry.suppliesCents) ||
       (i > 0 && (entry.cells <= all[i - 1].cells || entry.laborCents < all[i - 1].laborCents || entry.suppliesCents < all[i - 1].suppliesCents)))) {
-    throw new Error("La configuración de precios de prueba no es válida.");
+    throw new Error("La configuración de precios no es válida.");
   }
 }
 
@@ -41,7 +41,7 @@ export function estimateFrame(config: WorkshopConfig, size: number, policy: Pric
   const laborCents = interpolate("laborCents"), suppliesCents = interpolate("suppliesCents");
   const subtotal = tilesCents + laborCents + suppliesCents;
   const totalCents = Math.ceil(subtotal / policy.roundToCents) * policy.roundToCents;
-  return { currency: "ARS", provisional: true, pricingVersion: policy.version, size,
+  return { currency: "ARS", provisional: policy.provisional, pricingVersion: policy.version, size,
     tilesCents, laborCents, suppliesCents, roundingCents: totalCents - subtotal, totalCents, shippingCents: null };
 }
 

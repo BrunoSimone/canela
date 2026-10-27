@@ -7,8 +7,10 @@ import { ArrowLeft, ArrowRight, ImagePlus, RotateCcw, ImageIcon, Paintbrush } fr
 import type { DesignTemplate } from "../application/catalog";
 import { cm, dimensions, materialCounts, recolorDesign, renderMosaic, resizeDesign, type Crop, type WorkshopConfig } from "../domain/design";
 import { loadLocalImage, type LocalImage } from "./local-image";
-import { estimateFrame, formatArs, type PricingPolicy } from "../domain/estimate";
+import { formatArs } from "../domain/estimate";
+import { lookupFrameEstimate, type PublicPricing } from "../domain/public-pricing";
 import { FrameReview } from "./frame-review";
+import { FrameSandboxPurchase, type SandboxPurchaseSettings } from "./frame-sandbox-purchase";
 import { FramePurchase } from "./frame-purchase";
 import { MosaicSvg } from "./mosaic-svg";
 import { applyRetouches, emptyRetouches, paintTile, redoRetouch, restoreTile, undoRetouch } from "../domain/retouches";
@@ -16,9 +18,9 @@ import { ConfirmRegeneration, TileEditor } from "./tile-editor";
 import styles from "./customization.module.css";
 
 type Source = { kind: "image"; image: LocalImage } | { kind: "template"; template: DesignTemplate };
-type Props = { config: WorkshopConfig; pricing: PricingPolicy; template: DesignTemplate | null; templateUnavailable: boolean; purchaseDemoEnabled?: boolean };
+type Props = { config: WorkshopConfig; pricing: PublicPricing; template: DesignTemplate | null; templateUnavailable: boolean; purchaseDemoEnabled?: boolean; sandboxPurchase?: SandboxPurchaseSettings };
 
-export function Creator({ config, pricing, template, templateUnavailable, purchaseDemoEnabled = false }: Props) {
+export function Creator({ config, pricing, template, templateUnavailable, purchaseDemoEnabled = false, sandboxPurchase }: Props) {
   const [source, setSource] = useState<Source | null>(template ? { kind: "template", template } : null);
   const [size, setSize] = useState(template?.design.size ?? config.minCells);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -88,8 +90,9 @@ export function Creator({ config, pricing, template, templateUnavailable, purcha
   const measures = dimensions(config, size);
   const counts = design ? materialCounts(design) : [];
   const baseColors = result?.base ? materialCounts(result.base) : [];
-  const estimate = estimateFrame(config, size, pricing);
+  const estimate = lookupFrameEstimate(config, size, pricing);
 
+  if (reviewing && design && sandboxPurchase) return <FrameSandboxPurchase design={design} estimate={estimate} settings={sandboxPurchase} onEdit={() => setReviewing(false)} />;
   if (reviewing && design && purchaseDemoEnabled) return <FramePurchase design={design} estimate={estimate} onEdit={() => setReviewing(false)} />;
   if (reviewing && design) return <FrameReview design={design} estimate={estimate} onEdit={() => setReviewing(false)} />;
 

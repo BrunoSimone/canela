@@ -10,6 +10,7 @@ export type OperationalStatus =
   | "cancelled";
 
 export type AdminOrder = {
+  frame?: import("../../customization/domain/frame-order").AdminFrame | null;
   environment?: "test" | "production";
   id: string;
   reference: string;

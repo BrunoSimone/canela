@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { publishPricing } from "../domain/public-pricing";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -13,7 +14,7 @@ vi.mock("./local-image", () => ({ loadLocalImage: mocks.load }));
 vi.mock("react-easy-crop", () => ({ default: ({ onCropComplete }: { onCropComplete: (a: Crop, b: Crop) => void }) => <button onClick={() => { const area = { x: 1, y: 1, width: 2, height: 2 }; onCropComplete(area, area); }}>Mover recorte</button> }));
 beforeEach(() => { installEditorDom(); vi.stubGlobal("URL", { revokeObjectURL: vi.fn() }); });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.clearAllMocks(); vi.unstubAllGlobals(); });
-const setup = () => render(<Creator config={testWorkshop} pricing={testPricing} template={{ id: "test", title: "Flor", description: "", published: true, demonstration: true, design: renderMosaic(raster(), testWorkshop, 3) }} templateUnavailable={false} />);
+const setup = () => render(<Creator config={testWorkshop} pricing={publishPricing(testWorkshop, testPricing)} template={{ id: "test", title: "Flor", description: "", published: true, demonstration: true, design: renderMosaic(raster(), testWorkshop, 3) }} templateUnavailable={false} />);
 const cells = () => [...screen.getByRole("img", { name: /Tu mosaico/ }).querySelectorAll("[data-cell]")].map(r => r.getAttribute("fill"));
 async function retouch() {
   await userEvent.click(screen.getByRole("button", { name: "Retocar venecitas" }));

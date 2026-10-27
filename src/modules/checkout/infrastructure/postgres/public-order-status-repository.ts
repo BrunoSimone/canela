@@ -20,9 +20,10 @@ export class PostgresPublicOrderStatusRepository
     tokenHash: string,
   ): Promise<StoredPublicOrderStatus | null> {
     const [row] = await this.sql<PublicOrderStatusRow[]>`
-      SELECT orders.status, min(stock_reservation.expires_at) AS expires_at
+      SELECT orders.status, coalesce(min(stock_reservation.expires_at), min(frame.expires_at)) AS expires_at
       FROM orders
-      JOIN stock_reservation ON stock_reservation.order_id = orders.id
+      LEFT JOIN stock_reservation ON stock_reservation.order_id = orders.id
+      LEFT JOIN custom_frame_order frame ON frame.order_id = orders.id
       WHERE orders.public_token_hash = ${tokenHash}
       GROUP BY orders.id
     `;

@@ -1,3 +1,4 @@
+import { publicEstimate } from "../domain/public-pricing";
 import { randomUUID } from "node:crypto";
 import { parseDeliverySnapshot } from "@/modules/checkout/domain/delivery";
 import { dimensions, validateDesign, type MosaicDesign, type WorkshopConfig } from "../domain/design";
@@ -66,7 +67,7 @@ export class DemoPurchaseService {
     const parcel = this.policy.packages.find(p => design.size <= p.maxCells);
     if (!parcel) throw invalid();
     if (this.entries.size >= this.policy.maxQuotes) throw new DemoPurchaseError("DEMO_LIMIT", "Hay muchas pruebas abiertas. Esperá unos minutos antes de continuar.", 429);
-    const frame = estimateFrame(this.config, design.size, this.pricing);
+    const frame = publicEstimate(estimateFrame(this.config, design.size, this.pricing));
     const side = Math.ceil(dimensions(this.config, design.size).framedMm / 10) + this.policy.packagingExtraCm;
     const shipping = {
       cents: parcel.shippingCents + (recipient.delivery.provinceCode === "B" ? 0 : this.policy.otherProvinceCents),

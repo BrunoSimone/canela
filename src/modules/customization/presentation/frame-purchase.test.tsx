@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { publishPricing } from "../domain/public-pricing";
 import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -30,7 +31,7 @@ beforeEach(async () => {
   });
   vi.stubGlobal("fetch", requests);
   cart = configureCart(); cart.dispatch(addItem({ id: "real-stock-item", name: "Florero", price: 1000, checkoutEligible: true }));
-  render(<Provider store={cart}><Creator config={config} pricing={pricing} template={(await demoDesignCatalog.templates())[0]} templateUnavailable={false} purchaseDemoEnabled /></Provider>);
+  render(<Provider store={cart}><Creator config={config} pricing={publishPricing(config, pricing)} template={(await demoDesignCatalog.templates())[0]} templateUnavailable={false} purchaseDemoEnabled /></Provider>);
 });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 async function review() { await userEvent.click(screen.getByRole("button", { name: "Revisar mi cuadro" })); }

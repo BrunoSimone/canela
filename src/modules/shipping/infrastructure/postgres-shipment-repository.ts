@@ -1,3 +1,4 @@
+import { isDeepStrictEqual } from 'node:util';
 import type { Sql, TransactionSql } from "postgres";
 import { parseDeliverySnapshot } from "../../checkout/domain/delivery";
 import { FulfillmentError, validateShipmentOrder, validatePreparedQuote, type FulfillmentContext, type RemoteShipment, type ShipmentOrder, type ShipmentRecord, type ShipmentRepository, type ShipmentRequest } from "../domain/fulfillment";
@@ -9,13 +10,13 @@ type Query = Sql | TransactionSql;
 async function loadOrder(sql: Query, id: string): Promise<ShipmentOrder | null> {
   const [row] = await sql`
     SELECT o.id,o.environment,o.status,o.currency,o.buyer_email,o.subtotal_cents,o.shipping_cents,o.shipping_quote_snapshot,
-      row_to_json(d) AS delivery, row_to_json(p) AS preparation
+      row_to_json(d) AS delivery, row_to_json(p) AS preparation, c.production_state
     FROM orders o LEFT JOIN order_delivery d ON d.order_id=o.id
-    LEFT JOIN order_preparation p ON p.order_id=o.id WHERE o.id=${id}
+    LEFT JOIN order_preparation p ON p.order_id=o.id LEFT JOIN custom_frame_order c ON c.order_id=o.id WHERE o.id=${id}
   `;
   if (!row) return null;
   const d=row.delivery, p=row.preparation;
-  return { environment:row.environment, id:row.id,status:row.status,currency:row.currency,buyerEmail:row.buyer_email,
+  return { productionState:row.production_state??undefined, environment:row.environment, id:row.id,status:row.status,currency:row.currency,buyerEmail:row.buyer_email,
     subtotalCents:Number(row.subtotal_cents),shippingCents:Number(row.shipping_cents),quote:row.shipping_quote_snapshot,
     delivery:d ? parseDeliverySnapshot({type:"home",buyerName:d.buyer_name,recipientName:d.recipient_name,
       phone:d.recipient_phone,recipientDocument:d.recipient_document,streetName:d.street_name,streetNumber:d.street_number,
@@ -36,7 +37,7 @@ export class PostgresShipmentRepository implements ShipmentRepository {
       if (!order) throw new FulfillmentError("ORDER_NOT_FOUND",404);
       validateShipmentOrder(order,request.preparationVersion,context,!!request.originalQuote);
       if(request.originalQuote) validatePreparedQuote(order,request.quote);
-      if (JSON.stringify(order.quote)!==JSON.stringify(request.originalQuote??request.quote) || JSON.stringify(order.delivery)!==JSON.stringify(request.delivery) || order.buyerEmail!==request.buyerEmail) {
+      if (!isDeepStrictEqual(order.quote,request.originalQuote??request.quote) || !isDeepStrictEqual(order.delivery,request.delivery) || order.buyerEmail!==request.buyerEmail) {
         throw new FulfillmentError("SHIPMENT_ORDER_MISMATCH");
       }
       const [row]=await tx<Row[]>`

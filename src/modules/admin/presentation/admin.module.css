@@ -281,3 +281,9 @@
 .textButton, .pagination button, .help summary, .logout { min-height: 44px; }
 .logout { min-width: 44px; justify-content: center; }
 .searchWrap input, .sortWrap select, .parcelFields input, .preparationNote textarea, .loginCard input[type="email"] { font-size: 16px; }
+
+.framePreview { display: block; width: min(100%, 320px); margin: 20px auto; }
+
+.frameCard { display: grid; gap: 14px; }
+.frameCard > :is(.primaryLink, .textButton) { justify-self: start; margin-top: 0; }
+.frameCard > .framePreview { margin-block: 0; }

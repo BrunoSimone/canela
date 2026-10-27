@@ -1,3 +1,4 @@
+import { frameDesignSchema } from "./frame-schema";
 import { ALL_FIELDS_GROUP, type SchemaTypeDefinition } from "sanity";
 import { orderRankField } from "@sanity/orderable-document-list";
 
@@ -280,5 +281,5 @@ const shippingBox: SchemaTypeDefinition = {
 };
 
 export const schema: { types: SchemaTypeDefinition[] } = {
-  types: [producto, heroSlide, shippingBox],
+  types: [producto, heroSlide, shippingBox, frameDesignSchema],
 };

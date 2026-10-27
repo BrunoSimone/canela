@@ -208,7 +208,8 @@ Estas variables afectan solo ese proceso local. Las rutas están bloqueadas en
 Vercel Production. La configuración y los ejemplos vienen del repositorio de
 servidor `src/modules/customization/infrastructure/demo-catalog.ts`; medidas,
 límites, paleta y precios son provisionales y se cambian allí, sin modificar el motor.
-La estimación separa venecitas, mano de obra e insumos. El envío usa fixtures de
+La estimación interna separa venecitas, mano de obra e insumos; el navegador
+recibe únicamente precios finales por tamaño y muestra el total del cuadro. El envío usa fixtures de
 `demo-purchase-config.ts`: no son tarifas de Zipnova. Para probar, subí una imagen,
 revisá y aceptá el diseño, continuá al domicilio y usá «Completar con datos ficticios».
 Cotizá y elegí aprobado, pendiente o rechazado antes de «Simular pago».
@@ -224,9 +225,26 @@ Para una prueba de capacidad nueva se puede reiniciar el servidor local.
 
 Las fotos se procesan en memoria del navegador y se pierden al salir/recargar.
 Solo la grilla aceptada llega al backend; no hay subida de originales ni borradores
-persistentes. La simulación no crea pedidos en el panel de Mariela. La venta real
-requiere otra iteración con datos confirmados, persistencia durable y proveedores.
-La publicación de diseños de compradores en Sanity pertenece a la etapa de venta.
+persistentes. La simulación no crea pedidos en el panel de Mariela. El circuito persistente sandbox se describe a continuación; la venta real
+continúa bloqueada hasta confirmar los datos y completar la revisión de activación.
+
+### Pedidos de cuadros persistentes — PER-146
+
+La rama incluye un segundo recorrido, habilitado **solo en sandbox** mediante
+`CUADROS_CHECKOUT_MODE=sandbox`: envío cotizado, orden y diseño inmutables en
+PostgreSQL, reserva concurrente de cupos, Mercado Pago de prueba, resultado
+persistente, fabricación autenticada, guía privada imprimible y preparación/envío.
+Reutiliza los webhooks, recuperación manual y avisos existentes. No usa cron.
+No modifica stock ni vacía el carrito de productos.
+
+Las confirmaciones comerciales siguen pendientes y ningún flag habilita cobros
+reales de cuadros. La configuración del taller admite Sanity **privado**, separado
+del catálogo público; los diseños consentidos se exportan como borradores editoriales.
+No publicar datos internos en el dataset público.
+
+- [Spec PER-146](docs/specs/146-cuadros-operacion-persistente.md)
+- [Operación, configuración y QA](docs/runbooks/cuadros-personalizados.md)
+- [Evidencia y límites de la validación](docs/evidence/PER-146.md)
 
 ### Environment
 

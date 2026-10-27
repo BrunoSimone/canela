@@ -1,3 +1,4 @@
+import { isDeepStrictEqual } from "node:util";
 import { createHash } from "node:crypto";
 import type { ProductCatalog } from "../../catalog/domain/product-catalog";
 import { resolveCheckoutItems } from "../../checkout/application/resolve-checkout-items";
@@ -59,7 +60,7 @@ export class ZipnovaCheckoutQuotes implements ShippingQuoteVerifier {
     if (snapshot.planFingerprint !== marginPlanFingerprint(plan, this.deps.marginPolicy) || snapshot.cartFingerprint !== cartFingerprint ||
         snapshot.merchandiseCents !== merchandiseCents) throw new CourierQuoteMismatchError();
     const parcels = quoteParcels(this.deps, plan.parcels);
-    if (JSON.stringify(parcels) !== JSON.stringify(snapshot.parcels)) throw new CourierQuoteMismatchError();
+    if (!isDeepStrictEqual(parcels, snapshot.parcels)) throw new CourierQuoteMismatchError();
     const rates = await this.deps.rates.quoteShipment({ destination, declaredValueCents: merchandiseCents, parcels });
     const rate = rates.find(r => rateKey(r) === rateKey(snapshot));
     if (!rate) throw new UnavailableCourierRateError();

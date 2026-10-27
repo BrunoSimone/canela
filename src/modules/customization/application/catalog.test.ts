@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { publishPricing } from "../domain/public-pricing";
 import { loadCreator, loadGallery, type DesignCatalog } from "./catalog";
 import { renderMosaic } from "../domain/design";
 import { testWorkshop, raster } from "../testing/workshop";
@@ -52,7 +53,7 @@ describe("PER-130: server supplied gallery and creator", () => {
     expect(customizationEnabled({ NODE_ENV: "production", VERCEL_ENV: "preview", CUADROS_PREVIEW_ENABLED: "1" })).toBe(true);
   });
   it("PER-131: uses server pricing and rejects broken configuration before rendering", async () => {
-    expect((await loadCreator(repository())).pricing).toEqual(testPricing);
+    expect((await loadCreator(repository())).pricing).toEqual(publishPricing(testWorkshop, testPricing));
     await expect(loadCreator({ ...repository(), pricing: async () => ({ ...testPricing, tilePackQuantity: 0 }) })).rejects.toThrow();
   });
 });

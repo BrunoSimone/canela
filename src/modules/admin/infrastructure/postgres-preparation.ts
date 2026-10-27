@@ -29,6 +29,8 @@ export class PostgresOrderPreparationRepository {
       if (order.status !== "paid" && order.status !== "fulfillment_pending") {
         throw new PreparationNotAllowedError();
       }
+      const [frame] = await tx`SELECT production_state FROM custom_frame_order WHERE order_id=${orderId}`;
+      if(frame && frame.production_state!=='ready') throw new PreparationNotAllowedError();
       const [shipment] = await tx`SELECT order_id FROM order_shipment WHERE order_id=${orderId}`;
       if (shipment) throw new PreparationNotAllowedError();
       const [existing] = await tx<{ version: number }[]>`

@@ -79,3 +79,5 @@ export const storefrontPalette: TileColor[] = materials.colors.map(material => (
   name: identities[material.id][1],
   hex: material.hex,
 }));
+
+export const workshopMaterials = Object.fromEntries(materials.colors.map(m => [storefrontColorId(m.id), m.id.replace("murvi-", "Murvi ")]));

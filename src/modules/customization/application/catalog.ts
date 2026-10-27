@@ -1,4 +1,5 @@
 import { resizeDesign, validateWorkshop, type MosaicDesign, type WorkshopConfig } from "../domain/design";
+import { publishPricing } from "../domain/public-pricing";
 import { validatePricing, type PricingPolicy } from "../domain/estimate";
 
 export type DesignTemplate = {
@@ -21,5 +22,5 @@ export async function loadCreator(repository: DesignCatalog, id?: string) {
   const [{ config, templates }, pricing] = await Promise.all([loadGallery(repository), repository.pricing()]);
   validatePricing(config, pricing);
   const template = templates.find(t => t.id === id) ?? null;
-  return { config, pricing, template, templateUnavailable: !!id && !template };
+  return { config, pricing: publishPricing(config, pricing), template, templateUnavailable: !!id && !template };
 }

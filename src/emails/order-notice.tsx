@@ -1,5 +1,5 @@
 import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text, render, toPlainText } from "react-email";
-export type OrderNoticeProps={kind:"owner_paid"|"buyer_shipped";reference:string;test:boolean;actionUrl:string;carrier:string|null;trackingNumber:string|null;totalCents:number;items:{name:string;quantity:number}[]};
+export type OrderNoticeProps={frameProductionDays?:number;kind:"owner_paid"|"buyer_shipped";reference:string;test:boolean;actionUrl:string;carrier:string|null;trackingNumber:string|null;totalCents:number;items:{name:string;quantity:number}[]};
 export default function OrderNoticeEmail(props:OrderNoticeProps){
   const owner=props.kind==="owner_paid";
   return <Html lang="es"><Head/><Preview>{owner?"Hay un pedido pagado para preparar.":"Tu pedido fue entregado al transporte."}</Preview>
@@ -10,7 +10,7 @@ export default function OrderNoticeEmail(props:OrderNoticeProps){
           {props.test&&<Text style={{fontWeight:700}}>PRUEBA — Este correo corresponde a una simulación. No hay un despacho real.</Text>}
           <Heading as="h1" style={{fontSize:"28px",lineHeight:"1.2"}}>{owner?"Nuevo pedido pagado":"Tu pedido fue despachado"}</Heading>
           <Text>Pedido {props.reference}</Text>
-          {owner?<><Text>El pago está confirmado. Podés preparar las piezas y revisar el envío desde el panel.</Text>
+          {owner?<><Text>{props.frameProductionDays ? `El pago del cuadro está confirmado. Abrí el diseño y su guía de armado en el panel. El plazo indicado de fabricación es de ${props.frameProductionDays} días; el envío se prepara cuando esté terminado.` : "El pago está confirmado. Podés preparar las piezas y revisar el envío desde el panel."}</Text>
             {props.items.map((item,index)=><Text key={index}>{item.quantity} × {item.name}</Text>)}
             <Text>Total: {new Intl.NumberFormat("es-AR",{style:"currency",currency:"ARS"}).format(props.totalCents/100)}</Text></>:
             <><Text>El taller registró la entrega de tu paquete a {props.carrier??"el transporte"}. Las novedades del recorrido se consultan en su seguimiento.</Text>

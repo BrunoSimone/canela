@@ -3,7 +3,7 @@ import { DemoPurchaseError, type DemoRecipient } from "../domain/purchase";
 
 const MAX_BYTES = 100_000;
 const json = (body: unknown, status = 200) => Response.json(body, { status, headers: { "Cache-Control": "no-store, private", "X-Robots-Tag": "noindex" } });
-async function boundedJson(request: Request): Promise<Record<string, unknown>> {
+export async function boundedJson(request: Request): Promise<Record<string, unknown>> {
   if (Number(request.headers.get("content-length")) > MAX_BYTES) throw new DemoPurchaseError("BODY_TOO_LARGE", "El diseño supera el tamaño permitido.", 413);
   const reader = request.body?.getReader();
   if (!reader) throw new DemoPurchaseError("INVALID_INPUT", "Faltan los datos de la prueba.");

@@ -11,6 +11,7 @@ import { PreparationEditor } from "./preparation-editor";
 import { OrderOperations } from "./order-operations";
 import { ShipmentActions } from "./shipment-actions";
 import { ReviewNotice } from "./review-notice";
+import { FrameProductionPanel } from "./frame-production";
 import { PackingPlan } from "./packing-plan";
 import styles from "./admin.module.css";
 
@@ -57,6 +58,7 @@ export function OrderDetailClient({ id, demo, backHref }: { id: string; demo: bo
         </div>}
       <div className={styles.detailGrid}>
         <div className={styles.detailColumn}>
+          <FrameProductionPanel order={order} onChanged={setOrder} />
           <section className={styles.detailCard}>
             <div className={styles.cardHeading}><Package size={21} /><h2>Productos</h2></div>
             <div className={styles.itemList}>
@@ -91,13 +93,13 @@ export function OrderDetailClient({ id, demo, backHref }: { id: string; demo: bo
             <div className={styles.actionBox}><StatusBadge order={order} /><p>{order.nextAction}</p></div>
           </section>}
           {order.packingPlan?.map((parcel, i) => <PackingPlan key={i} parcel={parcel} items={order.items} />)}
-          <PreparationEditor order={order} demo={demo} onSaved={(preparation) => setOrder((current) => current ? {
+          {(!order.frame || order.frame.state === "ready") && <PreparationEditor order={order} demo={demo} onSaved={(preparation) => setOrder((current) => current ? {
             ...current,
             preparation,
             status: "ready_to_ship",
             statusLabel: "Listo para crear envío",
             nextAction: "Confirmar el embalaje para generar la etiqueta.",
-          } : current)} />
+          } : current)} />}
           <ShipmentActions key={order.preparation?.version ?? 0} order={order} onChanged={setOrder} />
           <OrderOperations order={order} onChanged={setOrder} />
           <section className={styles.detailCard}>

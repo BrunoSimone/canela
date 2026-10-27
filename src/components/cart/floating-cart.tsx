@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { CreditCard, Minus, Plus, ShoppingBag, X } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { formatPrice } from "@/lib/product-status";
@@ -9,6 +10,7 @@ import { useCart } from "@/modules/cart/presentation/hooks/use-cart";
 
 export function FloatingCart({ checkoutEnabled }: { checkoutEnabled: boolean }) {
   const { items, count, panelOpen, inc, dec, remove, togglePanel, closePanel } = useCart();
+  const pathname = usePathname();
   const trigger = useRef<HTMLButtonElement>(null);
   const close = useRef<HTMLButtonElement>(null);
   const hasItems = items.length > 0;
@@ -16,6 +18,8 @@ export function FloatingCart({ checkoutEnabled }: { checkoutEnabled: boolean }) 
   const subtotal = items.reduce((sum, item) => sum + Math.round(item.price * 100) * item.qty, 0) / 100;
   const quantityClass = "flex size-11 shrink-0 items-center justify-center rounded-lg border border-[rgba(184,132,42,.5)] text-[#6E4E38]";
 
+  // Custom frames have their own checkout. Keep the stock cart state intact.
+  if (pathname === "/crear-cuadro" || pathname?.startsWith("/cuadros/resultado/")) return null;
   return <>
     <button ref={trigger} type="button" onClick={togglePanel} aria-label={`Mi carrito${count ? `, ${count} ${count === 1 ? "pieza" : "piezas"}` : ""}`} aria-haspopup="dialog" aria-expanded={panelOpen}
       className="fixed bottom-5 right-5 z-[120] flex size-14 items-center justify-center rounded-full bg-[var(--canela-brown)] text-[var(--canela-cream)] shadow-[0_10px_26px_rgba(74,53,39,.35)]">

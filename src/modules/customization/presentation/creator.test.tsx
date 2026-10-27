@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { publishPricing } from "../domain/public-pricing";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -14,7 +15,7 @@ const mocks = vi.hoisted(() => ({ load: vi.fn() }));
 vi.mock("./local-image", () => ({ loadLocalImage: mocks.load }));
 vi.mock("react-easy-crop", () => ({ default: ({ onCropChange }: { onCropChange: (crop: { x: number; y: number }) => void }) => <div>Recortador de imagen<button onClick={() => onCropChange({ x: 10, y: 0 })}>Mover recorte de prueba</button></div> }));
 const template = (): DesignTemplate => ({ id: "test", title: "Flor de prueba", description: "Ejemplo", published: true, demonstration: true, design: renderMosaic(raster(), testWorkshop, 3) });
-const setup = (selected = true) => render(<Creator config={testWorkshop} pricing={testPricing} template={selected ? template() : null} templateUnavailable={false} />);
+const setup = (selected = true) => render(<Creator config={testWorkshop} pricing={publishPricing(testWorkshop, testPricing)} template={selected ? template() : null} templateUnavailable={false} />);
 const visibleCells = () => [...screen.getByRole("img", { name: /Tu mosaico/ }).querySelectorAll("[data-cell]")].map(cell => cell.getAttribute("fill"));
 beforeEach(() => { vi.stubGlobal("URL", { revokeObjectURL: vi.fn() }); });
 afterEach(() => { cleanup(); vi.clearAllMocks(); vi.unstubAllGlobals(); });
@@ -109,7 +110,7 @@ describe("PER-130: creator user journeys", () => {
     expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:first");
   });
   it("explains an unavailable template while keeping upload accessible", () => {
-    render(<Creator config={testWorkshop} pricing={testPricing} template={null} templateUnavailable />);
+    render(<Creator config={testWorkshop} pricing={publishPricing(testWorkshop, testPricing)} template={null} templateUnavailable />);
     expect(screen.getByRole("alert").textContent).toContain("no está disponible");
     expect(screen.getByLabelText("Elegir imagen")).toBeTruthy();
   });

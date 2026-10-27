@@ -1,10 +1,11 @@
 "use client";
+import type { PublicFrameEstimate } from "../domain/public-pricing";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ArrowLeft, CheckCircle2, Clock3, CircleAlert } from "lucide-react";
 import { ARGENTINE_PROVINCES, parseDeliverySnapshot, provinceName } from "@/modules/checkout/domain/delivery";
 import type { MosaicDesign } from "../domain/design";
-import { formatArs, type FrameEstimate } from "../domain/estimate";
+import { formatArs } from "../domain/estimate";
 import { selectDesign, type DemoOrder, type DemoOutcome, type DemoPurchaseRequest, type DemoQuote, type DemoRecipient } from "../domain/purchase";
 import { FrameReview } from "./frame-review";
 import { MosaicSvg } from "./mosaic-svg";
@@ -25,7 +26,7 @@ function sampleFields({ email, delivery: d }: DemoRecipient): Fields {
   return { email, name: d.recipientName, phone: d.phone ?? "", document: d.recipientDocument ?? "", street: d.streetName, number: d.streetNumber, floor: d.floor ?? "", apartment: d.apartment ?? "", city: d.city, province: d.provinceCode, postalCode: d.postalCode };
 }
 
-export function FramePurchase({ design, estimate, onEdit }: { design: MosaicDesign; estimate: FrameEstimate; onEdit: () => void }) {
+export function FramePurchase({ design, estimate, onEdit }: { design: MosaicDesign; estimate: PublicFrameEstimate; onEdit: () => void }) {
   const [step, setStep] = useState<Step>("review");
   const [fields, setFields] = useState<Fields>({ ...emptyFields });
   const [quote, setQuote] = useState<DemoQuote | null>(null);
