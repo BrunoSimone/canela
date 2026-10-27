@@ -11,7 +11,7 @@ export function CreatorSpotlight({ templates }: { templates: DesignTemplate[] })
   return <section className={styles.spotlight} aria-labelledby="creator-spotlight-title">
     <div className={styles.spotlightCopy}>
       <h2 id="creator-spotlight-title">Cuadros<br />personalizados</h2>
-      <p className={styles.intro}>Vista previa de un cuadro en mosaico a partir de tu foto o de un diseño de la galería.</p>
+      <p className={styles.intro}>Elegí una foto que te guste y probá cómo quedaría en un cuadro de venecitas. Ajustá los colores a tu gusto o empezá con un diseño de la galería.</p>
       <ol className={styles.steps}>
         <li><span aria-hidden="true">01</span>Subí tu imagen</li>
         <li><span aria-hidden="true">02</span>Elegí tamaño y encuadre</li>

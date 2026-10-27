@@ -116,7 +116,7 @@ export function Hero({ slides, customizationEnabled = false }: { slides: HeroSli
             className="m-0 max-w-[460px] text-base leading-relaxed text-[#5a4130]"
             {...itemProps}
           >
-            Objetos decorativos, espejos y cuadros fabricados en Mar del Plata.
+            Objetos decorativos, espejos y cuadros hechos a mano en Mar del Plata.
           </motion.p>
           <motion.div className="flex flex-wrap items-center gap-3" {...itemProps}>
             {customizationEnabled && <a href="/crear-cuadro" className="inline-flex min-h-12 items-center gap-2.5 rounded-full bg-[var(--canela-brown)] px-6 py-3.5 text-[15px] font-bold text-[var(--canela-cream-card)] transition-transform hover:scale-[1.03]"><ImagePlus size={19} aria-hidden="true" />Crear mi cuadro</a>}
