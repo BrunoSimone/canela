@@ -8,9 +8,10 @@ import styles from "./home-destinations.module.css";
 
 type Visual = "frames" | "store";
 
-export function HomeCarousel({ creatorEnabled, catalogBackdrop, frame, frameBackdrop }: {
+export function HomeCarousel({ creatorEnabled, catalogBackdrop, storePiece, frame, frameBackdrop }: {
   creatorEnabled: boolean;
   catalogBackdrop: ReactNode;
+  storePiece: ReactNode;
   frame: ReactNode;
   frameBackdrop: ReactNode;
 }) {
@@ -71,6 +72,9 @@ export function HomeCarousel({ creatorEnabled, catalogBackdrop, frame, frameBack
       </nav>
     </div>
     <div className={styles.stage}>
+      <div className={styles.productPresentation} aria-hidden={active !== "store"}>
+        <div className={styles.floatingVisual}>{storePiece}</div>
+      </div>
       {creatorEnabled && <div className={styles.framePresentation} aria-hidden={active !== "frames"}>
         <div className={styles.floatingVisual}>{frame}</div>
       </div>}

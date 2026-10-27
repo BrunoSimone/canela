@@ -43,7 +43,7 @@ describe("PER-141: public routes and shared cart", () => {
     const { rerender, container } = render(<MarketingLayout>{await HomePage()}</MarketingLayout>);
     expect(getProducts).toHaveBeenCalledOnce();
     expect(stockList).toHaveBeenCalledOnce();
-    expect(container.querySelectorAll("main [data-src]")).toHaveLength(25);
+    expect(container.querySelectorAll('main [data-src][aria-label=""]')).toHaveLength(25);
     expect(screen.queryByRole("link", { name: "Ver Cuenco de prueba en la tienda" })).toBeNull();
     expect(screen.queryByText("Maceta agotada")).toBeNull();
     expect(screen.queryByText("Pieza oculta")).toBeNull();
@@ -66,7 +66,7 @@ describe("PER-141: public routes and shared cart", () => {
     const main = within(screen.getByRole("main"));
     expect(main.getByRole("link", { name: "Explorar la tienda" })).toBeTruthy();
     expect(main.getByRole("link", { name: "Crear mi cuadro" })).toBeTruthy();
-    expect(screen.getByRole("main").querySelector("[data-src]")).toBeNull();
+    expect(screen.getByRole("main").querySelector('[data-src][aria-label=""]')).toBeNull();
     expect(main.queryByText("$1.500")).toBeNull();
   });
   it("filters the store, opens a photo, adds to cart and retains the purchase across sections", async () => {

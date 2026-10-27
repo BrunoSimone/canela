@@ -38,14 +38,17 @@ describe("PER-141: two storefront journeys", () => {
   it("uses real photos only as a decorative background, keeping exactly two destinations", async () => {
     const { container, rerender } = render(<HomeDestinations products={[{ id: "cuenco", src: "/cuenco.jpg" }, { id: "vaso", src: "/vaso.jpg" }]}
       templates={await demoDesignCatalog.templates()} />);
-    const photos = [...container.querySelectorAll('[data-src]')];
+    const photos = [...container.querySelectorAll('[data-src][aria-label=""]')];
     expect(photos).toHaveLength(25);
     expect(new Set(photos.map(p => p.getAttribute("data-src")))).toEqual(new Set(["/cuenco.jpg", "/vaso.jpg"]));
     for (const photo of photos) expect(photo.closest('[aria-hidden="true"]')).toBeTruthy();
     expect(screen.getAllByRole("link").map(link => link.getAttribute("href"))).toEqual(["/crear-cuadro", "/tienda"]);
     expect(screen.queryByRole("button")).toBeNull();
     rerender(<HomeDestinations products={[]} templates={null} />);
-    expect(container.querySelector('[data-src]')).toBeNull();
+    expect(container.querySelector('[data-src][aria-label=""]')).toBeNull();
+    const piece = screen.getByRole("img", { name: "Pieza de ajedrez de cerámica de Canela" });
+    expect(piece.getAttribute("data-src")).toContain("aca61f0c0b27615757104c53f3b53fcde12cc083-3456x4608.png");
+    expect(piece.closest("a")).toBeNull();
     expect(screen.getByRole("link", { name: "Explorar la tienda" })).toBeTruthy();
   });
   it("explains the appropriate checkout and only offers simulation where available", () => {

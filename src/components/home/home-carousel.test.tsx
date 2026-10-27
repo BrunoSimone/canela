@@ -7,6 +7,7 @@ const { reduced } = vi.hoisted(() => ({ reduced: vi.fn(() => false) }));
 vi.mock("motion/react", () => ({ useReducedMotion: reduced }));
 const props = {
   creatorEnabled: true,
+  storePiece: <span role="img" aria-label="Pieza de ajedrez" />,
   catalogBackdrop: <span role="img" aria-label="Fondo del catálogo" />,
   frame: <span role="img" aria-label="Cuadro de ejemplo" />,
   frameBackdrop: <span role="img" aria-label="Fondo decorativo" />,
@@ -25,6 +26,7 @@ describe("PER-143: home visual carousel", () => {
     expect(screen.getByRole("img", { name: "Cuadro de ejemplo" })).toBeTruthy();
     expect(screen.queryByRole("img", { name: "Fondo del catálogo" })).toBeNull();
     expect(activeVisual()).toBe("frames");
+    expect(screen.queryByRole("img", { name: "Pieza de ajedrez" })).toBeNull();
     expect(screen.getByRole("heading", { level: 1 }).closest("a")).toBeNull();
     const routes = within(screen.getByRole("navigation", { name: "Elegí tu recorrido" }));
     const creator = routes.getByRole("link", { name: "Crear mi cuadro" });
@@ -33,11 +35,13 @@ describe("PER-143: home visual carousel", () => {
     expect(screen.queryByRole("img", { name: "Fondo del catálogo" })).toBeNull();
     expect(screen.queryByRole("img", { name: "Cuadro de ejemplo" })).toBeNull();
     expect(activeVisual()).toBe("store");
+    expect(screen.getByRole("img", { name: "Pieza de ajedrez" })).toBeTruthy();
     expect(creator.getAttribute("href")).toBe("/crear-cuadro");
     expect(store.getAttribute("href")).toBe("/tienda");
     act(() => vi.advanceTimersByTime(6000));
     expect(screen.getByRole("img", { name: "Cuadro de ejemplo" })).toBeTruthy();
     expect(screen.queryByRole("button")).toBeNull();
+    expect(screen.queryByRole("img", { name: "Pieza de ajedrez" })).toBeNull();
     expect(screen.queryByRole("img", { name: "Fondo decorativo" })).toBeNull();
   });
   it("keeps rotating with the pointer over the hero and a navigation link focused", () => {
@@ -122,6 +126,7 @@ describe("PER-143: home visual carousel", () => {
     expect(screen.getAllByRole("link")).toHaveLength(1);
     expect(screen.getByRole("link").getAttribute("href")).toBe("/tienda");
     expect(screen.queryByRole("button")).toBeNull();
+    expect(screen.getByRole("img", { name: "Pieza de ajedrez" })).toBeTruthy();
     expect(cancelled).toHaveBeenCalledWith(rotation);
   });
 });
