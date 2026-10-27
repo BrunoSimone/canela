@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Tienda en mantenimiento",
-  description: "El catálogo y las compras online de Canela están temporalmente deshabilitados. Podés contactarnos por Instagram.",
+  description: "Estamos actualizando la tienda. Por ahora no podés ver el catálogo ni comprar. Si necesitás consultarnos algo, escribinos por Instagram.",
   robots: { index: false, follow: false },
 };
 
@@ -34,8 +34,8 @@ export default function MaintenancePage() {
           Tienda en mantenimiento
         </h1>
         <p className="mx-auto mt-7 max-w-[470px] text-base leading-relaxed text-[#6E4E38] sm:text-lg">
-          El catálogo y las compras online están temporalmente deshabilitados.
-          Podés contactarnos por Instagram.
+          Estamos actualizando la tienda. Por ahora no podés ver el catálogo ni comprar.
+          Si necesitás consultarnos algo, escribinos por Instagram.
         </p>
         <a
           href={siteConfig.instagramUrl}

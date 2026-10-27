@@ -40,22 +40,22 @@ describe("PER-133: preserve corrections through regeneration and review", () => 
     fireEvent.change(slider, { target: { value: "5" } });
     await userEvent.click(screen.getByRole("button", { name: "Conservar retoques" })); expect(cells()).toHaveLength(9); expect(cells()[0]).toBe("#ffffff");
     fireEvent.change(slider, { target: { value: "5" } });
-    await userEvent.click(screen.getByRole("button", { name: "Continuar y regenerar" })); expect(cells()).toEqual(Array(25).fill("#ff0000"));
+    await userEvent.click(screen.getByRole("button", { name: "Continuar sin los retoques" })); expect(cells()).toEqual(Array(25).fill("#ff0000"));
   });
   it("requires confirmation to reset and clears all state only when accepted", async () => {
     setup(); await retouch(); await userEvent.click(screen.getByRole("button", { name: "Empezar de nuevo" }));
     await userEvent.click(screen.getByRole("button", { name: "Conservar retoques" })); expect(cells()[0]).toBe("#ffffff");
-    await userEvent.click(screen.getByRole("button", { name: "Empezar de nuevo" })); await userEvent.click(screen.getByRole("button", { name: "Continuar y regenerar" }));
+    await userEvent.click(screen.getByRole("button", { name: "Empezar de nuevo" })); await userEvent.click(screen.getByRole("button", { name: "Continuar sin los retoques" }));
     expect(screen.queryByRole("button", { name: "Retocar venecitas" })).toBeNull(); expect(screen.queryByLabelText("Precio estimado del cuadro")).toBeNull();
   });
   it("canceling photo replacement avoids decoding; invalid replacement retains corrections; valid replacement clears them", async () => {
     setup(); await retouch(); await userEvent.upload(screen.getByLabelText("Elegir imagen"), file());
     await userEvent.click(screen.getByRole("button", { name: "Conservar retoques" })); expect(mocks.load).not.toHaveBeenCalled();
     mocks.load.mockRejectedValueOnce(new Error("Foto inválida"));
-    await userEvent.upload(screen.getByLabelText("Elegir imagen"), file()); await userEvent.click(screen.getByRole("button", { name: "Continuar y regenerar" }));
+    await userEvent.upload(screen.getByLabelText("Elegir imagen"), file()); await userEvent.click(screen.getByRole("button", { name: "Continuar sin los retoques" }));
     expect(await screen.findByRole("alert")).toBeTruthy(); expect(cells()[0]).toBe("#ffffff");
     mocks.load.mockResolvedValueOnce({ url: "blob:new", raster: raster(4, 4, [0, 0, 0, 255]) });
-    await userEvent.upload(screen.getByLabelText("Elegir imagen"), file()); await userEvent.click(screen.getByRole("button", { name: "Continuar y regenerar" }));
+    await userEvent.upload(screen.getByLabelText("Elegir imagen"), file()); await userEvent.click(screen.getByRole("button", { name: "Continuar sin los retoques" }));
     await waitFor(() => expect(cells()).toEqual(Array(9).fill("#000000")));
   });
   it("locks cropping while corrections exist and requires confirmation to unlock", async () => {
@@ -64,7 +64,7 @@ describe("PER-133: preserve corrections through regeneration and review", () => 
     expect(screen.getByLabelText("Recortar imagen").hasAttribute("inert")).toBe(true);
     fireEvent.click(screen.getByText("Mover recorte")); expect(cells()[0]).toBe("#ffffff");
     await userEvent.click(screen.getByRole("button", { name: "Cambiar encuadre" })); await userEvent.click(screen.getByRole("button", { name: "Conservar retoques" })); expect(cells()[0]).toBe("#ffffff");
-    await userEvent.click(screen.getByRole("button", { name: "Cambiar encuadre" })); await userEvent.click(screen.getByRole("button", { name: "Continuar y regenerar" }));
+    await userEvent.click(screen.getByRole("button", { name: "Cambiar encuadre" })); await userEvent.click(screen.getByRole("button", { name: "Continuar sin los retoques" }));
     expect(screen.getByLabelText("Recortar imagen").hasAttribute("inert")).toBe(false); expect(cells()).toEqual(Array(9).fill("#ff0000"));
   });
 });

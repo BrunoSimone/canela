@@ -113,7 +113,7 @@ export function CheckoutResultView({
           {notFound ? "No encontramos el pedido" : "No pudimos consultar tu pedido"}
         </h1>
         <p className="mt-3 max-w-lg leading-relaxed text-[#6E4E38]">
-          {notFound ? "El enlace puede estar incompleto. Si ya realizaste un pago, conservá el comprobante mientras verificamos el pedido." : "La consulta falló temporalmente. Volvé a consultar el estado y conservá tu comprobante. No repitas el pago."}
+          {notFound ? "El enlace puede estar incompleto. Si ya pagaste, guardá el comprobante y no vuelvas a pagar." : "No pudimos ver cómo va tu pedido. Probá de nuevo en unos momentos y guardá tu comprobante. No repitas el pago."}
         </p>
         {!notFound && <button type="button" onClick={onRetry} disabled={isFetching} className="mt-6 min-h-11 rounded-lg bg-[var(--canela-brown)] px-5 py-3 font-bold text-white">{isFetching ? "Consultando…" : "Volver a consultar"}</button>}
         <ReturnToStore />
@@ -159,10 +159,10 @@ export function CheckoutResultView({
           aria-live="polite"
         >
           {isFetching
-            ? "Consultando a Canela…"
+            ? "Consultando el pago…"
             : pollingEnabled
-              ? "Volveremos a consultar automáticamente."
-              : "Podés cerrar esta página. Canela seguirá recibiendo novedades de Mercado Pago."}
+              ? "Esta página se actualiza cuando recibimos novedades del pago."
+              : "Podés cerrar esta página y volver a consultar más tarde. No hace falta pagar de nuevo."}
         </p>
       )}
       {data.status === "verifying" && !pollingEnabled && <button type="button" onClick={onRetry} disabled={isFetching} className="mt-5 min-h-11 rounded-lg border border-[var(--canela-ochre)] px-5 font-bold">Volver a consultar</button>}
@@ -171,7 +171,7 @@ export function CheckoutResultView({
           href="/checkout"
           className="mt-8 inline-flex items-center gap-2 bg-[var(--canela-ochre)] px-6 py-3 font-extrabold text-white hover:bg-[var(--canela-ochre-dark)]"
         >
-          Intentar el pago nuevamente
+          Volver a intentar el pago
         </Link>
       ) : (
         <ReturnToStore />

@@ -40,11 +40,11 @@ export class DemoPurchaseService {
   }
   private entry(id: unknown): Entry {
     this.clean(); const entry = this.entries.get(identifier(id));
-    if (!entry) throw new DemoPurchaseError("QUOTE_EXPIRED", "La prueba venció o el servidor se reinició. Volvé a cotizar el envío.", 410);
+    if (!entry) throw new DemoPurchaseError("QUOTE_EXPIRED", "Esta cotización de prueba ya no está disponible. Volvé a calcular el envío.", 410);
     return entry;
   }
   private unexpired(entry: Entry) {
-    if (Date.parse(entry.quote.expiresAt) <= this.now()) throw new DemoPurchaseError("QUOTE_EXPIRED", "La cotización venció. Volvé a cotizar el envío.", 410);
+    if (Date.parse(entry.quote.expiresAt) <= this.now()) throw new DemoPurchaseError("QUOTE_EXPIRED", "La cotización venció. Volvé a calcular el envío.", 410);
   }
   snapshot(id: string): DemoQuote { return structuredClone(this.entry(id).quote); }
   quote(input: unknown): DemoQuote {
@@ -91,7 +91,7 @@ export class DemoPurchaseService {
     if (entry.order?.status === "pending") return structuredClone(entry.order);
     if (entry.attempts.size >= 10) throw new DemoPurchaseError("DEMO_LIMIT", "Esta prueba alcanzó el límite de intentos. Volvé a cotizar.", 429);
     // Synchronous check + write: capacity cannot be overbooked within this local store.
-    if (result !== "rejected" && this.activeCount() >= this.policy.capacity) throw new DemoPurchaseError("CAPACITY_FULL", "La capacidad de prueba está completa. Esperá a que termine otra simulación.", 409);
+    if (result !== "rejected" && this.activeCount() >= this.policy.capacity) throw new DemoPurchaseError("CAPACITY_FULL", "Ya se ocuparon los lugares disponibles en esta prueba. Esperá unos minutos y volvé a intentar.", 409);
     const order: DemoOrder = { mode: "demo", id: `DEMO-${randomUUID()}`, quoteId: entry.quote.id, status: result, production: result === "approved" ? "simulated" : "not_started" };
     entry.order = order; entry.attempts.set(attemptId, { outcome: result, order });
     return structuredClone(order);

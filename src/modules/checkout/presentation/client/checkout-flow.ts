@@ -37,14 +37,14 @@ export function checkoutErrorMessage(code: string | null): string {
     case "SHIPPING_QUOTE_EXPIRED":
       return "La cotización de envío venció. Volvé a calcular el envío para continuar.";
     case "SHIPPING_QUOTE_INVALID":
-      return "No pudimos validar el envío. Volvé a calcular el envío antes de intentar nuevamente.";
+      return "No pudimos confirmar ese envío. Volvé a calcularlo antes de seguir.";
     case "SHIPPING_QUOTE_MISMATCH":
     case "SHIPPING_RATE_CHANGED":
       return "El pedido o la tarifa cambió. Volvé a calcular el envío y confirmá el nuevo total.";
     case "UNSHIPPABLE_ITEM":
-      return "Todavía no podemos calcular el envío de una de estas piezas. Su embalaje está pendiente de confirmación.";
+      return "Todavía no podemos calcular el envío de una de estas piezas. Podés quitarla del carrito para seguir con las demás.";
     case "PACKAGE_LIMIT_EXCEEDED":
-      return "El embalaje de este pedido supera los límites de envío disponibles.";
+      return "Este pedido es demasiado grande para los envíos disponibles. Probá quitando alguna pieza del carrito.";
     case "SHIPPING_NOT_AVAILABLE":
       return "No encontramos un envío disponible para esa localidad y código postal. Revisá el destino.";
     case "SHIPPING_PROVIDER_UNAVAILABLE":
@@ -57,9 +57,9 @@ export function checkoutErrorMessage(code: string | null): string {
     case "SHIPPING_DISABLED":
       return "La cotización de envíos todavía no está disponible.";
     case "CHECKOUT_ATTEMPT_CLOSED":
-      return "Este intento ya terminó. Volvé a intentar para iniciar uno nuevo.";
+      return "Este intento de pago ya terminó. Podés volver a intentarlo.";
     case "CHECKOUT_ATTEMPT_CHANGED":
-      return "Los datos de este intento cambiaron. Actualizá la página y revisá el pedido antes de iniciar uno nuevo.";
+      return "Tu pedido cambió. Actualizá la página y revisalo antes de seguir.";
     case "PAYMENT_PROVIDER_UNAVAILABLE":
       return "Mercado Pago no pudo iniciar el cobro. Podés intentar nuevamente.";
     case "CHECKOUT_DISABLED":
@@ -67,7 +67,7 @@ export function checkoutErrorMessage(code: string | null): string {
     case "INVALID_CHECKOUT":
       return "Revisá tus datos, la dirección de entrega y las piezas del pedido antes de continuar.";
     default:
-      return "No pudimos iniciar el pago. Tu pedido sigue guardado para que puedas intentar nuevamente.";
+      return "No pudimos iniciar el pago. Tus piezas siguen en el carrito; podés volver a intentar.";
   }
 }
 
@@ -84,7 +84,7 @@ export function presentCheckoutResult(
       return {
         title: "Pago confirmado",
         description:
-          "Recibimos tu pedido. Canela va a preparar las piezas. Te enviaremos el seguimiento por email cuando despachemos tu pedido.",
+          "¡Gracias por tu compra! Vamos a preparar tus piezas. Cuando las despachemos, te mandamos el seguimiento por email.",
         label: "Pedido recibido",
         tone: "success",
         allowNewAttempt: false,
@@ -93,7 +93,7 @@ export function presentCheckoutResult(
       return {
         title: "El pago no se completó",
         description:
-          "No se realizó el cobro. Tus piezas siguen en el carrito y podés iniciar un nuevo intento.",
+          "No se realizó el cobro. Tus piezas siguen en el carrito y podés volver a intentar el pago.",
         label: "Sin cobro",
         tone: "warning",
         allowNewAttempt: true,

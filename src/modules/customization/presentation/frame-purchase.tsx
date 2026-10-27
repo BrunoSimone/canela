@@ -46,7 +46,7 @@ export function FramePurchase({ design, estimate, onEdit }: { design: MosaicDesi
     try { await work(controller.signal); }
     catch (e) {
       if (!controller.signal.aborted) {
-        setError(e instanceof RequestError ? e.message : "No pudimos conectar con la prueba. Intentá de nuevo; tu diseño sigue acá.");
+        setError(e instanceof RequestError ? e.message : "No pudimos completar este paso. Probá de nuevo; tu diseño sigue acá.");
         if (e instanceof RequestError && e.code === "QUOTE_EXPIRED") { setQuote(null); setOrder(null); attemptId.current = null; setStep("shipping"); }
       }
     } finally { if (pendingRequest.current === controller) { pendingRequest.current = null; setBusy(false); } }
@@ -88,14 +88,14 @@ export function FramePurchase({ design, estimate, onEdit }: { design: MosaicDesi
   return <div className={styles.page}>
     {step !== "result" && <button className={styles.backLink} disabled={busy} onClick={() => step === "shipping" ? setStep("review") : backToShipping()}><ArrowLeft size={16} aria-hidden="true" />{step === "shipping" ? "Volver al resumen" : "Editar domicilio"}</button>}
     <ol className={styles.purchaseSteps} aria-label="Pasos de compra"><li>1. Diseño</li><li aria-current={step === "shipping" ? "step" : undefined}>2. Envío</li><li aria-current={step === "payment" ? "step" : undefined}>3. Pago de prueba</li><li aria-current={step === "result" ? "step" : undefined}>4. Resultado</li></ol>
-    <div className={styles.pageHeading}><div><h1 ref={heading} tabIndex={-1}>{title}</h1><p>Una compra separada para tu cuadro, con su propio envío y tiempo de fabricación.</p></div></div>
-    <p className={styles.notice}><span className={styles.noticeDot} />Simulación local · No se cobra dinero, no se generan envíos y no se envían emails. Usá datos ficticios.</p>
+    <div className={styles.pageHeading}><div><h1 ref={heading} tabIndex={-1}>{title}</h1><p>Tu cuadro tiene su propio pedido y envío. Las piezas del carrito se compran aparte.</p></div></div>
+    <p className={styles.notice}><span className={styles.noticeDot} />Estás probando la compra: no hay cobros, envíos ni emails reales. Usá datos ficticios.</p>
     {error && <p role="alert" className={styles.error}>{error}</p>}
     <div className={styles.purchaseLayout} data-step={step}>
       <div aria-busy={busy}>
         {step === "shipping" && <form onSubmit={quoteDelivery} className={styles.reviewDetails}>
           <div className={styles.controlHeading}><h2>Datos de entrega</h2><button type="button" className={styles.textButton} disabled={busy} onClick={() => void perform(async signal => { const data = await demoRequest<{ recipient: DemoRecipient }>(signal); if (!signal.aborted) setFields(sampleFields(data.recipient)); })}>Completar con datos ficticios</button></div>
-          <p className={styles.hint}>Los datos de esta prueba se descartan automáticamente. No se crea una cuenta.</p>
+          <p className={styles.hint}>Podés usar el botón para completar estos campos con datos de ejemplo.</p>
           <fieldset disabled={busy} className={styles.addressFields}><legend className={styles.srOnly}>Destinatario y domicilio</legend>
             {field("name", "Nombre y apellido")}{field("email", "Email", { type: "email", maxLength: 254 })}
             {field("phone", "Teléfono", { type: "tel", maxLength: 24 })}{field("document", "DNI o documento", { maxLength: 20 })}
@@ -104,20 +104,20 @@ export function FramePurchase({ design, estimate, onEdit }: { design: MosaicDesi
             <label className={styles.formField}>Provincia<select name="province" required value={fields.province} onChange={e => setFields(prev => ({ ...prev, province: e.target.value }))}><option value="">Elegí una provincia</option>{ARGENTINE_PROVINCES.map(p => <option key={p.code} value={p.code}>{p.name}</option>)}</select></label>
             {field("city", "Localidad")}{field("postalCode", "Código postal (4 dígitos)", { pattern: "[1-9][0-9]{3}", maxLength: 4, numeric: true })}
           </fieldset>
-          <p className={styles.hint}>En esta prueba la entrega es a domicilio. La tarifa es ilustrativa y no se consulta a ningún transporte.</p>
+          <p className={styles.hint}>Vamos a probar un envío a domicilio con un precio de ejemplo.</p>
           <button className={styles.primaryButton} type="submit" disabled={busy}>{busy ? "Preparando…" : "Cotizar envío de prueba"}</button>
         </form>}
         {step === "payment" && quote && <section className={styles.reviewDetails} aria-label="Pago de prueba">
           <h2>Simular el pago</h2>
-          <p>La cotización dura 15 minutos. Revisá el total y elegí qué resultado querés probar.</p>
+          <p>Este precio de prueba vale por 15 minutos. Revisá el total y elegí qué resultado del pago querés probar.</p>
           <fieldset disabled={busy} className={styles.simulationOptions}><legend>Resultado del pago simulado</legend>{([['approved', 'Aprobado', 'El pedido avanzaría a fabricación.'], ['pending', 'Pendiente', 'Espera la confirmación del pago.'], ['rejected', 'Rechazado', 'Permite volver a intentar.']] as const).map(([value, label, detail]) => <label key={value}><input type="radio" name="outcome" value={value} checked={outcome === value} onChange={() => { setOutcome(value); attemptId.current = null; setError(""); }} /><span><strong>{label}</strong><small>{detail}</small></span></label>)}</fieldset>
           <button className={styles.primaryButton} disabled={busy} onClick={pay}>{busy ? "Simulando…" : "Simular pago"}</button>
-          <p className={styles.hint}>No necesitás una tarjeta ni una cuenta de Mercado Pago. El importe real a cobrar en esta prueba es $0.</p>
+          <p className={styles.hint}>No necesitás tarjeta ni cuenta de Mercado Pago: esta prueba no cobra dinero.</p>
         </section>}
         {step === "result" && order && <section className={`${styles.reviewDetails} ${styles.resultPanel}`} aria-label="Resultado de la simulación">
           <div role="status">{order.status === "approved" ? <CheckCircle2 size={40} aria-hidden="true" /> : order.status === "pending" ? <Clock3 size={40} aria-hidden="true" /> : <CircleAlert size={40} aria-hidden="true" />}
             <h2>{order.status === "approved" ? "Pago de prueba aprobado" : order.status === "pending" ? "Esperando confirmación" : "Podés volver a intentar"}</h2>
-            <p>{order.status === "approved" ? "En una compra real, este diseño quedaría confirmado para fabricación. Esta simulación no crea un pedido en el panel de Mariela ni reserva un turno real." : order.status === "pending" ? "Todavía no se iniciaría la fabricación. Podés simular la confirmación o el rechazo para ver qué sucede después." : "No se inicia la fabricación ni se ocupa capacidad de prueba. El diseño y la cotización siguen disponibles para otro intento."}</p>
+            <p>{order.status === "approved" ? "Así quedaría confirmado tu cuadro en una compra real. Por ahora es una prueba: no encargaste el cuadro ni reservaste un lugar en el taller." : order.status === "pending" ? "El cuadro quedaría a la espera del pago. Probá confirmarlo o rechazarlo para ver cómo sigue la compra." : "Tu diseño sigue acá. Podés volver a probar el pago con la misma cotización."}</p>
           </div>
           <p className={styles.reviewNotice}>Sin cobros ni envíos reales. Tu carrito de productos no cambió.</p>
           <div className={styles.resultActions}>
@@ -125,16 +125,16 @@ export function FramePurchase({ design, estimate, onEdit }: { design: MosaicDesi
             {order.status === "rejected" && <button className={styles.primaryButton} disabled={busy} onClick={() => { attemptId.current = null; setOutcome("approved"); setError(""); setStep("payment"); }}>Volver a intentar</button>}
             {order.status !== "pending" && <button className={styles.textButton} disabled={busy} onClick={onEdit}>Volver a mi diseño</button>}
           </div>
-          <p className={styles.hint}>Esta sesión no se guarda al salir o recargar. Los pedidos simulados vencen automáticamente; nunca se envían a producción.</p>
+          <p className={styles.hint}>Si salís o recargás la página, vas a perder el diseño y los datos de esta prueba.</p>
         </section>}
       </div>
       <aside className={styles.purchaseSummary} aria-label="Resumen de esta compra">
         <MosaicSvg design={quote?.design ?? design} label="Diseño para esta compra" className={styles.purchaseArt} />
-        <p className={styles.hint}>Simulación de material · Los colores y el acabado reales pueden variar.</p>
+        <p className={styles.hint}>Los colores y el acabado pueden variar en el cuadro real.</p>
         <h2>Tu cuadro personalizado</h2>
         <dl className={styles.priceBreakdown}><div><dt>Cuadro con marco</dt><dd>{formatArs(quote?.frame.totalCents ?? estimate.totalCents)}</dd></div><div><dt>Envío de prueba</dt><dd>{quote ? formatArs(quote.shipping.cents) : "Por cotizar"}</dd></div></dl>
-        {quote && <><p className={styles.estimateLabel}>Total de prueba · ARS</p><p className={styles.estimateAmount} aria-label="Total de prueba">{formatArs(quote.totalCents)}</p><p className={styles.hint}>{quote.productionDays} días estimados de fabricación + {quote.shipping.transitDays} días de transporte. Plazos ilustrativos.</p><div className={styles.deliverySummary}><h3>Entrega a domicilio</h3><p>{quote.recipient.delivery.recipientName}<br />{quote.recipient.delivery.streetName} {quote.recipient.delivery.streetNumber}{quote.recipient.delivery.floor && ` · Piso ${quote.recipient.delivery.floor}`}{quote.recipient.delivery.apartment && ` · Depto. ${quote.recipient.delivery.apartment}`}<br />{quote.recipient.delivery.city}, {provinceName(quote.recipient.delivery.provinceCode)} · {quote.recipient.delivery.postalCode}</p></div></>}
-        <p className={styles.hint}>Diseño, embalaje, importes y plazos de prueba. Pendientes de confirmación del taller.</p>
+        {quote && <><p className={styles.estimateLabel}>Total de prueba · ARS</p><p className={styles.estimateAmount} aria-label="Total de prueba">{formatArs(quote.totalCents)}</p><p className={styles.hint}>En esta prueba: {quote.productionDays} días para hacer el cuadro y {quote.shipping.transitDays} días para el envío.</p><div className={styles.deliverySummary}><h3>Entrega a domicilio</h3><p>{quote.recipient.delivery.recipientName}<br />{quote.recipient.delivery.streetName} {quote.recipient.delivery.streetNumber}{quote.recipient.delivery.floor && ` · Piso ${quote.recipient.delivery.floor}`}{quote.recipient.delivery.apartment && ` · Depto. ${quote.recipient.delivery.apartment}`}<br />{quote.recipient.delivery.city}, {provinceName(quote.recipient.delivery.provinceCode)} · {quote.recipient.delivery.postalCode}</p></div></>}
+        <p className={styles.hint}>Los precios y los plazos son de ejemplo. Los definitivos se confirmarán antes de habilitar la compra.</p>
       </aside>
     </div>
   </div>;

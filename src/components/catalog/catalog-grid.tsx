@@ -140,7 +140,7 @@ export function CatalogGrid({
         </>
       ) : (
         <p className="py-8 text-center text-sm text-[var(--canela-muted-foreground,#6E4E38)] text-[#6E4E38]">
-          No hay piezas en esta categoría por ahora.
+          Por ahora no hay piezas en esta categoría. Podés mirar las demás.
         </p>
       )}
     </div>

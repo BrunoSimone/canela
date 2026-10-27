@@ -61,7 +61,7 @@ describe("PER-133: editor interaction", () => {
     await userEvent.click(screen.getByRole("button", { name: "Retocar" }));
     const stage = screen.getByRole("group", { name: "Mosaico editable" });
     expect(screen.getAllByRole("button", { name: /^Usar color / })).toHaveLength(62);
-    expect(screen.getByText(/Los tonos transparentes cambian/)).toBeTruthy();
+    expect(screen.getByText(/los transparentes también cambian/)).toBeTruthy();
     fireEvent.keyDown(stage, { key: "ArrowRight" });
     const target = screen.getByRole("button", { name: "Usar color Blanco niebla" });
     target.focus(); await userEvent.keyboard("{Enter}");

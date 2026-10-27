@@ -159,7 +159,7 @@ export function CheckoutConfirmation({ shipping: shippingConfig, environment }: 
       <CheckoutShell>
         <div className="flex min-h-[360px] items-center justify-center gap-3 text-[#6E4E38]">
           <LoaderCircle className="canela-spin size-5" />
-          Recuperando tu pedido…
+          Buscando tus piezas…
         </div>
       </CheckoutShell>
     );
@@ -220,7 +220,7 @@ export function CheckoutConfirmation({ shipping: shippingConfig, environment }: 
               id="order-heading"
               className="text-xs font-extrabold uppercase tracking-[.18em] text-[#606839]"
             >
-              Piezas seleccionadas
+              Las piezas que elegiste
             </h2>
             <span className="text-sm text-[#79613e]">
               {unitCount} {unitCount === 1 ? "unidad" : "unidades"}
@@ -257,8 +257,8 @@ export function CheckoutConfirmation({ shipping: shippingConfig, environment }: 
             <div className="flex gap-3 border-l-2 border-[var(--canela-green)] pl-4">
               <ShieldCheck className="mt-0.5 size-5 shrink-0 text-[var(--canela-green)]" />
               <p className="text-sm leading-relaxed text-[#6E4E38]">
-                Confirmamos el precio y la disponibilidad de tus piezas antes
-                de iniciar el pago.
+                Antes de pasar al pago, revisamos que tus piezas sigan disponibles
+                y que el precio esté actualizado.
               </p>
             </div>
             <div className="flex gap-3 border-l-2 border-[var(--canela-ochre)] pl-4">
@@ -384,7 +384,7 @@ export function CheckoutConfirmation({ shipping: shippingConfig, environment }: 
 
             {!canStartCheckout && (
               <p className="mt-5 border-l-2 border-[#b06a52] pl-3 text-sm leading-relaxed text-[#7e4b3a]">
-                Quitá las piezas sin disponibilidad para continuar con el pago online.
+                Quitá las piezas que ya no están disponibles para seguir con la compra.
               </p>
             )}
 
@@ -416,7 +416,7 @@ export function CheckoutConfirmation({ shipping: shippingConfig, environment }: 
             </button>
 
             <p className="mt-4 text-center text-[11px] leading-relaxed text-[#79613e]">
-              {environment === "test" ? "Pago en entorno de prueba" : "Pago seguro con Mercado Pago"}{quoteExpiresAt && <> · cotización válida hasta {new Intl.DateTimeFormat("es-AR", { hour: "2-digit", minute: "2-digit" }).format(new Date(quoteExpiresAt))}</>}
+              {environment === "test" ? "Pago de prueba" : "Pago seguro con Mercado Pago"}{quoteExpiresAt && <> · cotización válida hasta {new Intl.DateTimeFormat("es-AR", { hour: "2-digit", minute: "2-digit" }).format(new Date(quoteExpiresAt))}</>}
               {isRealQuote && <span className="mt-1 block">Confirmamos nuevamente el costo de envío antes de iniciar el pago.</span>}
             </p>
           </div>

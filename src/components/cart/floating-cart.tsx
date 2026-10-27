@@ -29,14 +29,14 @@ export function FloatingCart({ checkoutEnabled }: { checkoutEnabled: boolean }) 
           <DialogTitle className="font-heading text-3xl">Mi carrito</DialogTitle>
           <button ref={close} type="button" onClick={closePanel} aria-label="Cerrar carrito" className="flex size-11 items-center justify-center text-[#6E4E38]"><X className="size-5" /></button>
         </div>
-        <DialogDescription className="sr-only">Revisá las piezas y sus cantidades antes de continuar al checkout.</DialogDescription>
+        <DialogDescription className="sr-only">Revisá las piezas y sus cantidades antes de seguir con la compra.</DialogDescription>
         <div className="min-h-0 overflow-y-auto px-5">
           {hasItems ? items.map(item => <div key={item.id} className="border-b border-[rgba(184,132,42,.16)] py-4 last:border-0">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0"><p className="break-words font-bold">{item.name}</p><p className="mt-1 text-sm text-[#6E4E38]">{formatPrice(item.price)} por unidad</p></div>
               <button type="button" onClick={() => { remove(item.id); close.current?.focus(); }} aria-label={`Quitar ${item.name} del carrito`} className="flex size-11 shrink-0 items-center justify-center text-[#7e4b3a]"><X className="size-5" /></button>
             </div>
-            {!item.checkoutEligible && <p className="mt-2 text-sm font-bold text-[#7e4b3a]">Sin disponibilidad. Quitá esta pieza para continuar.</p>}
+            {!item.checkoutEligible && <p className="mt-2 text-sm font-bold text-[#7e4b3a]">Esta pieza ya no está disponible. Quitala para continuar.</p>}
             <div className="mt-3 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <button type="button" onClick={() => { dec(item.id); if (item.qty === 1) close.current?.focus(); }} aria-label={`Quitar uno de ${item.name}`} className={quantityClass}><Minus className="size-4" /></button>
@@ -45,12 +45,12 @@ export function FloatingCart({ checkoutEnabled }: { checkoutEnabled: boolean }) 
               </div>
               <strong className="text-[var(--canela-ochre-dark)]">{formatPrice(item.price * item.qty)}</strong>
             </div>
-          </div>) : <p className="py-8 text-center text-sm leading-relaxed text-[#6E4E38]">El carrito está vacío. Agregá productos desde el catálogo.</p>}
+          </div>) : <p className="py-8 text-center text-sm leading-relaxed text-[#6E4E38]">Todavía no agregaste piezas. Elegí las que más te gusten del catálogo.</p>}
         </div>
         <div className="shrink-0 border-t border-[rgba(184,132,42,.18)] p-5">
           {hasItems && <><div className="flex justify-between gap-3 font-bold"><span>Subtotal de productos</span><span aria-live="polite">{formatPrice(subtotal)}</span></div><p className="mb-4 mt-2 text-sm text-[#6E4E38]">Calculamos el envío con tu dirección en el siguiente paso.</p></>}
           {checkoutEnabled && canStartCheckout && <Link href="/checkout" onClick={closePanel} className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[var(--canela-ochre)] px-4 py-3 text-sm font-extrabold text-[var(--canela-cream-card)]"><CreditCard className="size-4" /> Continuar con la compra</Link>}
-          {checkoutEnabled && hasItems && !canStartCheckout && <p className="text-sm leading-relaxed text-[#6E4E38]">Quitá las piezas sin disponibilidad para continuar con la compra.</p>}
+          {checkoutEnabled && hasItems && !canStartCheckout && <p className="text-sm leading-relaxed text-[#6E4E38]">Quitá las piezas que ya no están disponibles para seguir con la compra.</p>}
           {!checkoutEnabled && hasItems && <p className="text-sm leading-relaxed text-[#6E4E38]">La compra online está pausada. Tu carrito queda guardado para cuando retomemos las ventas.</p>}
           <button type="button" onClick={closePanel} className="mt-3 min-h-11 w-full font-bold text-[#6E4E38]">Seguir eligiendo</button>
         </div>

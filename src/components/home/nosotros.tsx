@@ -31,14 +31,13 @@ export function Nosotros() {
               rel="noopener noreferrer"
               className="font-semibold text-[var(--canela-ochre-dark)] underline decoration-[rgba(184,132,42,.45)] underline-offset-2 transition-colors hover:text-[var(--canela-brown)]"
             >
-              @Marieladeloso
-            </a>{" "}
-            artista y tallerista de Mar del Plata. En Canela Store encontrás
+              Mariela
+            </a>, artista y tallerista de Mar del Plata. En Canela Store encontrás
             mis trabajos en vidrio reciclado, vitrofusión, cerámica y mosaico:
             objetos de uso cotidiano, espejos y cuadros.
           </p>
           <p className="mt-5 border-l-2 border-[var(--canela-ochre)] pl-4 text-sm leading-relaxed text-[#5a4130]">
-            Cada pieza de Canela Store se produce en el{" "}
+            Hago estas piezas en mi{" "}
             <a
               href={siteConfig.workshop.mapUrl}
               target="_blank"

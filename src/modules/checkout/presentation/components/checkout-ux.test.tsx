@@ -46,7 +46,7 @@ describe("UX-03 checkout truthfulness and recovery",()=>{
     const store=createAppStore();
     store.dispatch(hydrateCart([{id:"a",name:"Cuenco",price:100,qty:1,checkoutEligible:true}]));
     render(<Provider store={store}><CheckoutConfirmation environment={environment} shipping={{kind:"zipnova"}} /></Provider>);
-    expect(!!screen.queryByText(/Pago en entorno de prueba/)).toBe(environment==="test");
+    expect(!!screen.queryByText(/Pago de prueba/)).toBe(environment==="test");
     if(environment==="production")expect(screen.getByText(/Pago seguro con Mercado Pago/)).toBeTruthy();
   });
   it("offers a read-only retry on a network failure without suggesting another payment",async()=>{

@@ -15,20 +15,20 @@ export function FrameReview({ design, estimate, onEdit, onContinue }: { design: 
   const side = cm(dimensions(design.config, design.size).framedMm);
   return <div className={styles.page}>
     <button className={styles.backLink} onClick={onEdit}><ArrowLeft size={16} aria-hidden="true" /> Seguir editando</button>
-    <div className={styles.pageHeading}><div><h1 ref={heading} tabIndex={-1}>Revisá tu cuadro</h1><p>Confirmá el diseño, las medidas y el precio antes de continuar.</p></div></div>
+    <div className={styles.pageHeading}><div><h1 ref={heading} tabIndex={-1}>Revisá tu cuadro</h1><p>Mirá cómo quedó y revisá el tamaño y el precio. Todavía podés volver a editarlo.</p></div></div>
     <DemoNotice />
     <div className={styles.reviewLayout}>
-      <div className={styles.previewWall}><MosaicSvg design={design} label={`Tu mosaico de ${design.size} por ${design.size} venecitas`} className={styles.previewArt} /><span className={styles.previewCaption}>Simulación de material · Los colores y el acabado reales pueden variar</span></div>
+      <div className={styles.previewWall}><MosaicSvg design={design} label={`Tu mosaico de ${design.size} por ${design.size} venecitas`} className={styles.previewArt} /><span className={styles.previewCaption}>Los colores y el acabado pueden variar en el cuadro real</span></div>
       <section className={styles.reviewDetails} aria-label="Resumen del cuadro">
         <h2>Cuadro personalizado</h2>
         <p>{side} × {side} cm con marco · Medidas de prueba</p>
         <p className={`${styles.estimateLabel} ${styles.reviewPriceLabel}`}>Precio del cuadro con marco · ARS · De prueba</p>
         <p className={styles.estimateAmount} aria-label="Precio estimado del cuadro">{formatArs(estimate.totalCents)}</p>
         <p className={styles.shippingPending}>Envío a cotizar</p>
-        <p className={styles.hint}>El precio final se confirmará con los materiales y las tarifas del taller.</p>
-        <div className={styles.nextSteps}><h3>Antes de comprar</h3><p>Los cuadros personalizados se compran por separado, con su propio envío y plazo de fabricación.</p><p>La fabricación lleva aproximadamente una semana, a confirmar según disponibilidad. El plazo de transporte se suma después.</p><p>El cobro real estará disponible cuando estén confirmados el precio, los materiales y el envío.</p></div>
-        {onContinue && <div className={styles.purchaseConsent}><label><input type="checkbox" checked={accepted} onChange={e => setAccepted(e.target.checked)} />Revisé el diseño y quiero continuar con esta versión.</label><button className={styles.primaryButton} disabled={!accepted} onClick={onContinue}>Continuar con el envío</button><p className={styles.hint}>Recorrido de prueba. No se cobra dinero.</p></div>}
-        <p className={styles.reviewNotice} role="status">No se creó un pedido ni se reservó un turno. Este resumen es de prueba y se pierde al salir o recargar.</p>
+        <p className={styles.hint}>Este precio es de prueba. Vamos a confirmar el valor definitivo antes de habilitar la compra.</p>
+        <div className={styles.nextSteps}><h3>Antes de comprar</h3><p>Tu cuadro se hace a pedido y se compra por separado de las piezas del catálogo.</p><p>Hacerlo lleva alrededor de una semana, según los pedidos que haya en el taller. Después se suma el tiempo de envío.</p><p>Por ahora podés probar los pasos de compra sin pagar ni encargar el cuadro.</p></div>
+        {onContinue && <div className={styles.purchaseConsent}><label><input type="checkbox" checked={accepted} onChange={e => setAccepted(e.target.checked)} />Revisé el diseño y quiero continuar con esta versión.</label><button className={styles.primaryButton} disabled={!accepted} onClick={onContinue}>Continuar con el envío</button><p className={styles.hint}>Podés seguir probando. No se cobra dinero.</p></div>}
+        <p className={styles.reviewNotice} role="status">Este resumen no encarga el cuadro ni reserva un lugar en el taller. Si salís o recargás la página, vas a perder el diseño.</p>
       </section>
     </div>
   </div>;

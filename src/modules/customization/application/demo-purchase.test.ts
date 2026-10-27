@@ -88,7 +88,7 @@ describe("PER-132: isolated purchase simulation", () => {
   it("enforces capacity atomically and releases rejected pending reservations", async () => {
     const s = await setup(1); const a = s.quote(); const b = s.quote();
     const pending = s.pay(a.id, "pending");
-    expect(() => s.pay(b.id)).toThrow(/capacidad/);
+    expect(() => s.pay(b.id)).toThrow(/lugares disponibles/);
     s.service.resolve({ quoteId: a.id, orderId: pending.id, outcome: "rejected" });
     expect(s.pay(b.id).status).toBe("approved");
   });
@@ -96,7 +96,7 @@ describe("PER-132: isolated purchase simulation", () => {
     const s = await setup(1); const q = s.quote(); s.pay(q.id);
     s.advance(demoPurchasePolicy.retentionMs);
     expect(s.service.activeCount()).toBe(0);
-    expect(() => s.service.snapshot(q.id)).toThrow(/venció/);
+    expect(() => s.service.snapshot(q.id)).toThrow(/ya no está disponible/);
     for (let i = 0; i < demoPurchasePolicy.maxQuotes; i++) s.quote();
     expect(() => s.quote()).toThrow(/pruebas/);
   });

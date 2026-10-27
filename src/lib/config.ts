@@ -12,9 +12,9 @@ export const siteConfig = {
   descriptor: "Diseño artesanal",
   tagline: "Diseño artesanal",
   description:
-    "Canela Store ofrece piezas artesanales hechas en Mar del Plata: vidrio " +
-    "reciclado y vitrofusión, cerámica, espejos y cuadros, con compra online " +
-    "segura mediante Mercado Pago.",
+    "Encontrá piezas hechas a mano en Mar del Plata: vidrio " +
+    "reciclado y vitrofusión, cerámica, espejos y cuadros. Comprá online " +
+    "con Mercado Pago en Canela Store.",
   country: "AR",
   city: "Mar del Plata",
   region: "Buenos Aires",

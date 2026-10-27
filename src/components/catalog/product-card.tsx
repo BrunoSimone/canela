@@ -94,8 +94,8 @@ export function ProductCard({
             />
           </>
         ) : (
-          <span className="font-mono text-xs tracking-wide text-[#79613e]">
-            {`// ${product.imgLabel ?? "foto"}`}
+          <span className="text-sm text-[#79613e]">
+            Foto no disponible
           </span>
         )}
       </div>

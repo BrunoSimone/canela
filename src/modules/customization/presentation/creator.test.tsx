@@ -140,7 +140,7 @@ describe("PER-130: creator user journeys", () => {
     expect(screen.getByLabelText("Precio estimado del cuadro").textContent).toBe(updated);
     await userEvent.click(screen.getByRole("button", { name: "Revisar mi cuadro" }));
     expect(screen.getByRole("heading", { name: "Revisá tu cuadro" })).toBeTruthy();
-    expect(screen.getByText(/No se creó un pedido/)).toBeTruthy();
+    expect(screen.getByText(/no encarga el cuadro ni reserva un lugar/)).toBeTruthy();
     expect(screen.getByText("Envío a cotizar")).toBeTruthy();
     expect(screen.getByLabelText("Precio estimado del cuadro").textContent).toBe(updated);
     expect(screen.getByText("Precio del cuadro con marco · ARS · De prueba")).toBeTruthy();
