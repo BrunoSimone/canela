@@ -12,8 +12,11 @@ export function HomeDestinations({ image, templates }: {
 }) {
   const featured = templates?.find(t => t.id === "atardecer") ?? templates?.[0];
   return <section className={styles.home} aria-labelledby="home-title">
-    <h1 id="home-title" className="sr-only">{templates === null ? "Canela · Tienda" : "Canela · Tienda y cuadros personalizados"}</h1>
     <div className={styles.destinations}>
+      <div className={styles.opening}>
+      <header className={styles.intro}>
+        <h1 id="home-title">{templates === null ? "Explorá nuestro catálogo." : <>Creá tu cuadro personalizado <span>o explorá nuestro catálogo.</span></>}</h1>
+      </header>
       <Link href="/tienda" className={styles.banner} aria-label="Explorar la tienda">
         <div className={styles.photo}>
           {/* Tall cover crops need a wider source than the visible mobile viewport. */}
@@ -26,6 +29,7 @@ export function HomeDestinations({ image, templates }: {
           <span className={styles.action}>Explorar la tienda <ArrowUpRight size={20} aria-hidden="true" /></span>
         </div>
       </Link>
+      </div>
       {templates !== null && <Link href="/crear-cuadro" className={`${styles.banner} ${styles.creator}`} aria-label="Crear mi cuadro">
         <div className={styles.scene}>
           {featured ? <MosaicSvg design={featured.design} label={`Cuadro de ejemplo: ${featured.title}`} className={styles.art} />

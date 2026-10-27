@@ -1,5 +1,10 @@
 .home { width: 100%; }
+.intro { padding: 26px 22px; background: var(--canela-cream); color: var(--canela-brown); text-align: center; }
+.intro h1 { max-width: 960px; margin: 0 auto; font-size: clamp(20px, 2.3vw, 28px); font-weight: 600; line-height: 1.5; text-wrap: balance; }
+.intro h1 span { color: #606839; }
 .destinations { display: flex; flex-direction: column; }
+.opening { display: flex; flex-direction: column; min-height: calc(100svh - 66px); }
+.opening .banner { flex: 1; min-height: 500px; }
 .banner { position: relative; isolation: isolate; display: flex; align-items: flex-end; min-height: max(560px, calc(100svh - 76px)); overflow: hidden; color: #fbf7ee; background: #4a3527; }
 .banner::after { content: ""; position: absolute; z-index: -1; inset: 0; background: linear-gradient(90deg, #24170fe6 0%, #24170f91 35%, #24170f00 75%), linear-gradient(0deg, #24170fa6, transparent 65%); }
 .banner:focus-visible { outline: 4px solid #fbf7ee; outline-offset: -10px; }
@@ -27,6 +32,7 @@
 .photoFallback p { font-size: 13px; }
 @keyframes arrive { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 @media (max-width: 767px) {
+  .intro { padding: 22px 24px; }
   .banner { min-height: max(640px, calc(100svh - 66px)); }
   .banner::after { background: linear-gradient(0deg, #24170ff2, #24170fb3 30%, #24170f00 75%); }
   .creator::after { background: linear-gradient(0deg, #242b1df5, #242b1dd9 35%, #242b1d00 73%); }

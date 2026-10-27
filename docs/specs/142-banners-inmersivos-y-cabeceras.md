@@ -32,6 +32,12 @@
   Sin descripción de marca repetida ni encabezados de columnas.
   Tras la revisión visual, usar un espaciado intermedio: 32/24 px de margen
   vertical principal y 8 px entre filas, para evitar comprimir los enlaces.
+- Apertura de la home: mostrar «Creá tu cuadro personalizado o explorá nuestro
+  catálogo.» inmediatamente bajo la navegación, sobre una franja crema breve.
+  Si el creador está deshabilitado, mostrar solo «Explorá nuestro catálogo.».
+  La introducción y el primer banner comparten la altura de apertura para que
+  el botón de tienda siga visible sin desplazarlo fuera de la primera pantalla;
+  en pantallas muy bajas, priorizar que el contenido tenga espacio suficiente.
 
 Esta revisión sustituye la distribución de dos columnas, los textos fuera de
 la imagen y la cabecera compacta descritos en PER-141.
