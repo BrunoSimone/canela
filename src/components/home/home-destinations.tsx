@@ -36,7 +36,6 @@ export function HomeDestinations({ image, templates }: {
           <h2>Cuadros personalizados</h2>
           <p>Elegí una foto que te guste y probá cómo quedaría en venecitas.</p>
           <span className={styles.action}>Crear mi cuadro <ArrowUpRight size={20} aria-hidden="true" /></span>
-          <small>Creador en prueba · Sin cobros reales.</small>
         </div>
       </Link>}
     </div>

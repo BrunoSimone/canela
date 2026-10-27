@@ -25,6 +25,11 @@
   distinguirlo de los títulos manuscritos de Vidrio, Cerámica y Espejos.
 - Conservar ayuda antes del footer, navegación, feature gates, compra separada
   de prueba, carrito y lógica de disponibilidad.
+- Ajuste posterior: quitar «Creador en prueba · Sin cobros reales» del banner.
+  Los avisos sobre importes orientativos y ausencia de cobros permanecen dentro
+  del recorrido de personalización. Footer compacto: marca pequeña, enlaces
+  repartidos horizontalmente (dos columnas en móvil), copyright e Instagram.
+  Sin descripción de marca repetida ni encabezados de columnas.
 
 Esta revisión sustituye la distribución de dos columnas, los textos fuera de
 la imagen y la cabecera compacta descritos en PER-141.

@@ -12,7 +12,6 @@
 .action { display: inline-flex; min-height: 50px; align-items: center; gap: 24px; padding: 13px 24px; border-radius: 999px; background: #fbf7ee; color: #4a3527; font-size: 15px; font-weight: 800; }
 .action svg { transition: transform .25s; }
 .banner:hover .action svg { transform: translate(2px, -2px); }
-.copy small { display: block; margin-top: 16px; font-size: 12px; line-height: 1.6; }
 .imageLabel { display: block; margin-bottom: 16px; font-size: 12px; font-weight: 700; }
 .creator { background: #59603e; }
 .creator::after { background: linear-gradient(90deg, #242b1de8 0%, #242b1db3 34%, #242b1d00 75%), linear-gradient(0deg, #242b1d99, transparent 65%); }
@@ -34,7 +33,6 @@
   .copy { padding: 40px 24px; }
   .copy h2 { font-size: clamp(54px, 10vw, 76px); max-width: 400px; }
   .copy p { max-width: 340px; margin: 16px 0 24px; font-size: 15px; }
-  .copy small { font-size: 11px; }
   .scene { align-items: flex-start; justify-content: center; padding: 55px 24px 0; }
   .art { width: min(70vw, 390px); }
   .emptyArt { width: 100%; height: 45%; }
