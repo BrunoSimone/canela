@@ -43,7 +43,11 @@ describe("PER-141: public routes and shared cart", () => {
     const { rerender, container } = render(<MarketingLayout>{await HomePage()}</MarketingLayout>);
     expect(getProducts).not.toHaveBeenCalled();
     expect(stockList).not.toHaveBeenCalled();
-    expect(within(screen.getByRole("main")).getAllByRole("link")).toHaveLength(2);
+    const opening = within(screen.getByRole("navigation", { name: "Elegí tu recorrido" }));
+    expect(opening.getByRole("link", { name: "Crear mi cuadro" }).getAttribute("href")).toBe("/crear-cuadro");
+    expect(opening.getByRole("link", { name: "Explorar la tienda" }).getAttribute("href")).toBe("/tienda");
+    const destinations = within(screen.getByRole("main")).getAllByRole("link").map(link => link.getAttribute("href"));
+    expect(new Set(destinations)).toEqual(new Set(["/crear-cuadro", "/tienda"]));
     expect(container.querySelector('script[type="application/ld+json"]')).toBeNull();
     expect(screen.queryByText(/Nuestro taller/)).toBeNull();
     vi.stubEnv("VERCEL_ENV", "production");

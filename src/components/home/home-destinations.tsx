@@ -13,7 +13,7 @@ export function HomeDestinations({ image, templates }: {
   const featured = templates?.find(t => t.id === "atardecer") ?? templates?.[0];
   return <section className={styles.home} aria-labelledby="home-title">
     <div className={styles.destinations}>
-      <Link href="/tienda" className={`${styles.banner} ${styles.store}`} aria-label="Explorar la tienda">
+      <div className={`${styles.banner} ${styles.store}`}>
         <div className={styles.photo}>
           {/* Tall cover crops need a wider source than the visible mobile viewport. */}
           {image ? <Image src={image.src} alt={image.alt} fill priority sizes="(max-width: 767px) 1200px, (max-aspect-ratio: 3/2) 150vh, 100vw" quality={90} className={styles.productImage} />
@@ -21,9 +21,16 @@ export function HomeDestinations({ image, templates }: {
         </div>
         <div className={styles.intro}>
           <h1 id="home-title">{templates === null ? "Explorá nuestro catálogo." : <>Creá tu cuadro personalizado <span>o explorá nuestro catálogo.</span></>}</h1>
-          <span className={styles.action}>Explorar la tienda <ArrowUpRight size={20} aria-hidden="true" /></span>
+          <nav className={styles.journeys} aria-label="Elegí tu recorrido">
+            {templates !== null && <Link href="/crear-cuadro" className={styles.action}>
+              Crear mi cuadro <ArrowUpRight size={20} aria-hidden="true" />
+            </Link>}
+            <Link href="/tienda" className={`${styles.action} ${templates !== null ? styles.secondaryAction : ""}`}>
+              Explorar la tienda <ArrowUpRight size={20} aria-hidden="true" />
+            </Link>
+          </nav>
         </div>
-      </Link>
+      </div>
       {templates !== null && <Link href="/crear-cuadro" className={`${styles.banner} ${styles.creator}`} aria-label="Crear mi cuadro">
         <div className={styles.scene}>
           {featured ? <MosaicSvg design={featured.design} label={`Cuadro de ejemplo: ${featured.title}`} className={styles.art} />

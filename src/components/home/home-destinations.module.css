@@ -2,7 +2,11 @@
 .intro { width: 100%; margin: 0 auto; padding: clamp(64px, 12svh, 128px) 24px 64px; text-align: center; animation: arrive .65s ease-out both; }
 .intro h1 { max-width: 880px; margin: 0 auto; font: 400 clamp(32px, 3.5vw, 46px)/1.3 var(--font-sans); letter-spacing: -.025em; text-wrap: balance; }
 .intro h1 span { display: block; }
-.intro .action { margin-top: 32px; gap: 18px; font-weight: 700; }
+.journeys { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
+.journeys .action { min-width: 214px; justify-content: space-between; gap: 18px; font-weight: 700; border: 1px solid transparent; }
+.journeys .secondaryAction { background: #24170f33; border-color: #fbf7eeb3; color: #fbf7ee; }
+.journeys .action:focus-visible { outline: 3px solid #fbf7ee; outline-offset: 5px; }
+.journeys .secondaryAction:hover { background: #24170f73; border-color: #fbf7ee; }
 .destinations { display: flex; flex-direction: column; }
 .banner { position: relative; isolation: isolate; display: flex; align-items: flex-end; min-height: max(560px, calc(100svh - 76px)); overflow: hidden; color: #fbf7ee; background: #4a3527; }
 .banner::after { content: ""; position: absolute; z-index: -1; inset: 0; background: linear-gradient(90deg, #24170fe6 0%, #24170f91 35%, #24170f00 75%), linear-gradient(0deg, #24170fa6, transparent 65%); }
@@ -11,13 +15,13 @@
 .banner:focus-visible { outline: 4px solid #fbf7ee; outline-offset: -10px; }
 .photo, .scene { position: absolute; z-index: -2; inset: 0; overflow: hidden; }
 .productImage { object-fit: cover; object-position: center; transition: transform .8s ease; }
-.banner:hover .productImage { transform: scale(1.025); }
+.store:has(.action:hover) .productImage { transform: scale(1.025); }
 .copy { width: 100%; max-width: 1180px; margin: 0 auto; padding: clamp(48px, 7vw, 96px) 22px; animation: arrive .65s ease-out both; }
 .copy h2 { max-width: 620px; margin: 0; font: 400 clamp(60px, 7vw, 96px)/1.02 var(--font-heading); text-wrap: balance; }
 .copy p { max-width: 390px; margin: 20px 0 28px; font-size: 17px; line-height: 1.7; }
 .action { display: inline-flex; min-height: 50px; align-items: center; gap: 24px; padding: 13px 24px; border-radius: 999px; background: #fbf7ee; color: #4a3527; font-size: 15px; font-weight: 800; }
 .action svg { transition: transform .25s; }
-.banner:hover .action svg { transform: translate(2px, -2px); }
+.action:hover svg, .creator:hover .action svg { transform: translate(2px, -2px); }
 .imageLabel { display: block; margin-bottom: 16px; font-size: 12px; font-weight: 700; }
 .creator { background: #59603e; }
 .creator::after { background: linear-gradient(90deg, #242b1de8 0%, #242b1db3 34%, #242b1d00 75%), linear-gradient(0deg, #242b1d99, transparent 65%); }
@@ -35,7 +39,7 @@
 @media (max-width: 767px) {
   .intro { padding: clamp(48px, 9svh, 80px) 24px 48px; }
   .intro h1 { max-width: 520px; font-size: clamp(27px, 6.7vw, 32px); line-height: 1.35; }
-  .intro .action { margin-top: 28px; }
+  .journeys { margin-top: 28px; }
   .banner { min-height: max(640px, calc(100svh - 66px)); }
   .banner::after { background: linear-gradient(0deg, #24170ff2, #24170fb3 30%, #24170f00 75%); }
   .store { min-height: max(560px, calc(100svh - 66px)); }
@@ -49,4 +53,8 @@
   .emptyArt { width: 100%; height: 45%; }
   .photoFallback { padding: 0 0 45%; }
 }
-@media (prefers-reduced-motion: reduce) { .intro, .copy { animation: none; } .productImage, .art, .action svg { transition: none; } .banner:hover .art { transform: rotate(-4deg); } .banner:hover .productImage { transform: none; } }
+@media (max-width: 480px) {
+  .journeys { flex-direction: column; align-items: center; }
+  .journeys .action { width: min(100%, 240px); }
+}
+@media (prefers-reduced-motion: reduce) { .intro, .copy { animation: none; } .productImage, .art, .action svg { transition: none; } .banner:hover .art { transform: rotate(-4deg); } .store:has(.action:hover) .productImage { transform: none; } }

@@ -13,19 +13,26 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ replace }), usePathname:
 afterEach(() => { cleanup(); vi.clearAllMocks(); pathname.mockReturnValue("/"); window.history.replaceState({}, "", "/"); });
 
 describe("PER-141: two storefront journeys", () => {
-  it("offers one complete link per banner and hides unavailable frame routes", async () => {
+  it("offers both journeys beside the welcome without making the photo a store link", async () => {
     const templates = await demoDesignCatalog.templates();
     const { container, rerender } = render(<HomeDestinations image={null} templates={templates} />);
-    expect(screen.getByRole("link", { name: "Explorar la tienda" }).getAttribute("href")).toBe("/tienda");
-    expect(screen.getByRole("link", { name: "Crear mi cuadro" }).getAttribute("href")).toBe("/crear-cuadro");
-    expect(screen.getAllByRole("link")).toHaveLength(2);
+    const opening = screen.getByRole("navigation", { name: "Elegí tu recorrido" });
+    const routes = within(opening);
+    expect(routes.getByRole("link", { name: "Explorar la tienda" }).getAttribute("href")).toBe("/tienda");
+    expect(routes.getByRole("link", { name: "Crear mi cuadro" }).getAttribute("href")).toBe("/crear-cuadro");
+    expect(routes.getAllByRole("link")).toHaveLength(2);
+    const welcome = screen.getByRole("heading", { name: "Creá tu cuadro personalizado o explorá nuestro catálogo." });
+    expect(welcome.closest("a")).toBeNull();
+    expect(welcome.nextElementSibling).toBe(opening);
+    expect(screen.getAllByRole("link", { name: "Crear mi cuadro" })).toHaveLength(2);
     expect(screen.getByText("Diseño de ejemplo")).toBeTruthy();
     expect(container.innerHTML).not.toMatch(/murvi|Vitro|DI99|Nuestro taller/i);
     rerender(<HomeDestinations image={null} templates={[]} />);
-    expect(screen.getByRole("link", { name: "Crear mi cuadro" })).toBeTruthy();
+    expect(within(screen.getByRole("navigation", { name: "Elegí tu recorrido" })).getByRole("link", { name: "Crear mi cuadro" })).toBeTruthy();
     rerender(<HomeDestinations image={null} templates={null} />);
     expect(screen.getAllByRole("link")).toHaveLength(1);
     expect(screen.queryByRole("link", { name: "Crear mi cuadro" })).toBeNull();
+    expect(screen.getByRole("heading", { name: "Explorá nuestro catálogo." })).toBeTruthy();
   });
   it("explains the appropriate checkout and only offers simulation where available", () => {
     const { rerender } = render(<ComoComprar variant="store" />);
