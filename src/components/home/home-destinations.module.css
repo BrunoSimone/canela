@@ -1,10 +1,11 @@
 .home { --hero-ink: #fbf7ee; --action-fill: #fbf7ee; --action-ink: #4a3527; --outline: #fbf7eeb3; position: relative; isolation: isolate; display: grid; grid-template-rows: auto 1fr; width: 100%; min-height: calc(100svh - 66px); overflow: hidden; color: var(--hero-ink); background: #4a3527; touch-action: pan-y pinch-zoom; transition: color .7s ease; }
-.photo, .frameBackdrop { position: absolute; z-index: -1; inset: 0; overflow: hidden; opacity: 0; pointer-events: none; transition: opacity .7s ease; }
-.photo::after, .frameBackdrop::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, #24170fa6, #24170f91 28%, #24170f1a 65%, #24170f66); }
-.home[data-visual="store"] .photo, .home[data-visual="frames"] .frameBackdrop { opacity: 1; }
+.photoBackdrop, .frameBackdrop { position: absolute; z-index: -1; inset: 0; overflow: hidden; opacity: 0; pointer-events: none; transition: opacity .7s ease; }
+.photoBackdrop::after, .frameBackdrop::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, #24170fb8, #24170f91 32%, #24170f33 70%, #24170f66); }
+.home[data-visual="store"] .photoBackdrop, .home[data-visual="frames"] .frameBackdrop { opacity: 1; }
 .frameBackdrop svg { position: absolute; top: 50%; left: 50%; width: max(112vw, 112svh); max-width: none; height: auto; transform: translate(-50%, -50%); filter: blur(28px); }
-.frameBackdrop::after { background: linear-gradient(180deg, #24170fb8, #24170f91 32%, #24170f33 70%, #24170f66); }
-.productImage { object-fit: cover; object-position: center; transition: transform .8s ease; }
+.backdropImage { object-fit: cover; object-position: center; filter: blur(28px); transform: scale(1.12); }
+.productImage { object-fit: contain; object-position: center; }
+.photoArt { position: relative; width: 100%; aspect-ratio: 1; filter: drop-shadow(12px 20px 20px #24170f55); transition: transform .8s ease; }
 .intro { width: 100%; padding: 48px 24px 24px; text-align: center; }
 .intro h1 { max-width: 880px; margin: 0 auto; font: 400 clamp(32px, 3.5vw, 46px)/1.3 var(--font-sans); letter-spacing: -.025em; text-wrap: balance; }
 .intro h1 span { display: block; }
@@ -15,28 +16,28 @@
 .action svg { transition: transform .25s; }
 .action:hover svg { transform: translate(2px, -2px); }
 .stage { display: grid; place-items: center; min-height: 0; padding: 16px 24px 36px; }
-.framePresentation { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .7s ease, visibility .7s; }
-.home[data-visual="frames"] .framePresentation { opacity: 1; visibility: visible; pointer-events: auto; }
-.floatingFrame { width: min(72vw, clamp(120px, calc(100svh - 420px), 470px)); animation: float 6s ease-in-out infinite; }
-.home[data-visual="store"] .floatingFrame { animation-play-state: paused; }
+.photoPresentation, .framePresentation { grid-area: 1 / 1; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .7s ease, visibility .7s; }
+.home[data-visual="store"] .photoPresentation, .home[data-visual="frames"] .framePresentation { opacity: 1; visibility: visible; pointer-events: auto; }
+.floatingVisual { width: min(72vw, clamp(120px, calc(100svh - 420px), 470px)); animation: float 6s ease-in-out infinite; }
+.stage [aria-hidden="true"] .floatingVisual { animation-play-state: paused; }
 .art { display: block; width: 100%; height: auto; aspect-ratio: 1; transform: rotate(-4deg); box-shadow: 12px 20px 30px #36291c33; transition: transform .8s ease; }
 .imageLabel { margin: 20px 0 0; text-align: center; font-size: 11px; line-height: 16px; color: #fbf7eecf; }
 .emptyArt { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; aspect-ratio: 1; border: 8px solid #72523c; background: #fbf7ee; color: #4a3527; text-align: center; font-size: 14px; padding: 12px; }
-.photoFallback { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; width: 100%; height: 100%; padding-top: 180px; background: radial-gradient(ellipse at 70% 20%, #f1e2c6, #dcbd8a); color: #6e4e38; }
-.photoFallback span { font: 400 96px/1 var(--font-heading); }
+.photoFallback { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; width: 100%; aspect-ratio: 1; background: radial-gradient(ellipse at 70% 20%, #f1e2c6, #dcbd8a); color: #6e4e38; }
+.photoFallback span { font: 400 clamp(28px, 8vw, 96px)/1 var(--font-heading); }
 .photoFallback p { font-size: 13px; }
 @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
 @media (hover: hover) and (pointer: fine) {
-  .home[data-visual="store"]:hover .photo .productImage { transform: scale(1.025); }
+  .home[data-visual="store"]:hover .photoArt { transform: scale(1.025); }
   .home[data-visual="frames"]:hover .art { transform: rotate(-1deg) translateY(-4px); }
 }
 @media (max-width: 767px) {
   .intro { padding: 28px 24px 16px; }
   .intro h1 { max-width: 520px; font-size: clamp(27px, 6.7vw, 32px); line-height: 1.35; }
   .journeys { margin-top: 24px; }
-  .floatingFrame { width: min(68vw, clamp(120px, calc(100svh - 390px), 400px)); }
+  .floatingVisual { width: min(68vw, clamp(120px, calc(100svh - 390px), 400px)); }
   .imageLabel { margin-top: 14px; }
-  .photo::after, .frameBackdrop::after { background: linear-gradient(180deg, #24170fa6, #24170f91 35%, #24170f1a 72%, #24170f66); }
+  .photoBackdrop::after, .frameBackdrop::after { background: linear-gradient(180deg, #24170fa6, #24170f91 35%, #24170f1a 72%, #24170f66); }
 }
 @media (max-width: 480px) {
   .journeys { flex-direction: column; align-items: center; }
@@ -46,14 +47,14 @@
   .intro { padding: 20px 20px 12px; }
   .intro h1 { font-size: 24px; line-height: 1.25; }
   .journeys { margin-top: 16px; gap: 8px; }
-  .floatingFrame { width: min(62vw, clamp(120px, calc(100svh - 420px), 220px)); }
+  .floatingVisual { width: min(62vw, clamp(120px, calc(100svh - 420px), 220px)); }
   .stage { padding: 8px 24px 24px; }
   .imageLabel { margin-top: 8px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .home, .photo, .frameBackdrop, .productImage, .framePresentation, .art, .action, .action svg { transition: none; }
-  .floatingFrame { animation: none; }
-  .home[data-visual="store"]:hover .photo .productImage { transform: none; }
+  .home, .photoBackdrop, .frameBackdrop, .photoArt, .photoPresentation, .framePresentation, .art, .action, .action svg { transition: none; }
+  .floatingVisual { animation: none; }
+  .home[data-visual="store"]:hover .photoArt { transform: none; }
   .home[data-visual="frames"]:hover .art { transform: rotate(-4deg); }
   .action:hover svg { transform: none; }
 }

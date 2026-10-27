@@ -8,6 +8,7 @@ vi.mock("motion/react", () => ({ useReducedMotion: reduced }));
 const props = {
   creatorEnabled: true,
   photo: <span role="img" aria-label="Productos de Canela" />,
+  photoBackdrop: <span role="img" aria-label="Fondo del producto" />,
   frame: <span role="img" aria-label="Cuadro de ejemplo" />,
   frameBackdrop: <span role="img" aria-label="Fondo decorativo" />,
 };
@@ -31,6 +32,7 @@ describe("PER-143: home visual carousel", () => {
     const store = routes.getByRole("link", { name: "Explorar la tienda" });
     act(() => vi.advanceTimersByTime(6000));
     expect(screen.getByRole("img", { name: "Productos de Canela" })).toBeTruthy();
+    expect(screen.queryByRole("img", { name: "Fondo del producto" })).toBeNull();
     expect(screen.queryByRole("img", { name: "Cuadro de ejemplo" })).toBeNull();
     expect(activeVisual()).toBe("store");
     expect(creator.getAttribute("href")).toBe("/crear-cuadro");

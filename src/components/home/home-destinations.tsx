@@ -12,9 +12,10 @@ export function HomeDestinations({ image, templates }: {
 }) {
   const featured = templates?.find(t => t.id === "atardecer") ?? templates?.[0];
   return <HomeCarousel creatorEnabled={templates !== null}
-    photo={image ? <Image src={image.src} alt={image.alt} fill priority
-      sizes="(max-width: 767px) 1200px, (max-aspect-ratio: 3/2) 150vh, 100vw" quality={90} className={styles.productImage} />
+    photo={image ? <div className={styles.photoArt}><Image src={image.src} alt={image.alt} fill priority
+      sizes="(max-width: 767px) 68vw, 470px" quality={90} className={styles.productImage} /></div>
       : <div className={styles.photoFallback}><span>Canela</span><p>Vidrio · Cerámica · Mosaico</p></div>}
+    photoBackdrop={image ? <Image src={image.src} alt="" fill sizes="100vw" quality={60} className={styles.backdropImage} /> : null}
     frame={featured ? <>
       <MosaicSvg design={featured.design} label={`Cuadro de ejemplo: ${featured.title}`} className={styles.art} />
       <p className={styles.imageLabel}>Diseño de ejemplo</p>

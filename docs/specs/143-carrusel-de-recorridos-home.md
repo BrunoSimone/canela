@@ -8,8 +8,9 @@ tienda, galería, creador, footer ni habilitación de cobros.
 ## Diseño
 
 - Una apertura de ancho completo alterna fotografía de productos y un cuadro
-  de ejemplo. El cuadro aparece primero, con una copia ampliada y desenfocada
-  de su imagen como fondo de ancho completo. No hay selectores inferiores.
+  de ejemplo. El cuadro aparece primero. Ambas escenas muestran su imagen
+  completa y nítida al centro, con una copia ampliada y desenfocada como fondo
+  de ancho completo. No hay selectores inferiores.
 - Se conservan el mensaje aprobado y los dos accesos fijos. Solo los enlaces
   «Crear mi cuadro» y «Explorar la tienda» navegan; sus destinos no cambian
   cuando avanza el carrusel.
@@ -17,14 +18,15 @@ tienda, galería, creador, footer ni habilitación de cobros.
   `#e7dfcb` y fondo cálido `#f1e2c6`. Mulish para bienvenida y controles.
   Ambas escenas usan texto crema y una capa oscura para mantener el contraste.
   El cuadro conserva el marco completo y las venecitas nítidas en primer plano.
+  La foto de tienda conserva su proporción y encuadre, sin recortar el artículo.
   El fondo desenfocado es decorativo y queda fuera del árbol accesible.
-- Composición centrada: mensaje → acciones → cuadro completo.
-  La foto ocupa el fondo completo. Las dos acciones se apilan en móvil pequeño.
+- Composición centrada: mensaje → acciones → cuadro o producto completo.
+  Solo las copias decorativas se amplían para llenar el fondo. Las dos acciones se apilan en móvil pequeño.
   Cuadro y botones caben desde 320 × 568 px; el contenido puede
   crecer con ampliación de texto sin superposición.
 - Desvanecimiento de 700 ms; cambio automático cada 6 s. Hover en escritorio
-  amplía la foto o inclina/eleva suavemente el cuadro. El cuadro conserva su
-  flotación. No hay un botón de pausa.
+  amplía el producto o inclina/eleva suavemente el cuadro. Ambos conservan una
+  flotación suave; los fondos permanecen quietos. No hay un botón de pausa.
 - La rotación sigue aunque el cursor o el foco estén en la apertura. Solo
   espera durante un gesto táctil o cuando la pestaña está oculta. Con movimiento
   reducido no hay avance automático, flotación, zoom ni transición; los dos
