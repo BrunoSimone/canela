@@ -21,10 +21,6 @@ export function HomeDestinations({ image, templates }: {
         </div>
         <div className={styles.intro}>
           <h1 id="home-title">{templates === null ? "Explorá nuestro catálogo." : <>Creá tu cuadro personalizado <span>o explorá nuestro catálogo.</span></>}</h1>
-        </div>
-        <div className={styles.copy}>
-          <h2>Tienda</h2>
-          <p>Vidrio, cerámica, espejos y cuadros para tu casa.</p>
           <span className={styles.action}>Explorar la tienda <ArrowUpRight size={20} aria-hidden="true" /></span>
         </div>
       </Link>

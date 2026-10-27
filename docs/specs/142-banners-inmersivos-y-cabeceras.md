@@ -13,9 +13,10 @@
   1200 × 900; imágenes responsivas con calidad 90. El cuadro usa el mismo SVG de
   material simulado que el creador, nítido a cualquier tamaño. El ejemplo sigue
   identificado como tal.
-- Texto crema sobre degradado marrón/oliva. Grand Hotel para títulos de los
-  banners; Mulish para explicación breve y acciones. En móvil el texto queda
-  abajo, sin ocultar la parte principal del cuadro. Altura adaptable al contenido.
+- Texto crema sobre degradado marrón/oliva. Mulish para la bienvenida de la
+  tienda, explicación breve y acciones; Grand Hotel para el título del banner
+  de cuadros. En este último el texto queda abajo en móvil, sin ocultar la parte
+  principal del cuadro. Altura adaptable al contenido.
 - Tienda: restaurar imagen protagonista de hasta 340 px y el espacio de la
   cabecera anterior. Conservar aro, flotación y carrusel sin control de pausa.
 - Galería: reutilizar esa misma cabecera con título, acciones y cuadros propios.
@@ -33,13 +34,15 @@
   Tras la revisión visual, usar un espaciado intermedio: 32/24 px de margen
   vertical principal y 8 px entre filas, para evitar comprimir los enlaces.
 - Apertura de la home: mostrar «Creá tu cuadro personalizado o explorá nuestro
-  catálogo.» sobre la primera fotografía, arriba a la izquierda, con Grand Hotel
-  en crema y un degradado suave detrás. Sin franja crema debajo del menú.
+  catálogo.» centrado sobre la primera fotografía, con Mulish de peso regular
+  en crema y un degradado superior que se desvanece hacia la imagen. Sin franja
+  crema debajo del menú ni título «Tienda» adicional.
   Si el creador está deshabilitado, mostrar solo «Explorá nuestro catálogo.».
-  La introducción y el acceso a Tienda comparten la imagen, distribuidos arriba
-  y abajo mediante flujo normal, sin posiciones absolutas para los textos. El
-  título distribuye sus líneas según el ancho disponible; en pantallas muy bajas o
-  con texto ampliado, el banner crece para evitar superposiciones.
+  Mensaje y botón forman un único bloque en la parte superior, separado del
+  menú y con espacio libre para la fotografía debajo. El título distribuye sus
+  líneas según el ancho disponible. Los textos siguen en flujo normal y el
+  banner puede crecer para evitar superposiciones. Animación de entrada suave
+  deshabilitada cuando se prefiere movimiento reducido.
 
 Esta revisión sustituye la distribución de dos columnas, los textos fuera de
 la imagen y la cabecera compacta descritos en PER-141.
