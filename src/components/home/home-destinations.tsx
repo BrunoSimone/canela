@@ -15,11 +15,10 @@ export function HomeDestinations({ image, templates }: {
     photo={image ? <Image src={image.src} alt={image.alt} fill priority
       sizes="(max-width: 767px) 1200px, (max-aspect-ratio: 3/2) 150vh, 100vw" quality={90} className={styles.productImage} />
       : <div className={styles.photoFallback}><span>Canela</span><p>Vidrio · Cerámica · Mosaico</p></div>}
-    photoThumbnail={image ? <Image src={image.src} alt="" fill sizes="36px" className={styles.productImage} /> : <span className={styles.fallbackMark}>C</span>}
     frame={featured ? <>
       <MosaicSvg design={featured.design} label={`Cuadro de ejemplo: ${featured.title}`} className={styles.art} />
       <p className={styles.imageLabel}>Diseño de ejemplo</p>
     </> : <div className={styles.emptyArt}><ImagePlus size={48} aria-hidden="true" /><span>Tu foto, en venecitas</span></div>}
-    frameThumbnail={featured ? <MosaicSvg design={featured.design} label="" /> : <ImagePlus size={24} />}
+    frameBackdrop={featured ? <MosaicSvg design={featured.design} label="" /> : null}
   />;
 }

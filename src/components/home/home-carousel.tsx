@@ -8,23 +8,20 @@ import styles from "./home-destinations.module.css";
 
 type Visual = "frames" | "store";
 
-export function HomeCarousel({ creatorEnabled, photo, frame, photoThumbnail, frameThumbnail }: {
+export function HomeCarousel({ creatorEnabled, photo, frame, frameBackdrop }: {
   creatorEnabled: boolean;
   photo: ReactNode;
   frame: ReactNode;
-  photoThumbnail: ReactNode;
-  frameThumbnail: ReactNode;
+  frameBackdrop: ReactNode;
 }) {
   const [selected, setSelected] = useState<Visual>("frames");
-  const [hovered, setHovered] = useState(false);
-  const [focused, setFocused] = useState(false);
   const [touching, setTouching] = useState(false);
   const touch = useRef<{ x: number; y: number } | null>(null);
   const reduced = useReducedMotion();
   const active = creatorEnabled ? selected : "store";
 
   useEffect(() => {
-    if (!creatorEnabled || reduced || hovered || focused || touching) return;
+    if (!creatorEnabled || reduced || touching) return;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const schedule = () => {
       clearTimeout(timer);
@@ -35,7 +32,7 @@ export function HomeCarousel({ creatorEnabled, photo, frame, photoThumbnail, fra
     schedule();
     document.addEventListener("visibilitychange", schedule);
     return () => { clearTimeout(timer); document.removeEventListener("visibilitychange", schedule); };
-  }, [creatorEnabled, reduced, hovered, focused, touching, active]);
+  }, [creatorEnabled, reduced, touching, active]);
 
   const startTouch = (event: TouchEvent<HTMLElement>) => {
     if (!creatorEnabled || (event.target as Element).closest("a, button")) return;
@@ -58,11 +55,9 @@ export function HomeCarousel({ creatorEnabled, photo, frame, photoThumbnail, fra
 
   return <section className={styles.home} data-visual={active} aria-labelledby="home-title"
     aria-roledescription={creatorEnabled ? "carrusel" : undefined}
-    onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
-    onFocusCapture={() => setFocused(true)}
-    onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false); }}
     onTouchStart={startTouch} onTouchEnd={endTouch}
     onTouchCancel={() => { touch.current = null; setTouching(false); }}>
+    {creatorEnabled && <div className={styles.frameBackdrop} aria-hidden="true">{frameBackdrop}</div>}
     <div className={styles.photo} aria-hidden={active !== "store"}>{photo}</div>
     <div className={styles.intro}>
       <h1 id="home-title">{creatorEnabled ? <>Creá tu cuadro personalizado <span>o explorá nuestro catálogo.</span></> : "Explorá nuestro catálogo."}</h1>
@@ -80,15 +75,5 @@ export function HomeCarousel({ creatorEnabled, photo, frame, photoThumbnail, fra
         <div className={styles.floatingFrame}>{frame}</div>
       </div>}
     </div>
-    {creatorEnabled && <div className={styles.selectors} role="group" aria-label="Imágenes de los recorridos">
-      <button type="button" className={styles.selector} aria-label="Ver cuadros personalizados"
-        aria-pressed={active === "frames"} onClick={() => setSelected("frames")}>
-        <span className={styles.thumbnail} aria-hidden="true">{frameThumbnail}</span><span>Cuadros</span>
-      </button>
-      <button type="button" className={styles.selector} aria-label="Ver productos de la tienda"
-        aria-pressed={active === "store"} onClick={() => setSelected("store")}>
-        <span className={styles.thumbnail} aria-hidden="true">{photoThumbnail}</span><span>Tienda</span>
-      </button>
-    </div>}
   </section>;
 }
