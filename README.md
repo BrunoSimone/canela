@@ -4,6 +4,11 @@ Inventario vigente: Sanity es la fuente única de cantidades/reservas y se gesti
 con **Producto → Stock** en Studio. Ver [spec 100](docs/specs/100-inventario-sanity.md)
 y [guía del cliente](docs/runbooks/carga-cliente.md).
 
+Migración aprobada en preparación: catálogo/stock en el panel y PostgreSQL,
+archivos en Neon Object Storage. La etapa [MED-151](docs/specs/151-almacenamiento-imagenes.md)
+prepara y prueba imágenes; **todavía no cambia la autoridad de Sanity**.
+Estado y verificaciones en [MED-151](docs/evidence/MED-151.md).
+
 Estado al 26/10/2026: tienda con mantenimiento activo y checkout deshabilitado.
 Cierre de implementación, regresión y pendientes de aceptación en
 [FIN-120](docs/evidence/FIN-120.md); revisión de tienda/panel en
