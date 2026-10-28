@@ -30,7 +30,7 @@ describe("PER-143: home visual carousel", () => {
     expect(screen.getByRole("heading", { level: 1 }).closest("a")).toBeNull();
     const routes = within(screen.getByRole("navigation", { name: "Elegí tu recorrido" }));
     const creator = routes.getByRole("link", { name: "Crear mi cuadro" });
-    const store = routes.getByRole("link", { name: "Explorar la tienda" });
+    const store = routes.getByRole("link", { name: "Explorar el catálogo" });
     act(() => vi.advanceTimersByTime(6000));
     expect(screen.queryByRole("img", { name: "Fondo del catálogo" })).toBeNull();
     expect(screen.queryByRole("img", { name: "Cuadro de ejemplo" })).toBeNull();

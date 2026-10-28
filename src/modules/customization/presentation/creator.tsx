@@ -99,7 +99,7 @@ export function Creator({ config, pricing, template, templateUnavailable, purcha
   return <div className={styles.page}>
     <Link className={styles.backLink} href="/cuadros"><ArrowLeft size={16} aria-hidden="true" /> Explorar diseños</Link>
     <div className={styles.pageHeading}><div><h1>Crear un cuadro en mosaico</h1><p>Elegí una foto que te guste y probá tamaños y colores para tu cuadro.</p></div></div>
-    {templateUnavailable && !source && <p role="alert" className={styles.error}>Ese diseño no está disponible. Podés elegir otro en la galería o usar tu propia imagen.</p>}
+    {templateUnavailable && !source && <p role="alert" className={styles.error}>Ese diseño no está disponible. Podés elegir otro en el catálogo de cuadros o usar tu propia imagen.</p>}
     <div className={`${styles.workspace} ${design ? styles.activeWorkspace : ""}`}>
       <aside className={styles.controls} aria-label="Herramientas del creador">
         <section className={styles.controlSection}>

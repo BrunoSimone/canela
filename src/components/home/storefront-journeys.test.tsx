@@ -49,7 +49,7 @@ describe("PER-141: public routes and shared cart", () => {
     expect(screen.queryByText("Pieza oculta")).toBeNull();
     const opening = within(screen.getByRole("navigation", { name: "Elegí tu recorrido" }));
     expect(opening.getByRole("link", { name: "Crear mi cuadro" }).getAttribute("href")).toBe("/crear-cuadro");
-    expect(opening.getByRole("link", { name: "Explorar la tienda" }).getAttribute("href")).toBe("/tienda");
+    expect(opening.getByRole("link", { name: "Explorar el catálogo" }).getAttribute("href")).toBe("/tienda");
     const destinations = within(screen.getByRole("main")).getAllByRole("link").map(link => link.getAttribute("href"));
     expect(new Set(destinations)).toEqual(new Set(["/crear-cuadro", "/tienda"]));
     expect(container.querySelector('script[type="application/ld+json"]')).toBeNull();
@@ -58,14 +58,14 @@ describe("PER-141: public routes and shared cart", () => {
     vi.stubEnv("CUADROS_PREVIEW_ENABLED", "0");
     rerender(<MarketingLayout>{await HomePage()}</MarketingLayout>);
     expect(screen.queryByRole("link", { name: "Crear mi cuadro" })).toBeNull();
-    expect(screen.queryByRole("link", { name: "Galería de cuadros" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Catálogo de cuadros" })).toBeNull();
     expect(within(screen.getByRole("main")).getAllByRole("link")).toHaveLength(1);
   });
   it("keeps both home journeys usable if stock cannot be confirmed, without advertising products", async () => {
     stockList.mockRejectedValueOnce(new Error("Inventory unavailable"));
     render(<MarketingLayout>{await HomePage()}</MarketingLayout>);
     const main = within(screen.getByRole("main"));
-    expect(main.getByRole("link", { name: "Explorar la tienda" })).toBeTruthy();
+    expect(main.getByRole("link", { name: "Explorar el catálogo" })).toBeTruthy();
     expect(main.getByRole("link", { name: "Crear mi cuadro" })).toBeTruthy();
     expect(screen.getByRole("main").querySelector('[data-src][aria-label=""]')).toBeNull();
     expect(main.queryByText("$1.500")).toBeNull();
@@ -108,7 +108,7 @@ describe("PER-141: public routes and shared cart", () => {
   it.each(["store", "creator", "gallery"])("keeps the appropriate guide directly before the footer on %s", async route => {
     const page = route === "store" ? await StorePage() : route === "creator" ? await CreatorPage({ searchParams: Promise.resolve({ diseno: "atardecer" }) }) : await GalleryPage();
     render(<MarketingLayout>{page}</MarketingLayout>);
-    const guide = screen.getByRole("region", { name: route === "store" ? "Cómo comprar en la tienda" : "Cómo comprar tu cuadro" });
+    const guide = screen.getByRole("region", { name: route === "store" ? "Cómo comprar en el catálogo" : "Cómo comprar tu cuadro" });
     const main = screen.getByRole("main");
     expect(main.lastElementChild).toBe(guide);
     expect(main.nextElementSibling).toBe(screen.getByRole("contentinfo"));

@@ -66,7 +66,7 @@ type HeroAction = { href: string; label: string };
 
 export function Hero({
   slides,
-  title = "Tienda",
+  title = "Catálogo",
   description = "Encontrá piezas de vidrio, cerámica y mosaico para tu casa.",
   action = { href: "#catalogo", label: "Ver catálogo" },
   secondaryAction,

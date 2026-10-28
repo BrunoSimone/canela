@@ -19,7 +19,7 @@ describe("PER-141: two storefront journeys", () => {
     const { container, rerender } = render(<HomeDestinations products={[]} templates={templates} />);
     const opening = screen.getByRole("navigation", { name: "Elegí tu recorrido" });
     const routes = within(opening);
-    expect(routes.getByRole("link", { name: "Explorar la tienda" }).getAttribute("href")).toBe("/tienda");
+    expect(routes.getByRole("link", { name: "Explorar el catálogo" }).getAttribute("href")).toBe("/tienda");
     expect(routes.getByRole("link", { name: "Crear mi cuadro" }).getAttribute("href")).toBe("/crear-cuadro");
     expect(routes.getAllByRole("link")).toHaveLength(2);
     const welcome = screen.getByRole("heading", { name: "Creá tu cuadro personalizado o explorá nuestro catálogo." });
@@ -50,7 +50,7 @@ describe("PER-141: two storefront journeys", () => {
     const piece = screen.getByRole("img", { name: "Pieza de ajedrez de cerámica de Canela" });
     expect(piece.getAttribute("data-src")).toContain("aca61f0c0b27615757104c53f3b53fcde12cc083-3456x4608.png");
     expect(piece.closest("a")).toBeNull();
-    expect(screen.getByRole("link", { name: "Explorar la tienda" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Explorar el catálogo" })).toBeTruthy();
   });
   it("explains the appropriate checkout and only offers simulation where available", () => {
     const { rerender } = render(<ComoComprar variant="store" />);
@@ -59,17 +59,17 @@ describe("PER-141: two storefront journeys", () => {
     rerender(<ComoComprar variant="frames" purchaseDemoEnabled />);
     expect(screen.getByRole("heading", { name: "Cómo comprar tu cuadro" })).toBeTruthy();
     expect(screen.getByText("Probá la compra")).toBeTruthy();
-    expect(screen.getByText(/No se cobra dinero/)).toBeTruthy();
+    expect(screen.queryByText(/No se cobra dinero/)).toBeNull();
     expect(screen.queryByText("Pagá con Mercado Pago")).toBeNull();
     rerender(<ComoComprar variant="frames" />);
     expect(screen.queryByText("Probá la compra")).toBeNull();
-    expect(screen.getByText(/Por ahora podés diseñar y revisar tu cuadro/)).toBeTruthy();
+    expect(screen.getByText("Revisá tu cuadro")).toBeTruthy();
   });
   it("points footer categories and help to their sections, honoring the feature gate", () => {
     const { rerender } = render(<Footer customizationEnabled />);
     const footer = within(screen.getByRole("contentinfo"));
     expect(footer.getByRole("link", { name: "Vidrio" }).getAttribute("href")).toBe("/tienda#vidrio");
-    expect(footer.getByRole("link", { name: "Cómo comprar en la tienda" }).getAttribute("href")).toBe("/tienda#como-comprar");
+    expect(footer.getByRole("link", { name: "Cómo comprar en el catálogo" }).getAttribute("href")).toBe("/tienda#como-comprar");
     expect(footer.getByRole("link", { name: "Cómo comprar tu cuadro" }).getAttribute("href")).toBe("/crear-cuadro#como-comprar");
     expect(footer.queryByRole("link", { name: "Nosotros" })).toBeNull();
     rerender(<Footer />);

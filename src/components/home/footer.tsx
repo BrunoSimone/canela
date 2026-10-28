@@ -9,7 +9,7 @@ import styles from "./footer.module.css";
 export function Footer({ customizationEnabled = false }: { customizationEnabled?: boolean }) {
   const links = [...STORE_LINKS, ...(customizationEnabled ? [
     { label: "Crear mi cuadro", href: "/crear-cuadro" },
-    { label: "Galería de cuadros", href: "/cuadros" },
+    { label: "Catálogo de cuadros", href: "/cuadros" },
     { label: "Cómo comprar tu cuadro", href: "/crear-cuadro#como-comprar" },
   ] : [])];
   return (

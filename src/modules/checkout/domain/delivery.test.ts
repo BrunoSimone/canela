@@ -1,5 +1,5 @@
 import {describe,it,expect} from "vitest";
-import {parseDeliverySnapshot} from "./delivery";
+import {isDeliveryFieldValid, parseDeliverySnapshot, type DeliveryField} from "./delivery";
 import {testDelivery} from "./delivery.test-fixture";
 import {buildStartCheckoutRequest} from "../presentation/client/checkout-api";
 import {parseCheckoutRequest} from "../presentation/http/checkout-request";
@@ -13,4 +13,12 @@ describe("shipment recipient document",()=>{
     expect(()=>parseDeliverySnapshot({...testDelivery,recipientDocument})).toThrow();
   });
   it("keeps old controlled-checkout payloads unchanged",()=>expect(parseDeliverySnapshot(testDelivery)).toEqual(testDelivery));
+  it.each<[DeliveryField, string]>([
+    ["buyerName", "  "], ["city", "A"], ["postalCode", "0000"],
+    ["provinceCode", "ZZ"], ["streetNumber", "!!!"], ["phone", "123"],
+    ["recipientDocument", "12.345.678"], ["floor", "1234"],
+  ])("rejects invalid %s consistently in field feedback and the server", (field, value) => {
+    expect(isDeliveryFieldValid(field, value)).toBe(false);
+    expect(()=>parseDeliverySnapshot({...testDelivery, [field]:value})).toThrow();
+  });
 });

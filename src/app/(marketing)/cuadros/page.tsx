@@ -11,7 +11,7 @@ import { frameCommerceMode } from '@/modules/customization/infrastructure/commer
 import { Gallery } from "@/modules/customization/presentation/gallery";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Diseños de cuadros", robots: { index: false, follow: false }, alternates: { canonical: "/cuadros" } };
+export const metadata: Metadata = { title: "Catálogo de cuadros", robots: { index: false, follow: false }, alternates: { canonical: "/cuadros" } };
 export default async function GalleryPage() {
   if (!customizationEnabled()) notFound();
   let data;try{data=await loadGallery(frameDesignCatalog());}catch(e){if(e instanceof FrameCommerceError&&e.code==='WORKSHOP_PENDING')return <WorkshopUnavailable/>;throw e;}

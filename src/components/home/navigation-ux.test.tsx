@@ -28,7 +28,7 @@ describe("UX-01 navigation and motion controls",()=>{
     const { rerender } = render(<Navbar customizationEnabled />);
     const desktop = () => screen.getByRole("navigation", { name: "Navegación principal" });
     expect(desktop().querySelector('[aria-current="page"]')).toBeNull();
-    for (const [path, label] of [["/tienda", "Tienda"], ["/cuadros", "Galería de cuadros"], ["/crear-cuadro", "Crear mi cuadro"], ["/crear-cuadro/resumen", "Crear mi cuadro"]]) {
+    for (const [path, label] of [["/tienda", "Catálogo"], ["/cuadros", "Catálogo de cuadros"], ["/crear-cuadro", "Crear mi cuadro"], ["/crear-cuadro/resumen", "Crear mi cuadro"]]) {
       pathname.mockReturnValue(path);
       rerender(<Navbar customizationEnabled />);
       expect([...desktop().querySelectorAll('[aria-current="page"]')].map(a => a.textContent)).toEqual([label]);
@@ -42,7 +42,7 @@ describe("UX-01 navigation and motion controls",()=>{
     expect(desktop().querySelector('[aria-current="page"]')).toBeNull();
     pathname.mockReturnValue("/tienda");
     rerender(<Navbar />);
-    expect([...desktop().querySelectorAll('[aria-current="page"]')].map(a => a.textContent)).toEqual(["Tienda"]);
+    expect([...desktop().querySelectorAll('[aria-current="page"]')].map(a => a.textContent)).toEqual(["Catálogo"]);
     expect(screen.getByRole("link", { name: "Cómo comprar" }).getAttribute("aria-current")).toBeNull();
   });
   it("rotates without a pause control, including after selecting or focusing a slide",()=>{
@@ -63,7 +63,7 @@ describe("UX-01 navigation and motion controls",()=>{
   });
   it("keeps the store hero focused on its catalog",()=>{
     render(<Hero slides={[]} />);
-    expect(screen.getByRole("heading",{name:"Tienda",level:1})).toBeTruthy();
+    expect(screen.getByRole("heading",{name:"Catálogo",level:1})).toBeTruthy();
     expect(screen.getByRole("link",{name:"Ver catálogo"}).getAttribute("href")).toBe("#catalogo");
     expect(screen.queryByRole("link",{name:"Crear mi cuadro"})).toBeNull();
   });
@@ -71,7 +71,7 @@ describe("UX-01 navigation and motion controls",()=>{
     const templates=await demoDesignCatalog.templates();
     vi.useFakeTimers();
     render(<Gallery templates={templates} />);
-    expect(screen.getByRole("heading",{name:"Galería de cuadros",level:1})).toBeTruthy();
+    expect(screen.getByRole("heading",{name:"Catálogo de cuadros",level:1})).toBeTruthy();
     expect(screen.getByRole("link",{name:"Ver diseños"}).getAttribute("href")).toBe("#disenos");
     expect(screen.getByRole("region",{name:"Diseños de cuadros"}).id).toBe("disenos");
     expect(screen.getByRole("link",{name:"Crear mi diseño"}).getAttribute("href")).toBe("/crear-cuadro");
@@ -86,7 +86,7 @@ describe("UX-01 navigation and motion controls",()=>{
   });
   it("keeps the gallery useful without published designs",()=>{
     render(<Gallery templates={[]} />);
-    expect(screen.getByRole("heading",{name:"Galería de cuadros",level:1})).toBeTruthy();
+    expect(screen.getByRole("heading",{name:"Catálogo de cuadros",level:1})).toBeTruthy();
     expect(screen.getByRole("link",{name:"Crear mi diseño"}).getAttribute("href")).toBe("/crear-cuadro");
     expect(screen.getByRole("heading",{name:"No hay diseños disponibles"})).toBeTruthy();
     expect(screen.queryByRole("button",{name:/Ver cuadro/})).toBeNull();
@@ -95,8 +95,8 @@ describe("UX-01 navigation and motion controls",()=>{
     const { rerender }=render(<Navbar customizationEnabled />);
     await userEvent.click(screen.getByRole("button",{name:"Menú"}));
     const mobile=within(screen.getByRole("navigation",{name:"Navegación móvil"}));
-    expect(mobile.getByRole("link",{name:"Galería de cuadros"}).getAttribute("href")).toBe("/cuadros");
-    expect(mobile.getByRole("link",{name:"Tienda"}).getAttribute("href")).toBe("/tienda");
+    expect(mobile.getByRole("link",{name:"Catálogo de cuadros"}).getAttribute("href")).toBe("/cuadros");
+    expect(mobile.getByRole("link",{name:"Catálogo"}).getAttribute("href")).toBe("/tienda");
     const creator=mobile.getByRole("link",{name:"Crear mi cuadro"});
     expect(creator.getAttribute("href")).toBe("/crear-cuadro");
     creator.addEventListener("click",event=>event.preventDefault());
@@ -104,7 +104,7 @@ describe("UX-01 navigation and motion controls",()=>{
     expect(screen.queryByRole("navigation",{name:"Navegación móvil"})).toBeNull();
     rerender(<Navbar />);
     expect(screen.queryByRole("link",{name:"Crear mi cuadro"})).toBeNull();
-    expect(screen.queryByRole("link",{name:"Galería de cuadros"})).toBeNull();
+    expect(screen.queryByRole("link",{name:"Catálogo de cuadros"})).toBeNull();
   });
   it("links directly to all three catalog sections",()=>{
     render(<CatalogDiscovery />);

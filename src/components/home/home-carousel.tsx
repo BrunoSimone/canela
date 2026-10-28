@@ -67,7 +67,7 @@ export function HomeCarousel({ creatorEnabled, catalogBackdrop, storePiece, fram
           Crear mi cuadro <ArrowUpRight size={20} aria-hidden="true" />
         </Link>}
         <Link href="/tienda" className={`${styles.action} ${creatorEnabled ? styles.secondaryAction : ""}`}>
-          Explorar la tienda <ArrowUpRight size={20} aria-hidden="true" />
+          Explorar el catálogo <ArrowUpRight size={20} aria-hidden="true" />
         </Link>
       </nav>
     </div>

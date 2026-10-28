@@ -12,9 +12,9 @@ export function Navbar({ customizationEnabled = false }: { customizationEnabled?
   const pathname = usePathname();
   const isCurrent = (href: string) => !href.includes("#") && (pathname === href || pathname?.startsWith(`${href}/`));
   const links = [
-    { label: "Tienda", href: "/tienda" },
+    { label: "Catálogo", href: "/tienda" },
     ...(customizationEnabled ? [
-      { label: "Galería de cuadros", href: "/cuadros" },
+      { label: "Catálogo de cuadros", href: "/cuadros" },
       { label: "Crear mi cuadro", href: "/crear-cuadro" },
     ] : [{ label: "Cómo comprar", href: "/tienda#como-comprar" }]),
   ];
@@ -38,7 +38,6 @@ export function Navbar({ customizationEnabled = false }: { customizationEnabled?
               key={link.href}
               href={link.href}
               aria-current={isCurrent(link.href) ? "page" : undefined}
-              data-cta={link.href === "/crear-cuadro" || undefined}
               className={styles.navLink}
             >
               {link.label}
@@ -67,7 +66,6 @@ export function Navbar({ customizationEnabled = false }: { customizationEnabled?
               href={link.href}
               onClick={() => setMobileOpen(false)}
               aria-current={isCurrent(link.href) ? "page" : undefined}
-              data-cta={link.href === "/crear-cuadro" || undefined}
               className={`${styles.navLink} ${styles.mobileLink}`}
             >
               {link.label}

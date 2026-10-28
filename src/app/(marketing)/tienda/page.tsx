@@ -13,7 +13,7 @@ import { CatalogDiscovery } from "@/components/home/catalog-discovery";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Tienda",
+  title: "Catálogo",
   description: "Elegí piezas de vidrio, cerámica, espejos y cuadros de Canela. Revisá el envío y comprá con Mercado Pago.",
   alternates: { canonical: "/tienda" },
 };

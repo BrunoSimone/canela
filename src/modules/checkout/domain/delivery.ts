@@ -53,36 +53,62 @@ export function provinceName(code: string): string | null {
   return ARGENTINE_PROVINCES.find((province) => province.code === code)?.name ?? null;
 }
 
+const deliveryParsers = {
+  buyerName: (value: unknown) => line(value, 2, 100),
+  recipientName: (value: unknown) => line(value, 2, 100),
+  streetName: (value: unknown) => line(value, 2, 100),
+  city: (value: unknown) => line(value, 2, 100),
+  floor: (value: unknown) => optionalLine(value, 3),
+  apartment: (value: unknown) => optionalLine(value, 3),
+  provinceCode: (value: unknown): ProvinceCode => {
+    if (typeof value !== "string" || !provinceName(value)) throw new InvalidDeliveryError();
+    return value as ProvinceCode;
+  },
+  postalCode: (value: unknown) => {
+    const result = line(value, 4, 4);
+    if (!/^[1-9]\d{3}$/.test(result)) throw new InvalidDeliveryError();
+    return result;
+  },
+  streetNumber: (value: unknown) => {
+    const result = line(value, 1, 12);
+    if (!/^[\p{L}\p{N}\s/-]+$/u.test(result)) throw new InvalidDeliveryError();
+    return result;
+  },
+  phone: (value: unknown) => {
+    const result = optionalLine(value, 24);
+    if (result && (!/^\+?[\d\s()-]+$/.test(result) || result.replace(/\D/g, "").length < 7)) throw new InvalidDeliveryError();
+    return result;
+  },
+  recipientDocument: (value: unknown) => {
+    const result = optionalLine(value, 20);
+    if (result && !/^[A-Za-z0-9]{5,20}$/.test(result)) throw new InvalidDeliveryError();
+    return result;
+  },
+};
+export type DeliveryField = keyof typeof deliveryParsers;
+
+// The field feedback and the HTTP parser use the same normalization and rules.
+export function isDeliveryFieldValid(field: DeliveryField, value: unknown): boolean {
+  try { deliveryParsers[field](value); return true; }
+  catch (error) { if (error instanceof InvalidDeliveryError) return false; throw error; }
+}
+
 export function parseDeliverySnapshot(value: unknown): DeliverySnapshot {
   if (!isRecord(value) || value.type !== "home") throw new InvalidDeliveryError();
-  const provinceCode = value.provinceCode;
-  if (typeof provinceCode !== "string" || !provinceName(provinceCode)) {
-    throw new InvalidDeliveryError();
-  }
-  const postalCode = line(value.postalCode, 4, 4);
-  const streetNumber = line(value.streetNumber, 1, 12);
-  if (!/^[1-9]\d{3}$/.test(postalCode) || !/^[\p{L}\p{N}\s/-]+$/u.test(streetNumber)) {
-    throw new InvalidDeliveryError();
-  }
-  const phone = optionalLine(value.phone, 24);
-  if (phone && (!/^\+?[\d\s()-]+$/.test(phone) || phone.replace(/\D/g, "").length < 7)) {
-    throw new InvalidDeliveryError();
-  }
-  const recipientDocument = optionalLine(value.recipientDocument, 20);
-  if (recipientDocument && !/^[A-Za-z0-9]{5,20}$/.test(recipientDocument)) throw new InvalidDeliveryError();
+  const recipientDocument = deliveryParsers.recipientDocument(value.recipientDocument);
   return {
     type: "home",
-    buyerName: line(value.buyerName, 2, 100),
-    recipientName: line(value.recipientName, 2, 100),
-    phone,
+    buyerName: deliveryParsers.buyerName(value.buyerName),
+    recipientName: deliveryParsers.recipientName(value.recipientName),
+    phone: deliveryParsers.phone(value.phone),
     ...(recipientDocument ? { recipientDocument } : {}),
-    streetName: line(value.streetName, 2, 100),
-    streetNumber,
-    floor: optionalLine(value.floor, 3),
-    apartment: optionalLine(value.apartment, 3),
-    city: line(value.city, 2, 100),
-    provinceCode: provinceCode as ProvinceCode,
-    postalCode,
+    streetName: deliveryParsers.streetName(value.streetName),
+    streetNumber: deliveryParsers.streetNumber(value.streetNumber),
+    floor: deliveryParsers.floor(value.floor),
+    apartment: deliveryParsers.apartment(value.apartment),
+    city: deliveryParsers.city(value.city),
+    provinceCode: deliveryParsers.provinceCode(value.provinceCode),
+    postalCode: deliveryParsers.postalCode(value.postalCode),
   };
 }
 

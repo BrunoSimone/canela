@@ -1,3 +1,4 @@
+import { isBuyerEmailValid } from "../../domain/buyer-email";
 import type { RequestedCheckoutItem } from "../../application/resolve-checkout-items";
 import { InvalidDeliveryError, parseDeliverySnapshot, type DeliverySnapshot } from "../../domain/delivery";
 
@@ -39,7 +40,7 @@ export function parseCheckoutRequest(
   }
 
   const buyerEmail = body.buyer.email.trim().toLowerCase();
-  if (!isEmail(buyerEmail) || body.shippingQuoteToken.length > 32_768) {
+  if (!isBuyerEmailValid(buyerEmail) || body.shippingQuoteToken.length > 32_768) {
     throw new CheckoutRequestValidationError();
   }
 
@@ -92,13 +93,6 @@ function parseItem(value: unknown): RequestedCheckoutItem {
   }
 
   return { productId, quantity: quantity as number };
-}
-
-function isEmail(value: string): boolean {
-  return (
-    value.length <= 254 &&
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
-  );
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

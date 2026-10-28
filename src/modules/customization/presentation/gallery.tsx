@@ -32,7 +32,7 @@ export function Gallery({ templates }: { templates: DesignTemplate[] }) {
     tint: ["#e4e7dc", "#eaded5", "#dfe6e3"][index % 3],
   }));
   return <>
-    <Hero slides={slides} title="Galería de cuadros"
+    <Hero slides={slides} title="Catálogo de cuadros"
       description="Elegí el diseño que más te guste y probá distintos tamaños y colores."
       action={{ href: "#disenos", label: "Ver diseños" }}
       secondaryAction={{ href: "/crear-cuadro", label: "Crear mi diseño" }} slideNoun="cuadro" />

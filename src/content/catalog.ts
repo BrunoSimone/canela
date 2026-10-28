@@ -36,5 +36,5 @@ export const STORE_LINKS = [
   { label: "Vidrio", href: "/tienda#vidrio" },
   { label: "Cerámica", href: "/tienda#ceramica" },
   { label: "Espejos y Cuadros", href: "/tienda#espejos" },
-  { label: "Cómo comprar en la tienda", href: "/tienda#como-comprar" },
+  { label: "Cómo comprar en el catálogo", href: "/tienda#como-comprar" },
 ] as const;
