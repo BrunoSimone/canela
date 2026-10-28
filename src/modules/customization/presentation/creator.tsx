@@ -10,7 +10,7 @@ import { loadLocalImage, type LocalImage } from "./local-image";
 import { formatArs } from "../domain/estimate";
 import { lookupFrameEstimate, type PublicPricing } from "../domain/public-pricing";
 import { FrameReview } from "./frame-review";
-import { FrameSandboxPurchase, type SandboxPurchaseSettings } from "./frame-sandbox-purchase";
+import { FrameCheckout, type FrameCheckoutSettings } from "./frame-checkout";
 import { FramePurchase } from "./frame-purchase";
 import { MosaicSvg } from "./mosaic-svg";
 import { applyRetouches, emptyRetouches, paintTile, redoRetouch, restoreTile, undoRetouch } from "../domain/retouches";
@@ -18,9 +18,9 @@ import { ConfirmRegeneration, TileEditor } from "./tile-editor";
 import styles from "./customization.module.css";
 
 type Source = { kind: "image"; image: LocalImage } | { kind: "template"; template: DesignTemplate };
-type Props = { config: WorkshopConfig; pricing: PublicPricing; template: DesignTemplate | null; templateUnavailable: boolean; purchaseDemoEnabled?: boolean; sandboxPurchase?: SandboxPurchaseSettings };
+type Props = { config: WorkshopConfig; pricing: PublicPricing; template: DesignTemplate | null; templateUnavailable: boolean; purchaseDemoEnabled?: boolean; purchaseSettings?: FrameCheckoutSettings };
 
-export function Creator({ config, pricing, template, templateUnavailable, purchaseDemoEnabled = false, sandboxPurchase }: Props) {
+export function Creator({ config, pricing, template, templateUnavailable, purchaseDemoEnabled = false, purchaseSettings }: Props) {
   const [source, setSource] = useState<Source | null>(template ? { kind: "template", template } : null);
   const [size, setSize] = useState(template?.design.size ?? config.minCells);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -92,7 +92,7 @@ export function Creator({ config, pricing, template, templateUnavailable, purcha
   const baseColors = result?.base ? materialCounts(result.base) : [];
   const estimate = lookupFrameEstimate(config, size, pricing);
 
-  if (reviewing && design && sandboxPurchase) return <FrameSandboxPurchase design={design} estimate={estimate} settings={sandboxPurchase} onEdit={() => setReviewing(false)} />;
+  if (reviewing && design && purchaseSettings) return <FrameCheckout design={design} estimate={estimate} settings={purchaseSettings} onEdit={() => setReviewing(false)} />;
   if (reviewing && design && purchaseDemoEnabled) return <FramePurchase design={design} estimate={estimate} onEdit={() => setReviewing(false)} />;
   if (reviewing && design) return <FrameReview design={design} estimate={estimate} onEdit={() => setReviewing(false)} />;
 
@@ -147,10 +147,10 @@ export function Creator({ config, pricing, template, templateUnavailable, purcha
     </div>
     {design && <section className={styles.creatorSummary} aria-label="Tu cuadro y su precio">
         <div className={styles.retouchBar}><div><button ref={editorButton} className={styles.retouchButton} disabled={loading} onClick={() => setEditingTiles(true)}><Paintbrush size={18} aria-hidden="true" /> Retocar venecitas</button><p>Elegí una pieza y ajustá su color.</p></div>{hasRetouches && <span>{Object.keys(history.present).length} {Object.keys(history.present).length === 1 ? "retoque" : "retoques"}</span>}</div><div className={styles.previewStats} aria-live="polite"><div><strong>{cm(measures.framedMm)} cm</strong><span>por lado, con marco</span></div><div><strong>{size ** 2}</strong><span>venecitas enteras</span></div><div><strong>{counts.length || "—"}</strong><span>colores utilizados</span></div></div>
-        <section className={styles.estimateCard} aria-label="Cotización estimada">
-          <div><h3 className={styles.estimateLabel}>Precio estimado · ARS</h3><p className={styles.estimateAmount} aria-label="Precio estimado del cuadro">{formatArs(estimate.totalCents)}</p><p className={styles.shippingPending}>Incluye el marco. El envío se calcula después.</p></div>
+        <section className={styles.estimateCard} aria-label={estimate.provisional?"Cotización estimada":"Precio del cuadro"}>
+          <div><h3 className={styles.estimateLabel}>{estimate.provisional?"Precio estimado":"Precio del cuadro"} · ARS</h3><p className={styles.estimateAmount} aria-label={estimate.provisional?"Precio estimado del cuadro":"Precio del cuadro"}>{formatArs(estimate.totalCents)}</p><p className={styles.shippingPending}>Incluye el marco. El envío se calcula después.</p></div>
           <button ref={reviewButton} className={styles.primaryButton} disabled={!design || loading} onClick={() => setReviewing(true)}>Revisar mi cuadro <ArrowRight size={18} aria-hidden="true" /></button>
-          <p className={styles.estimateHint}>El precio es orientativo y se confirma antes de comprar.</p>
+          {estimate.provisional&&<p className={styles.estimateHint}>El precio es orientativo y se confirma antes de comprar.</p>}
         </section>
         {counts.length > 0 && <div className={styles.paletteLegend} aria-label="Colores del cuadro">{counts.map(c => <span key={c.id}><i className={styles.swatch} style={{ backgroundColor: c.hex }} aria-hidden="true" />{c.name}</span>)}</div>}
       </section>}

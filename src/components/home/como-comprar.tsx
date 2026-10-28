@@ -36,12 +36,12 @@ const STORE_STEPS: Step[] = [
   },
 ];
 
-export function ComoComprar({ variant = "store", purchaseDemoEnabled = false }: { variant?: "store" | "frames"; purchaseDemoEnabled?: boolean }) {
+export function ComoComprar({ variant = "store", purchaseDemoEnabled = false, productionPurchaseEnabled = false }: { variant?: "store" | "frames"; purchaseDemoEnabled?: boolean; productionPurchaseEnabled?: boolean }) {
   const frames = variant === "frames";
   const steps: Step[] = frames ? [
     { n: 1, icon: <ImagePlus size={22} />, iconBg: "#e5e7d4", iconColor: "#606839", title: "Elegí tu imagen", text: "Subí una foto que te guste o empezá con un diseño de la galería." },
     { n: 2, icon: <Palette size={22} />, iconBg: "#e5e7d4", iconColor: "#606839", title: "Dale tu toque", text: "Probá tamaños, ajustá el encuadre y cambiá las venecitas que quieras." },
-    { n: 3, icon: <SquareCheck size={22} />, iconBg: "#e5e7d4", iconColor: "#606839", title: purchaseDemoEnabled ? "Probá la compra" : "Revisá tu cuadro", text: purchaseDemoEnabled ? "Revisá el diseño y el precio. Después podés probar el envío y el pago con datos de prueba." : "Mirá el diseño, el tamaño y el precio orientativo en el resumen. Podés volver a editarlo antes de decidir." },
+    { n: 3, icon: <SquareCheck size={22} />, iconBg: "#e5e7d4", iconColor: "#606839", title: productionPurchaseEnabled ? "Encargá tu cuadro" : purchaseDemoEnabled ? "Probá la compra" : "Revisá tu cuadro", text: productionPurchaseEnabled ? "Confirmá tu diseño, calculá el envío y pagá con Mercado Pago. Con el pago confirmado empezamos a fabricarlo." : purchaseDemoEnabled ? "Revisá el diseño y el precio. Después podés probar el envío y el pago con datos de prueba." : "Mirá el diseño, el tamaño y el precio orientativo en el resumen. Podés volver a editarlo antes de decidir." },
   ] : STORE_STEPS;
 
   return (
@@ -80,10 +80,10 @@ export function ComoComprar({ variant = "store", purchaseDemoEnabled = false }: 
         ))}
       </ol>
 
-      {frames ? <p className="mt-6 rounded-2xl border border-[#c7c9ae] bg-[#eeeedd] px-5 py-4 text-sm leading-relaxed text-[#4a3527]">
+      {frames ? (!productionPurchaseEnabled && <p className="mt-6 rounded-2xl border border-[#c7c9ae] bg-[#eeeedd] px-5 py-4 text-sm leading-relaxed text-[#4a3527]">
         {purchaseDemoEnabled ? "Estás probando el recorrido de compra. " : "Por ahora podés diseñar y revisar tu cuadro; la compra todavía no está habilitada. "}
         Medidas, colores y precios orientativos. No se cobra dinero.
-      </p> : <div className="mt-6 flex flex-wrap items-center justify-center gap-3.5 rounded-2xl border border-dashed border-[rgba(184,132,42,.4)] bg-[#EFE4CE] px-6 py-5">
+      </p>) : <div className="mt-6 flex flex-wrap items-center justify-center gap-3.5 rounded-2xl border border-dashed border-[rgba(184,132,42,.4)] bg-[#EFE4CE] px-6 py-5">
         <div className="flex size-[78px] flex-none items-center justify-center rounded-xl border border-[rgba(184,132,42,.25)] bg-[var(--canela-cream-card)]">
           <ShieldCheck
             className="size-[42px] text-[var(--canela-brown)]"

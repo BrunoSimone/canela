@@ -1,3 +1,6 @@
+import { PostgresWorkshopRepository } from './workshop-repository';
+import { workshopDocument } from '../../domain/workshop-document';
+import { recoverFrameCheckout } from '../../application/recover-frame-checkout';
 import { randomUUID } from 'node:crypto';
 import { beforeAll,beforeEach,afterAll,describe,it,expect,vi } from 'vitest';
 import type { Sql } from 'postgres';
@@ -36,7 +39,9 @@ const payment=vi.fn(async(i:CreatePaymentOrderInput)=>makeOrder(i));
 const quote=vi.fn(async()=>[rate]);
 let sql:Sql;
 const inventory={settle:vi.fn()} as unknown as import('@/modules/inventory/domain/inventory-store').InventoryStore;
-const service=()=>new FrameCommerce({sql,workshop:demoWorkshop,shipping:{rates:{quoteShipment:quote},issuer:new SignedCourierQuoteService(secret),accountMode:'sandbox',contextFingerprint:'f'.repeat(64),constraints:ZIPNOVA_INPUT_CONSTRAINTS,maxParcels:1,marginPolicy:DEFAULT_QUOTE_MARGIN},payments:{createOrder:payment,getOrder:vi.fn()},siteUrl:'http://localhost:3000',signingSecret:secret});
+let environment:'test'|'production'='test';
+const workshop=async()=>{const w=await demoWorkshop();if(environment==='production'){w.config.provisional=false;w.pricing.provisional=false;for(const k of Object.keys(w.confirmations) as Array<keyof typeof w.confirmations>)w.confirmations[k]=true;}return w;};
+const service=()=>new FrameCommerce({sql,environment,workshop,shipping:{rates:{quoteShipment:quote},issuer:new SignedCourierQuoteService(secret),accountMode:environment==='test'?'sandbox':'operational',contextFingerprint:'f'.repeat(64),constraints:ZIPNOVA_INPUT_CONSTRAINTS,maxParcels:1,marginPolicy:DEFAULT_QUOTE_MARGIN},payments:{createOrder:payment,getOrder:vi.fn()},siteUrl:'http://localhost:3000',signingSecret:secret});
 async function quoted(galleryConsent=false) {
   return (await service().quote({accepted:true,galleryConsent,termsVersion:'preview-1',design:selectDesign((await demoDesignCatalog.templates())[0].design),recipient:demoRecipient}))[0];
 }
@@ -45,9 +50,9 @@ async function confirm(id:string,state:'approved'|'rejected'='approved',event=ra
  return new PostgresPaymentConfirmationRepository(sql,inventory).apply({orderId:id,providerOrderId:p.provider_order_id,state,providerStatus:state,providerStatusDetail:null,webhookDeliveryId:event});
 }
 
-describe.skipIf(!connection)('PER-146 persistent frame lifecycle',()=>{
+describe.skipIf(!connection).each(['test','production'] as const)('PER-148 persistent frame lifecycle: %s',(mode)=>{
  beforeAll(async()=>{sql=createDatabaseClient(connection!);await runMigrations(sql);});
- beforeEach(async()=>{await sql`TRUNCATE orders,custom_frame_quote,processed_webhook CASCADE`;payment.mockReset().mockImplementation(async i=>makeOrder(i));quote.mockReset().mockResolvedValue([rate]);vi.mocked(inventory.settle).mockClear();});
+ beforeEach(async()=>{environment=mode;await sql`TRUNCATE orders,custom_frame_quote,processed_webhook,frame_workshop CASCADE`;payment.mockReset().mockImplementation(async i=>makeOrder(i));quote.mockReset().mockResolvedValue([rate]);vi.mocked(inventory.settle).mockClear();});
  afterAll(async()=>{await sql?.end();});
  it('persists retouches, survives service replacement, duplicate payment and webhook; never consumes inventory',async()=>{
   const q=await quoted(),attemptId=randomUUID();
@@ -105,14 +110,14 @@ describe.skipIf(!connection)('PER-146 persistent frame lifecycle',()=>{
   expect((await sql`SELECT reservation_state FROM custom_frame_order`)[0].reservation_state).toBe('released');
   const another=await quoted(),attemptId=randomUUID();payment.mockRejectedValueOnce(new PaymentOrderGatewayError('ambiguous'));
   const uncertain=await service().pay({quoteId:another.id,attemptId});expect(uncertain).toMatchObject({uncertain:true,checkoutUrl:null});
-  expect((await new PostgresFrameRepository(sql).getQuote(another.id))?.snapshot.design).toEqual(another.snapshot.design);
+  expect((await new PostgresFrameRepository(sql,environment).getQuote(another.id))?.snapshot.design).toEqual(another.snapshot.design);
   const retried=await service().pay({quoteId:another.id,attemptId});expect(retried.orderToken).toBe(uncertain.orderToken);
  });
  it('keeps gallery publication consented, editorial, private and idempotent in its own environment',async()=>{
-  const writer={createIfNotExists:vi.fn().mockResolvedValue({})},publisher=new GalleryPublisher(sql,writer,'test');
+  const writer={createIfNotExists:vi.fn().mockResolvedValue({})},publisher=new GalleryPublisher(sql,writer,environment);
   const q=await quoted(true),paid=await service().pay({quoteId:q.id,attemptId:randomUUID()}),[o]=await sql`SELECT id FROM orders`;
   await expect(publisher.prepare(o.id,'owner')).rejects.toThrow();await confirm(o.id);
-  await expect(new GalleryPublisher(sql,writer,'production').prepare(o.id,'owner')).rejects.toThrow();expect(writer.createIfNotExists).not.toHaveBeenCalled();
+  await expect(new GalleryPublisher(sql,writer,environment==='test'?'production':'test').prepare(o.id,'owner')).rejects.toThrow();expect(writer.createIfNotExists).not.toHaveBeenCalled();
   writer.createIfNotExists.mockRejectedValueOnce(Error('network'));await expect(publisher.prepare(o.id,'owner')).rejects.toThrow();
   const result=await publisher.prepare(o.id,'owner');await publisher.prepare(o.id,'owner');expect(writer.createIfNotExists).toHaveBeenCalledTimes(2);
   const doc=writer.createIfNotExists.mock.calls[1][0];expect(doc._id).toBe(`drafts.${result.documentId}`);const serialized=JSON.stringify(doc);
@@ -126,26 +131,74 @@ describe.skipIf(!connection)('PER-146 persistent frame lifecycle',()=>{
   const serialized=JSON.stringify(receipt);for(const value of ['materials','terms','gallery','buyerEmail',q.recipient.email])expect(serialized).not.toContain(value);
   const admin=await new PostgresAdminOrderReader(sql).get(o.id);expect(admin).toMatchObject({statusLabel:'Cuadro por fabricar',frame:{state:'queued',design:q.snapshot.design}});
   const [job]=await sql`SELECT id FROM order_notification`;
-  const email=await renderNotification(sql,{environment:'test',apiKey:'unused',from:'test@example.com',siteUrl:'http://localhost:3000',ownerEmail:null,testTo:'test@example.com'},{id:job.id,orderId:o.id,environment:'test',kind:'owner_paid',attempts:0} as Parameters<typeof renderNotification>[2]);
-  expect(email.to).toEqual(['test@example.com']);expect(email.text).toContain('fabric');expect(email.text).toContain('7');expect(email.text).not.toContain('Murvi');
+  const email=await renderNotification(sql,{environment,apiKey:'unused',from:'test@example.com',siteUrl:'http://localhost:3000',ownerEmail:'owner@example.com',testTo:'test@example.com'},{id:job.id,orderId:o.id,environment,kind:'owner_paid',attempts:0} as Parameters<typeof renderNotification>[2]);
+  expect(email.to).toEqual([environment==='test'?'test@example.com':'owner@example.com']);expect(email.text).toContain('fabric');expect(email.text).toContain('7');expect(email.text).not.toContain('Murvi');
  });
  it('never regresses a verified payment when a concurrent provider creation finishes later',async()=>{
   const q=await quoted(),attemptId=randomUUID();await service().pay({quoteId:q.id,attemptId});const [o]=await sql`SELECT id FROM orders`;await confirm(o.id);
-  const provider=makeOrder(payment.mock.calls[0][0]);await new PostgresFrameRepository(sql).saveProviderOrder(o.id,provider);
+  const provider=makeOrder(payment.mock.calls[0][0]);await new PostgresFrameRepository(sql,environment).saveProviderOrder(o.id,provider);
   expect((await sql`SELECT status FROM payment_attempt`)[0].status).toBe('approved');expect((await sql`SELECT status FROM orders`)[0].status).toBe('paid');
   const repeated=await service().pay({quoteId:q.id,attemptId});expect(repeated.checkoutUrl).toBeNull();expect(repeated.resultUrl).toContain('/cuadros/resultado/');expect(payment).toHaveBeenCalledTimes(1);
  });
  it('blocks an unfinished frame in the shipping service and transaction, even with a forged preparation',async()=>{
   const q=await quoted();await service().pay({quoteId:q.id,attemptId:randomUUID()});const [o]=await sql`SELECT id FROM orders`;await confirm(o.id);
   const repo=new PostgresShipmentRepository(sql),loaded=(await repo.loadOrder(o.id))!;
-  expect(loaded.productionState).toBe('queued');expect(()=>validateShipmentOrder(loaded,1,{accountMode:'sandbox',contextFingerprint:'f'.repeat(64),maxParcels:1})).toThrow('SHIPMENT_PRODUCTION_REQUIRED');
+  expect(loaded.productionState).toBe('queued');expect(()=>validateShipmentOrder(loaded,1,{accountMode:environment==='test'?'sandbox':'operational',contextFingerprint:'f'.repeat(64),maxParcels:1})).toThrow('SHIPMENT_PRODUCTION_REQUIRED');
   const p=new FrameProduction(sql),current=(await p.get(o.id))!;await p.advance(o.id,current.version,'making','owner');await p.advance(o.id,current.version+1,'ready','owner');
   const {weightGrams,heightCm,widthCm,lengthCm}=q.shipping.parcels[0];await new PostgresOrderPreparationRepository(sql).save(o.id,'owner',{expectedVersion:0,parcels:[{weightGrams,heightCm,widthCm,lengthCm}],note:null});
-  const context={accountMode:'sandbox',contextFingerprint:'f'.repeat(64),maxParcels:1};
+  const context={accountMode:environment==='test'?'sandbox':'operational',contextFingerprint:'f'.repeat(64),maxParcels:1};
   const request={orderId:o.id,externalId:`CA-${o.id.replaceAll("-", "").slice(0,27)}`,preparationVersion:1,buyerEmail:q.recipient.email,delivery:q.recipient.delivery,quote:q.shipping};
   const claim=await repo.claim(request,'owner',context);expect(claim.acquired).toBe(true);
   await repo.saveRemote(o.id,{id:42,externalId:request.externalId,status:'new',trackingNumber:'sandbox-only',trackingUrl:null,amountCents:q.shipping.amountCents});
   await repo.saveLabel(o.id,Buffer.from('%PDF-fixture'));expect(Buffer.from((await repo.readLabel(o.id))!).toString()).toBe('%PDF-fixture');
+ });
+
+ it('blocks cross-environment quote reuse, including completed attempts, without another charge',async()=>{
+  const q=await quoted(),attemptId=randomUUID();await service().pay({quoteId:q.id,attemptId});const [o]=await sql`SELECT id FROM orders`;await confirm(o.id);
+  environment=mode==='test'?'production':'test';
+  await expect(service().pay({quoteId:q.id,attemptId})).rejects.toMatchObject({code:'FRAME_ENVIRONMENT'});
+  await expect(service().pay({quoteId:q.id,attemptId:randomUUID()})).rejects.toMatchObject({code:'FRAME_ENVIRONMENT'});
+  expect(payment).toHaveBeenCalledTimes(1);
+ });
+ it('separates workshop capacity by environment',async()=>{
+  const qs=await Promise.all(Array.from({length:5},()=>quoted()));await Promise.all(qs.map(q=>service().pay({quoteId:q.id,attemptId:randomUUID()})));
+  environment=mode==='test'?'production':'test';const other=await quoted();await service().pay({quoteId:other.id,attemptId:randomUUID()});
+  expect((await sql`SELECT count(*)::int AS n FROM orders`)[0].n).toBe(6);
+ });
+ it('requires all workshop confirmations for production before contacting providers or saving quotes',async()=>{
+  environment='production';
+  const provisional=await demoWorkshop();
+  const commerce=new FrameCommerce({sql,environment,workshop:async()=>provisional,shipping:{rates:{quoteShipment:quote},issuer:new SignedCourierQuoteService(secret),accountMode:'operational',contextFingerprint:'f'.repeat(64),constraints:ZIPNOVA_INPUT_CONSTRAINTS,maxParcels:1,marginPolicy:DEFAULT_QUOTE_MARGIN},payments:{createOrder:payment,getOrder:vi.fn()},siteUrl:'https://canela.example',signingSecret:secret});
+  await expect(commerce.quote({})).rejects.toMatchObject({code:'WORKSHOP_PENDING'});
+  expect(quote).not.toHaveBeenCalled();expect(payment).not.toHaveBeenCalled();expect(await sql`SELECT id FROM custom_frame_quote`).toHaveLength(0);
+ });
+
+ it('recovers only an existing ambiguous checkout with the same provider key, without consulting workshop or shipping',async()=>{
+  const q=await quoted(),attemptId=randomUUID();payment.mockRejectedValueOnce(new PaymentOrderGatewayError('ambiguous'));
+  const first=await service().pay({quoteId:q.id,attemptId}),[o]=await sql`SELECT id FROM orders`;const originalKey=payment.mock.calls[0][0].idempotencyKey;
+  quote.mockClear();
+  const deps={sql,environment,payments:{createOrder:payment,getOrder:vi.fn()},siteUrl:'https://canela.example',signingSecret:secret};
+  await expect(recoverFrameCheckout(deps,randomUUID())).rejects.toMatchObject({code:'NOT_FOUND'});
+  await expect(recoverFrameCheckout({...deps,environment:environment==='test'?'production':'test'},o.id)).rejects.toMatchObject({code:'FRAME_ENVIRONMENT'});
+  const recovered=await recoverFrameCheckout(deps,o.id);
+  expect(recovered.orderToken).toBe(first.orderToken);expect(payment.mock.calls[1][0].idempotencyKey).toBe(originalKey);expect(quote).not.toHaveBeenCalled();
+  expect(await sql`SELECT id FROM orders`).toHaveLength(1);
+ });
+
+ it('keeps incomplete drafts private, publishes only reviewed data, rejects stale updates and pauses without losing drafts',async()=>{
+  const repository=new PostgresWorkshopRepository(sql,environment),initial=await repository.settings();
+  expect(initial.version).toBe(0);await expect(repository.published()).rejects.toMatchObject({code:'WORKSHOP_PENDING'});
+  await expect(repository.save(0,initial.document,'publish','owner')).rejects.toMatchObject({code:'WORKSHOP_INVALID'});
+  const draft=await repository.save(0,initial.document,'save','owner');expect(draft.publishedVersion).toBeNull();
+  await expect(repository.save(0,initial.document,'save','owner')).rejects.toMatchObject({code:'WORKSHOP_CONFLICT'});
+  const complete=workshopDocument(await workshop());for(const k of Object.keys(complete.confirmations) as Array<keyof typeof complete.confirmations>)complete.confirmations[k]=true;
+  const published=await repository.save(draft.version,complete,'publish','owner');
+  const active=await repository.published();expect(active.config.version).toBe(`workshop-${environment}-${published.version}`);
+  const edited=structuredClone(complete);edited.termsText='Unpublished terms';edited.confirmations.terms=false;
+  const saved=await repository.save(published.version,edited,'save','owner');expect((await repository.published()).terms).toEqual(active.terms);
+  const other=new PostgresWorkshopRepository(sql,environment==='test'?'production':'test');await expect(other.published()).rejects.toMatchObject({code:'WORKSHOP_PENDING'});
+  await repository.save(saved.version,edited,'pause','owner');await expect(repository.published()).rejects.toMatchObject({code:'WORKSHOP_PENDING'});
+  expect((await repository.settings()).document.termsText).toBe('Unpublished terms');expect(await sql`SELECT id FROM frame_workshop_event`).toHaveLength(4);
  });
 
 });

@@ -1,0 +1,12 @@
+import { beforeEach,it,expect,vi } from 'vitest';
+const mocks=vi.hoisted(()=>({session:vi.fn(),save:vi.fn(),db:vi.fn()}));
+vi.mock('@/db/client',()=>({getDatabase:mocks.db}));
+vi.mock('@/modules/admin/infrastructure/admin-request',()=>({currentAdminSession:mocks.session,privateJson:(body:unknown,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'private, no-store'}})}));
+vi.mock('@/modules/customization/infrastructure/postgres/workshop-repository',()=>({PostgresWorkshopRepository:class{save=mocks.save;}}));
+import { POST } from '@/app/api/admin/taller/route';
+import { FrameCommerceError } from '../domain/workshop';
+const request=(body:unknown,origin='http://localhost:3000')=>new Request('http://localhost:3000/api/admin/taller',{method:'POST',headers:{origin,'Content-Type':'application/json'},body:JSON.stringify(body)});
+beforeEach(()=>{vi.clearAllMocks();mocks.session.mockResolvedValue({email:'owner@example.com'});mocks.save.mockResolvedValue({version:2});});
+it('never reads or writes workshop configuration without an authenticated owner',async()=>{mocks.session.mockResolvedValue(null);expect((await POST(request({}))).status).toBe(401);expect(mocks.db).not.toHaveBeenCalled();});
+it('rejects cross-origin and oversized updates before storage',async()=>{expect((await POST(request({},'https://evil.example'))).status).toBe(403);expect((await POST(request({document:'x'.repeat(110000)}))).status).toBe(413);expect(mocks.db).not.toHaveBeenCalled();});
+it('uses the authenticated actor, preserves optimistic locking and returns only private responses',async()=>{const body={version:1,action:'save',document:{},actor:'attacker'};const r=await POST(request(body));expect(r.status).toBe(200);expect(r.headers.get('cache-control')).toContain('no-store');expect(mocks.save).toHaveBeenCalledWith(1,{},'save','owner@example.com');mocks.save.mockRejectedValueOnce(new FrameCommerceError('WORKSHOP_CONFLICT','Recargá.'));expect((await POST(request(body))).status).toBe(409);});

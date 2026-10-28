@@ -55,6 +55,7 @@ describe("PER-141: public routes and shared cart", () => {
     expect(container.querySelector('script[type="application/ld+json"]')).toBeNull();
     expect(screen.queryByText(/Nuestro taller/)).toBeNull();
     vi.stubEnv("VERCEL_ENV", "production");
+    vi.stubEnv("CUADROS_PREVIEW_ENABLED", "0");
     rerender(<MarketingLayout>{await HomePage()}</MarketingLayout>);
     expect(screen.queryByRole("link", { name: "Crear mi cuadro" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Galería de cuadros" })).toBeNull();

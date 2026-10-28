@@ -1,5 +1,8 @@
 # PER-146 — Circuito persistente de cuadros personalizados
 
+> Estado histórico. PER-148 reemplaza el bloqueo permanente de producción y el
+> almacenamiento privado del taller en Sanity por PostgreSQL + `/admin/taller`.
+
 2026-10-27. Autorizado por Bruno: cerrar el trabajo técnico independiente del taller,
 en `codex/creador-cuadros-personalizados`, con pruebas y cobros reales bloqueados.
 Extiende PER-130–145 y las decisiones del discovery 002.

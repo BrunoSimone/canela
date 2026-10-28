@@ -15,7 +15,7 @@ export function GalleryCards({ templates }: { templates: DesignTemplate[] }) {
         <MosaicSvg design={t.design} label={`Mosaico ${t.title}`} className={styles.galleryArt} />
       </Link>
       <div className={styles.cardBody}><h2>{t.title}</h2><p>{t.description}</p>
-        <p className={styles.cardMeasure}>{cm(framedMm)} × {cm(framedMm)} cm con marco · medidas orientativas</p>
+        <p className={styles.cardMeasure}>{cm(framedMm)} × {cm(framedMm)} cm con marco{t.design.config.provisional?" · medidas orientativas":""}</p>
         <Link className={styles.textLink} href={`/crear-cuadro?diseno=${encodeURIComponent(t.id)}`}>Crear uno similar <ArrowUpRight size={17} aria-hidden="true" /></Link>
       </div>
     </article>;

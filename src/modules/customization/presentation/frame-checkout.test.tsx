@@ -2,14 +2,14 @@
 import { afterEach,beforeEach,describe,it,expect,vi } from 'vitest';
 import { cleanup,fireEvent,render,screen,waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { FrameSandboxPurchase } from './frame-sandbox-purchase';
+import { FrameCheckout } from './frame-checkout';
 import { demoWorkshop } from '../infrastructure/demo-workshop';
 import { demoDesignCatalog } from '../infrastructure/demo-catalog';
 import { estimateFrame } from '../domain/estimate';
 const option={id:'quote',expiresAt:new Date(Date.now()+900_000).toISOString(),frameCents:10000,shippingCents:1000,totalCents:11000,carrier:'Correo',service:'Domicilio',productionDays:7};
 const network=vi.fn(),navigate=vi.fn();
 beforeEach(async()=>{network.mockReset();navigate.mockReset();vi.stubGlobal('fetch',network);const w=await demoWorkshop(),design=(await demoDesignCatalog.templates())[0].design;
- render(<FrameSandboxPurchase design={design} estimate={estimateFrame(w.config,design.size,w.pricing)} settings={{terms:w.terms,productionDays:7}} onEdit={vi.fn()} navigate={navigate}/>);
+ render(<FrameCheckout design={design} estimate={estimateFrame(w.config,design.size,w.pricing)} settings={{mode:'sandbox',terms:w.terms,productionDays:7}} onEdit={vi.fn()} navigate={navigate}/>);
 });
 afterEach(()=>{cleanup();vi.unstubAllGlobals();});
 async function shipping(){await userEvent.click(screen.getByRole('checkbox',{name:/Revisé el diseño/}));await userEvent.click(screen.getByRole('button',{name:'Continuar con el envío'}));
@@ -36,4 +36,14 @@ describe('sandbox purchase UI',()=>{
   await quote();network.mockResolvedValueOnce(Response.json({code:'RATE_CHANGED',error:'El envío cambió.'},{status:409}));await userEvent.click(screen.getByRole('button',{name:'Ir a Mercado Pago de prueba'}));await screen.findByRole('heading',{name:'Envío de tu cuadro'});
   expect(navigate).not.toHaveBeenCalled();expect(screen.queryByRole('button',{name:'Ir a Mercado Pago de prueba'})).toBeNull();expect((screen.getByLabelText('Email') as HTMLInputElement).value).toBe('persona@example.com');
  });
+ it('presents a real purchase without sandbox promises, keeps the final price private and redirects to MP',async()=>{
+  cleanup();const w=await demoWorkshop(),design=(await demoDesignCatalog.templates())[0].design;
+  render(<FrameCheckout design={design} estimate={estimateFrame(w.config,design.size,w.pricing)} settings={{mode:'production',terms:w.terms,productionDays:7}} onEdit={vi.fn()} navigate={navigate}/>);
+  expect(screen.queryByText(/sin pagar|No se cobra|orientativo|ensayo|sandbox/i)).toBeNull();
+  await shipping();network.mockResolvedValueOnce(Response.json({mode:'production',options:[option]}));await userEvent.click(screen.getByRole('button',{name:'Calcular envío'}));await screen.findByRole('heading',{name:'Revisá el total'});
+  expect(screen.queryByText(/ensayo|sandbox|reales siguen bloqueadas/i)).toBeNull();
+  network.mockResolvedValueOnce(Response.json({mode:'production',checkoutUrl:'https://www.mercadopago.com.ar/checkout/live',resultUrl:'/cuadros/resultado/token'}));
+  await userEvent.click(screen.getByRole('button',{name:'Pagar con Mercado Pago'}));await waitFor(()=>expect(navigate).toHaveBeenCalledWith('https://www.mercadopago.com.ar/checkout/live'));
+ });
+
 });

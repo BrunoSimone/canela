@@ -16,7 +16,7 @@ export function frameCommerceHandler(d:{enabled:()=>boolean;service:()=>FrameCom
       const body=await boundedJson(request);
       if(body.action==='quote') {
         const quotes=await d.service().quote(body);
-        return json({mode:'sandbox',options:quotes.map(q=>({id:q.id,expiresAt:q.expiresAt,frameCents:q.snapshot.priceCents,shippingCents:q.shipping.amountCents,totalCents:q.snapshot.priceCents+q.shipping.amountCents,carrier:q.shipping.carrierName,service:q.shipping.serviceName,productionDays:q.snapshot.productionDays}))});
+        return json({mode:quotes[0]?.environment==='production'?'production':'sandbox',options:quotes.map(q=>({id:q.id,expiresAt:q.expiresAt,frameCents:q.snapshot.priceCents,shippingCents:q.shipping.amountCents,totalCents:q.snapshot.priceCents+q.shipping.amountCents,carrier:q.shipping.carrierName,service:q.shipping.serviceName,productionDays:q.snapshot.productionDays}))});
       }
       if(body.action==='pay')return json(await d.service().pay(body));
       return json({code:'INVALID_INPUT'},422);

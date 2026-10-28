@@ -21,8 +21,7 @@
     "studio": "sanity dev",
     "studio:deploy": "sanity deploy",
     "notifications:process": "tsx --env-file=.env.local scripts/process-notifications.ts",
-    "commerce:preflight": "tsx --env-file=.env.local scripts/commerce-preflight.ts",
-    "cuadros:workshop-draft": "tsx scripts/frame-workshop-draft.ts"
+    "commerce:preflight": "tsx --env-file=.env.local scripts/commerce-preflight.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

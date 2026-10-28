@@ -52,3 +52,9 @@ en la cuenta. No generar pagos ni transportes reales para probar esta preparaci�
 Conservar mantenimiento activo. Si falla la preparación, dejar `CHECKOUT_MODE`
 y `ZIPNOVA_FULFILLMENT_MODE` deshabilitados. No cambiar credenciales de callbacks
 de pagos iniciados. No revertir el modo remoto de Zipnova sin coordinarlo con soporte.
+
+## Continuidad
+
+PER-148 autoriza completar y desplegar la rama del creador bajo el mismo
+mantenimiento. La configuración del taller queda pendiente de publicación,
+sin confirmar precios ni medidas por Mariela.

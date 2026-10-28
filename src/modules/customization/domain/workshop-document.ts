@@ -9,3 +9,8 @@ export function parseWorkshopDocument(d:WorkshopDocument):FrameWorkshop {
   const w={config,pricing,materials:Object.fromEntries(d.colors.filter(c=>c.enabled).map(c=>[c.publicId,c.material])),packages:d.packages.map(({maxCells,weightGrams,widthCm,heightCm,lengthCm,classificationId})=>({maxCells,weightGrams,widthCm,heightCm,lengthCm,classificationId})),capacity:d.capacity,productionDays:d.productionDays,terms:{version:d._rev,text:d.termsText},confirmations:d.confirmations};
   validateFrameWorkshop(w);return w;
 }
+
+/** Editable shape shared by the private panel and server, never sent to buyers. */
+export function workshopDocument(w:FrameWorkshop):WorkshopDocument {
+  return {_rev:w.config.version,geometry:{...w.config},colors:w.config.palette.map(c=>({publicId:c.id,name:c.name,hex:c.hex,material:w.materials[c.id],enabled:true})),pricing:{version:w.pricing.version,tilePackArs:w.pricing.tilePackCents/100,tilePackQuantity:w.pricing.tilePackQuantity,roundToArs:w.pricing.roundToCents/100,sizes:w.pricing.sizes.map(s=>({cells:s.cells,laborArs:s.laborCents/100,suppliesArs:s.suppliesCents/100}))},packages:structuredClone(w.packages),capacity:w.capacity,productionDays:w.productionDays,termsText:w.terms.text,confirmations:{...w.confirmations}};
+}

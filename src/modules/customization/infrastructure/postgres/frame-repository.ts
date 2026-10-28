@@ -6,36 +6,37 @@ import type { FrameQuote } from '../../domain/frame-order';
 import { FrameCommerceError } from '../../domain/workshop';
 
 export class PostgresFrameRepository implements CheckoutRepository {
-  constructor(private sql:Sql, private quote?:FrameQuote) {}
+  constructor(private sql:Sql, private environment:'test'|'production', private quote?:FrameQuote) {}
   async saveQuote(quote:FrameQuote) {
-    await this.sql`INSERT INTO custom_frame_quote(id,payload,expires_at) VALUES(${quote.id},${this.sql.json(JSON.parse(JSON.stringify(quote)))},${quote.expiresAt})`;
+    await this.sql`INSERT INTO custom_frame_quote(id,environment,payload,expires_at) VALUES(${quote.id},${quote.environment},${this.sql.json(JSON.parse(JSON.stringify(quote)))},${quote.expiresAt})`;
   }
   async getQuote(id:string):Promise<FrameQuote|null> {
     const [r]=await this.sql`SELECT payload FROM custom_frame_quote WHERE id=${id}`; return r?.payload??null;
   }
   async existing(key:string,quoteId:string):Promise<ReservedCheckout|null> {
-    const [r]=await this.sql`SELECT o.id,c.quote_id FROM orders o JOIN custom_frame_order c ON c.order_id=o.id WHERE o.checkout_idempotency_key=${key}`;
+    const [r]=await this.sql`SELECT o.id,o.environment,c.quote_id FROM orders o JOIN custom_frame_order c ON c.order_id=o.id WHERE o.checkout_idempotency_key=${key}`;
     if (!r) return null;
+    if(r.environment!==this.environment) throw new FrameCommerceError('FRAME_ENVIRONMENT','El intento pertenece a otro ambiente.');
     if(r.quote_id!==quoteId) throw new FrameCommerceError('ATTEMPT_CHANGED','Este intento corresponde a otra cotización.');
     return this.read(r.id,true);
   }
   async reserve(input:ReserveCheckoutInput):Promise<ReservedCheckout> {
     const q=this.quote;
-    if(!q || input.environment!=='test') throw new FrameCommerceError('FRAME_SALES_LOCKED','Los cobros de cuadros están bloqueados.',503);
+    if(!q || input.environment!==this.environment || q.environment!==this.environment) throw new FrameCommerceError('FRAME_SALES_LOCKED','Los cobros de cuadros están bloqueados.',503);
     const id=await this.sql.begin(async tx=>{
       await tx`SELECT pg_advisory_xact_lock(146001)`;
-      const [existing]=await tx`SELECT id,checkout_payload_hash FROM orders WHERE checkout_idempotency_key=${input.idempotencyKey}`;
+      const [existing]=await tx`SELECT id,environment,checkout_payload_hash FROM orders WHERE checkout_idempotency_key=${input.idempotencyKey}`;
       const digest=createHash('sha256').update(JSON.stringify({quoteId:q.id,publicTokenHash:input.publicTokenHash})).digest('hex');
       if(existing) {
-        if(existing.checkout_payload_hash!==digest) throw new FrameCommerceError('ATTEMPT_CHANGED','El intento de compra cambió.');
+        if(existing.environment!==this.environment || existing.checkout_payload_hash!==digest) throw new FrameCommerceError('ATTEMPT_CHANGED','El intento de compra cambió.');
         return existing.id as string;
       }
       if(new Date(q.expiresAt).getTime()<=Date.now()) throw new FrameCommerceError('QUOTE_EXPIRED','La cotización venció. Volvé a calcular el envío.');
       if((await tx`SELECT order_id FROM custom_frame_order WHERE quote_id=${q.id}`).length) throw new FrameCommerceError('QUOTE_USED','Esta cotización ya tiene un pedido. Consultá el resultado del intento anterior.');
-      const [count]=await tx`SELECT count(*)::int AS n FROM custom_frame_order c JOIN orders o ON o.id=c.order_id WHERE o.environment='test' AND c.reservation_state IN ('active','consumed')`;
+      const [count]=await tx`SELECT count(*)::int AS n FROM custom_frame_order c JOIN orders o ON o.id=c.order_id WHERE o.environment=${this.environment} AND c.reservation_state IN ('active','consumed')`;
       if(count.n>=q.snapshot.capacity) throw new FrameCommerceError('CAPACITY_FULL','Por ahora no quedan lugares para fabricar otro cuadro.');
       await tx`INSERT INTO orders(id,public_token_hash,checkout_idempotency_key,checkout_payload_hash,currency,subtotal_cents,shipping_cents,total_cents,buyer_email,environment,shipping_quote_snapshot)
-        VALUES(${input.orderId},${input.publicTokenHash},${input.idempotencyKey},${digest},'ARS',${q.snapshot.priceCents},${q.shipping.amountCents},${q.snapshot.priceCents+q.shipping.amountCents},${q.recipient.email},'test',${tx.json(JSON.parse(JSON.stringify(q.shipping)))})`;
+        VALUES(${input.orderId},${input.publicTokenHash},${input.idempotencyKey},${digest},'ARS',${q.snapshot.priceCents},${q.shipping.amountCents},${q.snapshot.priceCents+q.shipping.amountCents},${q.recipient.email},${this.environment},${tx.json(JSON.parse(JSON.stringify(q.shipping)))})`;
       await tx`INSERT INTO custom_frame_order(order_id,quote_id,snapshot,expires_at,gallery_id)
         VALUES(${input.orderId},${q.id},${tx.json(JSON.parse(JSON.stringify(q.snapshot)))},${q.expiresAt},${randomUUID()})`;
       await tx`INSERT INTO order_item(order_id,product_id,name_snapshot,unit_price_cents,quantity)

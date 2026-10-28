@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { frameSandboxEnabled } from '../infrastructure/commerce-mode';
+import { frameCommerceEnabled } from '../infrastructure/commerce-mode';
 import { acceptedDesign, validateFrameWorkshop, workshopPending } from './workshop';
 import { demoWorkshop } from '../infrastructure/demo-workshop';
 import { selectDesign } from './purchase';
@@ -8,10 +8,10 @@ import { demoDesignCatalog } from '../infrastructure/demo-catalog';
 describe('PER-146 workshop and commercial lock', () => {
   it('keeps real charges locked even with all general commerce flags', () => {
     const env = { CUADROS_CHECKOUT_MODE:'sandbox', PAYMENT_ENVIRONMENT:'test', CHECKOUT_MODE:'test', ZIPNOVA_ACCOUNT_MODE:'sandbox', SHIPPING_PROVIDER:'zipnova' };
-    expect(frameSandboxEnabled(env)).toBe(true);
+    expect(frameCommerceEnabled(env)).toBe(true);
     for (const changes of [{VERCEL_ENV:'production'}, {PAYMENT_ENVIRONMENT:'production'}, {ZIPNOVA_ACCOUNT_MODE:'operational'}, {CHECKOUT_MODE:'production'}, {CUADROS_CHECKOUT_MODE:'production'}, {CUADROS_PREVIEW_ENABLED:'0'}])
-      expect(frameSandboxEnabled({...env,...changes,COMMERCE_PRODUCTION_APPROVED:'1'})).toBe(false);
-    expect(frameSandboxEnabled({})).toBe(false);
+      expect(frameCommerceEnabled({...env,...changes,COMMERCE_PRODUCTION_APPROVED:'1'})).toBe(false);
+    expect(frameCommerceEnabled({})).toBe(false);
   });
   it('keeps workshop approvals pending and rejects inadequate packaging', async () => {
     const w = await demoWorkshop(); expect(workshopPending(w)).toContain('geometry');

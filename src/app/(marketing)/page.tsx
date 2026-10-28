@@ -1,7 +1,7 @@
 import { loadStorefrontProducts } from "@/lib/storefront-catalog";
 import { selectCatalogPreview } from "@/components/home/catalog-preview";
 import { customizationEnabled } from "@/modules/customization/infrastructure/availability";
-import { frameDesignCatalog } from "@/modules/customization/infrastructure/sanity-workshop";
+import { frameDesignCatalog } from "@/modules/customization/infrastructure/frame-catalog";
 import { loadGallery } from "@/modules/customization/application/catalog";
 import { HomeDestinations } from "@/components/home/home-destinations";
 import { LegacyCatalogLinks } from "@/components/home/legacy-catalog-links";
@@ -12,7 +12,7 @@ export default async function HomePage() {
   const [products, designs] = await Promise.all([
     // An unavailable preview must not prevent entry to either journey.
     loadStorefrontProducts().catch(() => []),
-    customizationEnabled() ? loadGallery(frameDesignCatalog()) : Promise.resolve(null),
+    customizationEnabled() ? Promise.resolve().then(() => loadGallery(frameDesignCatalog())).catch(() => null) : Promise.resolve(null),
   ]);
   return <>
     <LegacyCatalogLinks />

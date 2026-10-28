@@ -6,7 +6,7 @@ import { startCheckout, PaymentProviderUncertainError } from '@/modules/checkout
 import { quoteShipping, ZipnovaCheckoutQuotes, type QuoteShippingDependencies } from '@/modules/shipping/application/quote-shipping';
 import type { PaymentOrderGateway } from '@/modules/payments/domain/payment-order';
 import { PostgresFrameRepository } from '../infrastructure/postgres/frame-repository';
-import { acceptedDesign, framePrice, validateFrameWorkshop, FrameCommerceError, type FrameWorkshop } from '../domain/workshop';
+import { acceptedDesign, framePrice, validateFrameWorkshop, requireProductionWorkshop, FrameCommerceError, type FrameWorkshop } from '../domain/workshop';
 import type { DesignSelection } from '../domain/purchase';
 import type { FrameQuote } from '../domain/frame-order';
 import type { MosaicDesign } from '../domain/design';
@@ -23,12 +23,13 @@ export function shippingForFrame(w:FrameWorkshop,design:MosaicDesign,deps:FrameS
 }
 export class FrameCommerce {
   private repository:PostgresFrameRepository;
-  constructor(private deps:{sql:Sql;workshop:()=>Promise<FrameWorkshop>;shipping:FrameShippingDependencies;payments:PaymentOrderGateway;siteUrl:string;signingSecret:string}) {
-    if(deps.shipping.accountMode!=='sandbox') throw new FrameCommerceError('FRAME_SALES_LOCKED','Los cobros reales de cuadros están bloqueados.',503);
-    this.repository=new PostgresFrameRepository(deps.sql);
+  constructor(private deps:{sql:Sql;environment:'test'|'production';workshop:()=>Promise<FrameWorkshop>;shipping:FrameShippingDependencies;payments:PaymentOrderGateway;siteUrl:string;signingSecret:string}) {
+    if(deps.shipping.accountMode!==(deps.environment==='test'?'sandbox':'operational')) throw new FrameCommerceError('FRAME_SALES_LOCKED','Los ambientes de pago y envío no coinciden.',503);
+    this.repository=new PostgresFrameRepository(deps.sql,deps.environment);
   }
+  get mode() { return this.deps.environment==='test'?'sandbox' as const:'production' as const; }
   async quote(raw:Record<string,unknown>):Promise<FrameQuote[]> {
-    const w=await this.deps.workshop(); validateFrameWorkshop(w);
+    const w=await this.deps.workshop(); validateFrameWorkshop(w); if(this.deps.environment==='production') requireProductionWorkshop(w);
     if(raw.accepted!==true || typeof raw.galleryConsent!=='boolean' || raw.termsVersion!==w.terms.version)
       throw new FrameCommerceError('ACCEPTANCE_REQUIRED','Revisá y aceptá el diseño y las condiciones antes de continuar.',422);
     let design:MosaicDesign,recipient;
@@ -44,7 +45,7 @@ export class FrameCommerce {
     const quotes:FrameQuote[]=[];
     for(const issued of rates.options) {
       const {token:_,...shipping}=issued; void _;
-      const quote={id:randomUUID(),expiresAt:shipping.expiresAt,snapshot,recipient,shipping};
+      const quote={environment:this.deps.environment,id:randomUUID(),expiresAt:shipping.expiresAt,snapshot,recipient,shipping};
       await this.repository.saveQuote(quote);quotes.push(quote);
     }
     return quotes;
@@ -56,27 +57,27 @@ export class FrameCommerce {
     let existing;
     try { existing=await this.repository.existing(key,raw.quoteId); }
     catch(e) {
-      if(e instanceof FrameCommerceError && e.code==='ATTEMPT_CLOSED') return {mode:'sandbox' as const,orderToken,resultUrl,checkoutUrl:null,uncertain:false};
+      if(e instanceof FrameCommerceError && e.code==='ATTEMPT_CLOSED') return {mode:this.mode,orderToken,resultUrl,checkoutUrl:null,uncertain:false};
       throw e;
     }
     const q=await this.repository.getQuote(raw.quoteId);
     if(!q) throw new FrameCommerceError('QUOTE_EXPIRED','La cotización ya no está disponible.');
+    if(q.environment!==this.deps.environment || q.shipping.accountMode!==this.deps.shipping.accountMode) throw new FrameCommerceError('FRAME_ENVIRONMENT','La cotización pertenece a otro ambiente.',409);
     if(!existing) {
-      const w=await this.deps.workshop();validateFrameWorkshop(w);
+      const w=await this.deps.workshop();validateFrameWorkshop(w); if(this.deps.environment==='production') requireProductionWorkshop(w);
       if(fingerprint(w)!==q.snapshot.workshopFingerprint) throw new FrameCommerceError('DESIGN_CHANGED','Las condiciones del taller cambiaron. Volvé a revisar el cuadro.');
       if(Date.parse(q.expiresAt)<=Date.now()) throw new FrameCommerceError('QUOTE_EXPIRED','La cotización venció. Volvé a calcular el envío.');
-      if(q.shipping.accountMode!=='sandbox') throw new FrameCommerceError('FRAME_SALES_LOCKED','La compra está bloqueada.',503);
       await new ZipnovaCheckoutQuotes(shippingForFrame(w,q.snapshot.design,this.deps.shipping)).verifyForCheckout({source:'zipnova',snapshot:q.shipping,amountCents:q.shipping.amountCents,expiresAt:new Date(q.expiresAt)},
         {items:[{productId:'custom-frame',name:'Cuadro personalizado con marco',unitPriceCents:q.snapshot.priceCents,quantity:1}],destination:q.recipient.delivery});
     }
     try {
-      const result=await startCheckout({repository:new PostgresFrameRepository(this.deps.sql,q),payments:this.deps.payments},{
-        orderId:randomUUID(),environment:'test',orderToken,publicTokenHash:hashOrderToken(orderToken),idempotencyKey:key,
+      const result=await startCheckout({repository:new PostgresFrameRepository(this.deps.sql,this.deps.environment,q),payments:this.deps.payments},{
+        orderId:randomUUID(),environment:this.deps.environment,orderToken,publicTokenHash:hashOrderToken(orderToken),idempotencyKey:key,
         buyerEmail:q.recipient.email,delivery:q.recipient.delivery,returnUrl:resultUrl,shippingCents:q.shipping.amountCents,shippingSnapshot:q.shipping,
         items:[{productId:'custom-frame',name:'Cuadro personalizado con marco',unitPriceCents:q.snapshot.priceCents,quantity:1}]});
-      return {mode:'sandbox' as const,...result,resultUrl};
+      return {mode:this.mode,...result,resultUrl};
     } catch(e) {
-      if(e instanceof PaymentProviderUncertainError) return {mode:'sandbox' as const,orderToken,resultUrl,checkoutUrl:null,uncertain:true};
+      if(e instanceof PaymentProviderUncertainError) return {mode:this.mode,orderToken,resultUrl,checkoutUrl:null,uncertain:true};
       throw e;
     }
   }

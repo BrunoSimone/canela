@@ -1,4 +1,6 @@
 /** Read-only checks. No migrations, network mutations, emails or carrier orders. */
+import {frameCommerceMode} from "../src/modules/customization/infrastructure/commerce-mode";
+import {PostgresWorkshopRepository} from "../src/modules/customization/infrastructure/postgres/workshop-repository";
 import {inventoryStore} from "../src/modules/inventory/infrastructure/sanity-documents";
 import {createHash} from "node:crypto";
 import {readdir,readFile} from "node:fs/promises";
@@ -35,6 +37,12 @@ async function main(){
     checks.push({check:"notifications_need_review",status:health.review===0?"ok":"blocked"});
     checks.push({check:"notifications_overdue",status:health.overdue===0?"ok":"blocked"});
     checks.push({check:"expired_pre_payment_reservations",status:health.expiredReservations===0?"ok":"blocked"});
+   }
+   if(process.env.CUADROS_CHECKOUT_MODE&&process.env.CUADROS_CHECKOUT_MODE!=="disabled"){
+    check("frame_commerce_configuration",()=>frameCommerceMode()!==null);
+    check("frame_gallery_token",()=>!!process.env.SANITY_FRAME_WRITE_TOKEN);
+    try{await new PostgresWorkshopRepository(sql,process.env.PAYMENT_ENVIRONMENT==="production"?"production":"test").published();checks.push({check:"frame_workshop_confirmed",status:"ok"});}
+    catch{checks.push({check:"frame_workshop_confirmed",status:"blocked"});}
    }
    const products=await readInventoryCatalog();
    const inventory=(await inventoryStore().list(products)).map(i=>({product_id:i.id,stock_on_hand:i.stockOnHand,stock_reserved:i.reserved,enabled:i.enabled}));

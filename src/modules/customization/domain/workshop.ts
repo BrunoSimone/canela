@@ -45,3 +45,7 @@ export function acceptedDesign(w: FrameWorkshop, selection: DesignSelection): Mo
   return structuredClone(design);
 }
 export function framePrice(w: FrameWorkshop, size: number) { return estimateFrame(w.config, size, w.pricing).totalCents; }
+
+export function requireProductionWorkshop(w: FrameWorkshop): void {
+  if (workshopPending(w).length) throw new FrameCommerceError('WORKSHOP_PENDING', 'Estamos terminando de preparar las opciones del taller. Probá más tarde.', 503);
+}

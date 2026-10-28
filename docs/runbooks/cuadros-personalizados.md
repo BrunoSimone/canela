@@ -1,13 +1,13 @@
 # Cuadros personalizados: desarrollo y operación
 
-Estado 2026-10-27, rama `codex/creador-cuadros-personalizados`, PER-146.
-Implementación disponible para ensayos; **ventas reales bloqueadas por código**.
-No cambiar las variables de la tienda real para probar cuadros.
+Estado 2026-10-28, rama `codex/creador-cuadros-personalizados`, PER-148.
+Soporte productivo con configuración privada, validada y confirmada. La tienda
+permanece en mantenimiento. No usar la cuenta Zipnova operativa para ensayos.
 
 ## Qué recibe cada persona
 
 - Comprador: editor, retoques, precio final del cuadro, aceptación del diseño,
-  domicilio, opciones de envío, pago sandbox y resultado con el mismo mosaico.
+  domicilio, opciones de envío, pago en el ambiente configurado y resultado con el mismo mosaico.
 - Taller: pedido pagado en `/admin`, diseño aceptado, plazo, fabricación,
   guía privada y embalaje/envío. Los pedidos de prueba están identificados.
 - Galería: copia autorizada del mosaico en un **borrador** de Sanity. Nunca incluye
@@ -60,7 +60,7 @@ ZIPNOVA_ACCOUNT_MODE=sandbox
 Aplicar primero las migraciones en la base aislada con `pnpm db:migrate`.
 Además configurar las variables existentes de origen Zipnova, credenciales,
 firma, URL de la instancia y webhook Mercado Pago (ver `.env.example`). Nunca
-mezclar la base test con la de ventas. `VERCEL_ENV=production` bloquea este flujo.
+mezclar la base test con la de ventas. `VERCEL_ENV=production` bloquea el modo sandbox. La cuenta Canela de Zipnova ya es operativa: estos ajustes solo sirven con otra cuenta de pruebas confirmada.
 
 El endpoint `/api/cuadros/compra` valida y cotiza el diseño en servidor, persiste
 la cotización, vuelve a comprobar la tarifa al pagar y reserva un cupo antes de
@@ -72,35 +72,53 @@ Los flags y restricciones existentes de etiquetas y emails siguen vigentes.
 Para enviar emails de prueba usar `ORDER_EMAIL_MODE=test` y un destinatario de
 pruebas explícito. No habilitar producción para ensayar.
 
-## 3. Configuración de Sanity
+## 3. Configuración privada del taller
 
-Por defecto se utilizan fixtures. Para administrar datos del taller:
+El plan gratuito de Sanity no admite datasets privados. Por decisión de Bruno,
+la configuración de cuadros vive en PostgreSQL y se edita en `/admin/taller`.
+Catálogo, cantidades y galería continúan en Sanity. No borrar datasets de otros
+proyectos: sus cuotas son independientes. No se contrató otro plan.
 
-1. Preparar un dataset **privado**, diferente del catálogo público. No importar
-   materiales/costos al dataset `production`. Los tokens se configuran solo en
-   servidor y con el mínimo acceso al dataset requerido.
-2. Configurar `SANITY_FRAME_DATASET`, `SANITY_FRAME_READ_TOKEN` y
-   `SANITY_STUDIO_FRAME_DATASET` con el mismo dataset privado. Al configurar
-   `CUADROS_CATALOG_SOURCE=sanity`, el backend verifica que su ACL sea `private`;
-   datos faltantes/ACL incorrecta fallan explícitamente, sin usar fixtures ocultos.
-3. Generar un borrador local: `pnpm cuadros:workshop-draft /tmp/cuadros-taller.ndjson`.
-   No sobrescribe archivos ni se conecta a Sanity. Importarlo **solo al privado**.
-4. Abrir el workspace **Canela — Taller** (`/taller`) en Studio. Completar geometría,
-   colores públicos/referencias internas, costos/precios, paquetes, cupos, plazo
-   y condiciones. Todas las confirmaciones iniciales están desmarcadas.
-5. Publicar la configuración cuando corresponda. El servidor lee `frame-workshop`
-   publicado; usa su revisión como versión. Una revisión distinta invalida las
-   cotizaciones previas todavía no iniciadas.
+1. Ingresar al panel y elegir **Taller de cuadros**.
+2. Reemplazar los valores orientativos: medidas de venecita/junta/marco y grilla;
+   paleta disponible; precios; peso y medidas exteriores de cada paquete completo;
+   capacidad/plazo; condiciones de compra. Referencias y costos son privados.
+3. **Guardar borrador** permite avanzar por partes. No altera la configuración
+   publicada. Un cambio en una sección desmarca su confirmación.
+4. Revisar las seis confirmaciones y marcar la intención de usar esos datos.
+5. **Publicar configuración** valida todo en servidor. Cambia únicamente nuevas
+   compras; invalida cotizaciones no iniciadas con una versión anterior.
+6. **Pausar nuevas compras de cuadros** retira la configuración publicada pero
+   conserva el borrador y permite seguir atendiendo pedidos ya iniciados/pagados.
 
-La galería utiliza `frameDesign` en el catálogo público. Para exportar pedidos
-sandbox se exige `CUADROS_SANITY_TEST_DATASET` separado del catálogo actual y
-`SANITY_FRAME_WRITE_TOKEN`. Apuntar un Studio de ensayo a ese dataset permite
-revisar/publicar sus borradores. **Nunca exportar pedidos de prueba a producción.**
-Para verlos en la web de ensayo, apuntar su `NEXT_PUBLIC_SANITY_DATASET` al dataset
-de galería test después de preparar los borradores; el exportador sigue exigiendo
-un destino separado del catálogo de la instancia que genera los pedidos.
+Una edición concurrente devuelve un conflicto; recargar antes de intentar guardar
+sobre otra versión. La publicación y cambios quedan registrados con operador y fecha.
 
-No se creó ni modificó ningún dataset remoto en esta iteración.
+### Producción
+
+```dotenv
+SITE_MAINTENANCE_MODE=1
+CUADROS_PREVIEW_ENABLED=1
+CUADROS_CATALOG_SOURCE=database
+CUADROS_CHECKOUT_MODE=production
+```
+
+Además deben estar alineados `CHECKOUT_MODE`, `PAYMENT_ENVIRONMENT`, aprobación
+productiva, emails y Zipnova operativa según el runbook de producción. Las tres
+migraciones del creador (0014–0016) deben estar aplicadas. El mantenimiento sigue
+bloqueando la tienda y APIs públicas. No se quita al publicar el taller.
+
+La configuración inicial no está publicada y no confirma datos por Mariela.
+Al abrir la tienda, la compra seguirá bloqueada si falta esa publicación.
+No hay código que editar para incorporar los datos finales.
+
+### Galería en Sanity
+
+`SANITY_FRAME_WRITE_TOKEN` es un token de servidor con escritura sobre `frameDesign`
+en el catálogo. Los pedidos productivos pagados y consentidos pueden preparar un
+borrador desde la ficha; Mariela revisa y publica en Studio. Los pedidos test usan
+`CUADROS_SANITY_TEST_DATASET`, que debe diferir del catálogo real; nunca se exportan
+al dataset `production`. No se publica automáticamente ni se copia información personal.
 
 ## 4. Trabajo diario en el panel
 
@@ -144,7 +162,18 @@ Mariela confirma: geometría coherente de venecita/junta/marco y tamaños; color
 realmente disponibles y referencias físicas; precios finales; peso y dimensiones
 **embalados** por tamaño; plazo/capacidad; condiciones y aceptación de variaciones.
 
-Luego corresponde cargar/publicar esos datos, revisar el cambio que retire el
-bloqueo de producción, ejecutar un recorrido integrado con los proveedores y
-hacer despliegue/validación controlada. Las confirmaciones de Sanity no habilitan
-por sí solas ventas. Esta iteración no hizo cobros, envíos, emails ni despliegues reales.
+La integración productiva se despliega bajo mantenimiento. Cargar y publicar los
+valores definitivos desde el panel no requiere modificar código. Antes de abrir,
+corresponde revisar catálogo, saldo del transporte y autorizar el retiro del
+mantenimiento. Las pruebas de esta iteración usan proveedores dobles y no generan
+cobros ni envíos reales.
+
+## 7. Verificación antes de abrir
+
+- `pnpm commerce:preflight` verifica migraciones, variables y taller publicado sin
+  crear pagos/envíos. Un taller pendiente es un bloqueo de datos esperado hasta su aprobación.
+- QA con proveedores dobles y base local: `TEST_DATABASE_URL=… pnpm test:db`.
+- Comprobar los recorridos productivos bajo mantenimiento por HTTPS, sin abrir la tienda.
+- El saldo para envíos sigue siendo una tarea operativa de Zipnova. La integración
+  no carga saldo automáticamente ni transfiere el pago del comprador al proveedor.
+- Evidencia y alcance de aceptación: `docs/evidence/PER-148.md`.

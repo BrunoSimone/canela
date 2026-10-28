@@ -24,10 +24,14 @@ export class GalleryPublisher {
     return {documentId};
   }
 }
+export function galleryTarget(env:Record<string,string|undefined>,catalogDataset:string):{dataset:string;environment:'test'|'production'} {
+  if(env.PAYMENT_ENVIRONMENT==='production')return {dataset:catalogDataset,environment:'production'};
+  const testDataset=env.CUADROS_SANITY_TEST_DATASET;
+  if(env.PAYMENT_ENVIRONMENT!=='test'||!testDataset||testDataset===catalogDataset||testDataset==='production'||!/^[a-z0-9][a-z0-9_-]{0,63}$/.test(testDataset))throw new FrameCommerceError('GALLERY_EXPORT_DISABLED','Configurá un dataset de pruebas separado antes de exportar.',503);
+  return {dataset:testDataset,environment:'test'};
+}
 export function createGalleryPublisher(sql:Sql) {
-  // An explicit sandbox dataset is mandatory for exports of test orders.
-  if(process.env.PAYMENT_ENVIRONMENT!=='test'||!process.env.CUADROS_SANITY_TEST_DATASET||process.env.CUADROS_SANITY_TEST_DATASET===dataset) throw new FrameCommerceError('GALLERY_EXPORT_DISABLED','Configurá un dataset de pruebas separado antes de exportar.',503);
-  const token=process.env.SANITY_FRAME_WRITE_TOKEN;
-  if(!token) throw new FrameCommerceError('GALLERY_EXPORT_DISABLED','Falta el acceso de escritura de la galería.',503);
-  return new GalleryPublisher(sql,createClient({projectId,dataset:process.env.CUADROS_SANITY_TEST_DATASET,apiVersion,useCdn:false,token}),'test');
+  const target=galleryTarget(process.env,dataset),token=process.env.SANITY_FRAME_WRITE_TOKEN;
+  if(!token)throw new FrameCommerceError('GALLERY_EXPORT_DISABLED','Falta el acceso de escritura de la galería.',503);
+  return new GalleryPublisher(sql,createClient({projectId,dataset:target.dataset,apiVersion,useCdn:false,token}),target.environment);
 }

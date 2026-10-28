@@ -24,9 +24,9 @@ describe("PER-130: route gates and server data", () => {
     expect(missing).toContain("Ese diseño no está disponible");
     expect(missing).not.toContain("Tu mosaico de 25");
   });
-  it("hides both routes on production even if preview is requested", async () => {
+  it("hides both routes on production unless explicitly enabled", async () => {
     vi.stubEnv("VERCEL_ENV", "production");
-    vi.stubEnv("CUADROS_PREVIEW_ENABLED", "1");
+    vi.stubEnv("CUADROS_PREVIEW_ENABLED", "0");
     await expect(GalleryPage()).rejects.toThrow("NOT_FOUND");
     await expect(CreatorPage({ searchParams: Promise.resolve({}) })).rejects.toThrow("NOT_FOUND");
   });

@@ -45,8 +45,8 @@ describe("PER-130: server supplied gallery and creator", () => {
     expect((await loadCreator(repository())).templateUnavailable).toBe(false);
     expect((await loadCreator(repository())).template).toBeNull();
   });
-  it("never enables demonstration routes in Vercel production", () => {
-    expect(customizationEnabled({ NODE_ENV: "production", VERCEL_ENV: "production", CUADROS_PREVIEW_ENABLED: "1" })).toBe(false);
+  it("requires explicit activation in Vercel production", () => {
+    expect(customizationEnabled({ NODE_ENV: "production", VERCEL_ENV: "production", CUADROS_PREVIEW_ENABLED: "1" })).toBe(true);
     expect(customizationEnabled({ NODE_ENV: "production" })).toBe(false);
     expect(customizationEnabled({ NODE_ENV: "development" })).toBe(true);
     expect(customizationEnabled({ NODE_ENV: "development", CUADROS_PREVIEW_ENABLED: "0" })).toBe(false);
