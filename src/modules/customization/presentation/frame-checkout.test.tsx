@@ -18,7 +18,7 @@ async function shipping(){await userEvent.click(screen.getByRole('checkbox',{nam
  fireEvent.change(screen.getByLabelText('Provincia'),{target:{value:'B'}});
  await userEvent.click(screen.getByRole('checkbox',{name:/Acepto estas condiciones/}));
 }
-async function quote(){await shipping();network.mockResolvedValueOnce(Response.json({mode:'sandbox',options:[option]}));await userEvent.click(screen.getByRole('button',{name:'Calcular envío'}));await screen.findByRole('heading',{name:'Revisá el total'});}
+async function quote(){await shipping();network.mockResolvedValueOnce(Response.json({mode:'sandbox',options:[option]}));await userEvent.click(screen.getByRole('button',{name:'Continuar'}));await screen.findByRole('heading',{name:'Revisá el total'});}
 describe('sandbox purchase UI',()=>{
  it('requires acceptance, leaves gallery opt-in off, and sends only the selected design and delivery',async()=>{
   expect((screen.getByRole('button',{name:'Continuar con el envío'}) as HTMLButtonElement).disabled).toBe(true);await quote();
@@ -40,7 +40,7 @@ describe('sandbox purchase UI',()=>{
   cleanup();const w=await demoWorkshop(),design=(await demoDesignCatalog.templates())[0].design;
   render(<FrameCheckout design={design} estimate={estimateFrame(w.config,design.size,w.pricing)} settings={{mode:'production',terms:w.terms,productionDays:7}} onEdit={vi.fn()} navigate={navigate}/>);
   expect(screen.queryByText(/sin pagar|No se cobra|orientativo|ensayo|sandbox/i)).toBeNull();
-  await shipping();network.mockResolvedValueOnce(Response.json({mode:'production',options:[option]}));await userEvent.click(screen.getByRole('button',{name:'Calcular envío'}));await screen.findByRole('heading',{name:'Revisá el total'});
+  await shipping();network.mockResolvedValueOnce(Response.json({mode:'production',options:[option]}));await userEvent.click(screen.getByRole('button',{name:'Continuar'}));await screen.findByRole('heading',{name:'Revisá el total'});
   expect(screen.queryByText(/ensayo|sandbox|reales siguen bloqueadas/i)).toBeNull();
   network.mockResolvedValueOnce(Response.json({mode:'production',checkoutUrl:'https://www.mercadopago.com.ar/checkout/live',resultUrl:'/cuadros/resultado/token'}));
   await userEvent.click(screen.getByRole('button',{name:'Pagar con Mercado Pago'}));await waitFor(()=>expect(navigate).toHaveBeenCalledWith('https://www.mercadopago.com.ar/checkout/live'));

@@ -62,7 +62,7 @@ export function FrameCheckout({design,estimate,settings,onEdit,navigate=(url)=>w
      <label className={styles.formField}>Provincia<select name="province" required value={address.province} onChange={e=>setAddress({...address,province:e.target.value})}><option value="">Elegí una provincia</option>{ARGENTINE_PROVINCES.map(p=><option key={p.code} value={p.code}>{p.name}</option>)}</select></label>
     </fieldset>
     <div className={styles.purchaseConsent}><p>{settings.terms.text}</p><label><input type="checkbox" required checked={accepted} onChange={e=>setAccepted(e.target.checked)}/>Acepto estas condiciones y el diseño que revisé.</label><label><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/>Autorizo a Canela a mostrar este mosaico en el catálogo de cuadros y ofrecerlo a otras personas. Es opcional.</label></div>
-    <button className={styles.primaryButton} disabled={busy||!accepted}>{busy?'Calculando…':'Calcular envío'}</button>
+    <button className={styles.primaryButton} disabled={busy||!accepted}>{busy?'Preparando tu resumen…':'Continuar'}</button>
    </form>:<>
     <fieldset disabled={busy||attempted} className={styles.simulationOptions}><legend>Elegí el envío</legend>{options.map(o=><label key={o.id}><input type="radio" name="shipping" checked={selected===o.id} onChange={()=>setSelected(o.id)}/><span><strong>{o.carrier} · {formatArs(o.shippingCents)}</strong><small>{o.service} · Entrega a domicilio</small></span></label>)}</fieldset>
     {quote&&<p className={styles.hint}>Cotización válida hasta las {new Date(quote.expiresAt).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})}. Se vuelve a comprobar antes del pago.</p>}

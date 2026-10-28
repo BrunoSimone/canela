@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
+  ArrowRight,
   CreditCard,
   LoaderCircle,
   PackageCheck,
@@ -24,7 +25,7 @@ import {
   resolveCheckoutNavigation,
 } from "@/modules/checkout/presentation/client/checkout-flow";
 import { useAppSelector } from "@/store/hooks";
-import { ARGENTINE_PROVINCES, isDeliveryFieldValid, parseDeliverySnapshot, type DeliveryField } from "@/modules/checkout/domain/delivery";
+import { ARGENTINE_PROVINCES, provinceName, isDeliveryFieldValid, parseDeliverySnapshot, type DeliveryField } from "@/modules/checkout/domain/delivery";
 
 import { InvalidCourierQuoteInputError, normalizeShippingDestination } from "@/modules/shipping/domain/courier-quote";
 
@@ -64,6 +65,12 @@ export function CheckoutConfirmation({ shipping: shippingConfig, environment }: 
   const [quoted, setQuoted] = useState<{ key: string; result: ShippingQuotesResponse } | null>(null);
   const [selectedToken, setSelectedToken] = useState<string | null>(null);
   const [quoteError, setQuoteError] = useState<string | null>(null);
+  const [reviewKey, setReviewKey] = useState<string | null>(null);
+  const [isAdvancing, setIsAdvancing] = useState(false);
+  const advancing = useRef(false);
+  const reviewHeading = useRef<HTMLHeadingElement>(null);
+  const detailsHeading = useRef<HTMLLegendElement>(null);
+  const hasReviewed = useRef(false);
   const [controlledQuoteKey, setControlledQuoteKey] = useState<string | null>(null);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [nativeInvalid, setNativeInvalid] = useState<Record<string, boolean>>({});
@@ -98,6 +105,19 @@ export function CheckoutConfirmation({ shipping: shippingConfig, environment }: 
   const quotedItems = isRealQuote ? currentQuote?.items : undefined;
   const subtotal = (quotedItems ? quotedItems.reduce((sum, i) => sum + i.unitPriceCents * i.quantity, 0) : items.reduce((sum, i) => sum + i.price * 100 * i.qty, 0)) / 100;
   const shipping = shippingCents === undefined ? null : shippingCents / 100;
+  const reviewing = reviewKey === requestKey && formValid;
+  useEffect(() => {
+    if (reviewing) { hasReviewed.current = true; reviewHeading.current?.focus(); }
+    else if (hasReviewed.current) detailsHeading.current?.focus();
+  }, [reviewing]);
+
+  function editDetails() {
+    quoteRequestSequence.current += 1;
+    setReviewKey(null); setSelectedToken(null); setQuoted(null); setControlledQuoteKey(null);
+    setQuoteError(null); setErrorMessage(null);
+    // Refresh the server-issued fixture token while keeping the controlled fields.
+    if (!isRealQuote) router.refresh();
+  }
 
   function fieldProps(name: string, label: string) {
     const invalid = !!touched[name] && invalidFields.has(name);
@@ -109,23 +129,41 @@ export function CheckoutConfirmation({ shipping: shippingConfig, environment }: 
     return touched[name] && invalidFields.has(name) ? <span id={`${name}-error`} className="mt-2 block text-sm font-normal text-[#9b4132]">{fieldErrors[name] ?? "Completá este campo con al menos 2 caracteres."}</span> : null;
   }
 
-  async function calculateShipping() {
-    if (!canStartCheckout || !destinationValid || isLoading || isQuoting) return;
-    setQuoteError(null); setErrorMessage(null); setSelectedToken(null); setQuoted(null);
+  async function continueToSummary() {
+    if (!canStartCheckout || !formValid || isLoading || advancing.current || isQuoting) return;
+    advancing.current = true;
+    setIsAdvancing(true);
+    setQuoteError(null); setErrorMessage(null); setSelectedToken(null); setQuoted(null); setReviewKey(null);
     const sequence = ++quoteRequestSequence.current;
     try {
       const destination = normalizeShippingDestination({ city, provinceCode, postalCode });
-      if (!isRealQuote) { setControlledQuoteKey(requestKey); return; }
+      if (!isRealQuote) {
+        if (Date.parse(shippingConfig.quoteExpiresAt) <= Date.now()) {
+          router.refresh();
+          setQuoteError("Estamos actualizando el envío. Volvé a continuar en unos segundos.");
+          return;
+        }
+        setControlledQuoteKey(requestKey); setReviewKey(requestKey);
+        return;
+      }
       const result = await requestQuote({ destination, items: items.map(i => ({ productId: i.id, quantity: i.qty })) }).unwrap();
-      if (sequence === quoteRequestSequence.current) setQuoted({ key: requestKey, result });
+      if (sequence !== quoteRequestSequence.current) return;
+      const options = result.options.filter(option => Date.parse(option.expiresAt) > Date.now())
+        .sort((a, b) => a.shippingCents - b.shippingCents);
+      if (!options.length) { setQuoteError(checkoutErrorMessage("SHIPPING_NOT_AVAILABLE")); return; }
+      setQuoted({ key: requestKey, result: { ...result, options } });
+      setSelectedToken(options[0].quoteToken);
+      setReviewKey(requestKey);
     } catch (error) {
       if (sequence === quoteRequestSequence.current) setQuoteError(checkoutErrorMessage(error instanceof InvalidCourierQuoteInputError ? "INVALID_SHIPPING_REQUEST" : readCheckoutErrorCode(error) ?? "SHIPPING_PROVIDER_UNAVAILABLE"));
-    }
+    } finally { advancing.current = false; setIsAdvancing(false); }
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!canStartCheckout || isLoading || !formValid || !quoteReady || !event.currentTarget.checkValidity()) return;
+    if (!event.currentTarget.checkValidity()) return;
+    if (!reviewing) { await continueToSummary(); return; }
+    if (!canStartCheckout || isLoading || !formValid || !quoteReady) return;
     // Recheck time on submit as well as on the display timer.
     if (!quoteExpiresAt || Date.parse(quoteExpiresAt) <= Date.now()) { setClock(Date.now()); return; }
     setErrorMessage(null);
@@ -158,7 +196,7 @@ export function CheckoutConfirmation({ shipping: shippingConfig, environment }: 
       ) {
         idempotencyKey.current = null;
       }
-      if (code?.startsWith("SHIPPING_") || code === "UNSHIPPABLE_ITEM") { setSelectedToken(null); setQuoted(null); setControlledQuoteKey(null); }
+      if (code?.startsWith("SHIPPING_") || code === "UNSHIPPABLE_ITEM") { setSelectedToken(null); setQuoted(null); setControlledQuoteKey(null); setReviewKey(null); }
       setErrorMessage(checkoutErrorMessage(code));
     }
   }
@@ -212,7 +250,7 @@ export function CheckoutConfirmation({ shipping: shippingConfig, environment }: 
             Confirmá tu pedido
           </h1>
           <p className="mt-4 max-w-2xl leading-relaxed text-[#6E4E38]">
-            Completá tus datos, elegí el envío y revisá el total antes de pagar.
+            {reviewing ? "Revisá las piezas, el envío y el total antes de pagar." : "Completá tus datos y continuá para revisar el envío y el total."}
           </p>
         </div>
         <div className="hidden sm:block">
@@ -228,8 +266,13 @@ export function CheckoutConfirmation({ shipping: shippingConfig, environment }: 
           setNativeInvalid(previous => ({ ...previous, [name]: invalid }));
         }
       }} className="mx-auto max-w-3xl space-y-10">
-        <fieldset className="min-w-0">
-          <legend className="text-xl font-extrabold text-[var(--canela-brown)]">Contacto y entrega</legend>
+        <ol aria-label="Pasos de compra" className="flex gap-6 border-b border-[rgba(184,132,42,.2)] pb-4 text-sm">
+          <li aria-current={!reviewing ? "step" : undefined} className={!reviewing ? "font-bold text-[var(--canela-brown)]" : "text-[#79613e]"}>1. Tus datos</li>
+          <li aria-current={reviewing ? "step" : undefined} className={reviewing ? "font-bold text-[var(--canela-brown)]" : "text-[#79613e]"}>2. Revisá y pagá</li>
+        </ol>
+        {!reviewing ? <>
+        <fieldset disabled={isAdvancing} className="min-w-0 disabled:opacity-70">
+          <legend ref={detailsHeading} tabIndex={-1} className="scroll-mt-28 text-xl font-extrabold text-[var(--canela-brown)]">Contacto y entrega</legend>
           <p className="mt-2 text-sm leading-relaxed text-[#6E4E38]">Usaremos estos datos para preparar el pedido y enviarlo a domicilio.</p>
           <div className="mt-6 grid gap-5 sm:grid-cols-2">
             <label className="text-sm font-bold text-[var(--canela-brown)]">Nombre y apellido
@@ -284,25 +327,36 @@ export function CheckoutConfirmation({ shipping: shippingConfig, environment }: 
             <input className={checkoutFieldClass} type="text" {...fieldProps("postalCode", "Código postal")} autoComplete="postal-code" inputMode="numeric" required minLength={4} maxLength={4} pattern="[1-9][0-9]{3}" value={postalCode} onChange={(event) => setPostalCode(event.target.value)} placeholder="Ej. 1425" />
           {fieldError("postalCode")}</label>
           {!isRealQuote && <p className="mt-3 text-xs leading-relaxed text-[#79613e]">Compra de prueba con costo de envío de prueba.</p>}
-          <section aria-labelledby="shipping-heading" className="mt-8 border-t border-[rgba(184,132,42,.26)] pt-6">
-            <h2 id="shipping-heading" className="text-xl font-extrabold text-[var(--canela-brown)]">Elegí tu envío</h2>
-            <p className="mt-2 text-sm text-[#6E4E38]">Completá localidad, provincia y código postal para conocer las opciones.</p>
-            <button type="button" onClick={calculateShipping} disabled={!canStartCheckout || !destinationValid || isQuoting || isLoading} className="mt-4 inline-flex items-center gap-2 border border-[var(--canela-ochre)] px-5 py-3 font-bold text-[var(--canela-brown)] disabled:opacity-50">
-              {isQuoting && <LoaderCircle className="canela-spin size-4" />}
-              {isQuoting ? "Consultando envíos…" : (currentQuote || controlledQuoteCurrent) ? "Volver a calcular envío" : "Calcular envío"}
-            </button>
-            {quoteError && <p role="alert" className="mt-4 text-sm text-[#7e4b3a]">{quoteError}</p>}
-            <div aria-live="polite" className="mt-4 space-y-3">
-              {currentQuote?.options.map(option => <label key={option.quoteToken} className="flex cursor-pointer items-start gap-3 border border-[rgba(184,132,42,.3)] bg-white/60 p-4">
-                <input type="radio" name="shippingOption" value={option.quoteToken} checked={selectedToken === option.quoteToken} onChange={() => setSelectedToken(option.quoteToken)} disabled={isLoading || Date.parse(option.expiresAt) <= clock} className="mt-1" />
-                <span className="min-w-0 flex-1"><strong>{option.carrierName}</strong><span className="mt-1 block text-sm text-[#6E4E38]">{option.serviceName} · {option.parcelCount} {option.parcelCount === 1 ? "bulto" : "bultos"}</span></span>
-                <strong>{formatPrice(option.shippingCents / 100)}</strong>
-              </label>)}
-              {((quoted && !currentQuote) || (controlledQuoteKey && !controlledQuoteCurrent)) && <p className="text-sm text-[#6E4E38]">El pedido o el destino cambió. Volvé a calcular el envío.</p>}
-              {quoteExpired && <p className="text-sm text-[#7e4b3a]">La cotización venció. Volvé a calcular el envío.</p>}
-            </div>
-          </section>
         </fieldset>
+        {reviewKey && reviewKey !== requestKey && <p role="status" className="text-sm text-[#6E4E38]">Tu carrito cambió. Continuá para revisar el nuevo total.</p>}
+        {!canStartCheckout && <p role="alert" className="text-sm text-[#7e4b3a]">Quitá las piezas que ya no están disponibles para seguir con la compra.</p>}
+        {(quoteError || errorMessage) && <p role="alert" className="text-sm text-[#7e4b3a]">{quoteError || errorMessage}</p>}
+        <button type="submit" disabled={!canStartCheckout || !formValid || isAdvancing || isLoading} className={checkoutButtonClass}>
+          {isAdvancing ? <><LoaderCircle className="canela-spin size-5" />Preparando tu resumen…</> : <>Continuar<ArrowRight className="size-5" aria-hidden="true" /></>}
+        </button>
+        </> : <>
+        <section aria-labelledby="delivery-summary-heading">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 id="delivery-summary-heading" ref={reviewHeading} tabIndex={-1} className="scroll-mt-28 text-xl font-extrabold text-[var(--canela-brown)]">Revisá tu pedido</h2>
+            <button type="button" onClick={editDetails} disabled={isLoading} className="min-h-11 font-bold text-[var(--canela-ochre-dark)] underline underline-offset-4 disabled:opacity-50">Editar datos</button>
+          </div>
+          <p className="mt-3 text-sm leading-relaxed text-[#6E4E38]">
+            <span className="block font-bold">{deliveryValues.recipientName}</span>
+            {streetName} {streetNumber}{floor && ` · Piso ${floor}`}{apartment && ` · Depto. ${apartment}`}<br />
+            {city}, {provinceName(provinceCode)} · CP {postalCode}<br />
+            <span className="break-words">{email}</span>
+          </p>
+        </section>
+        {isRealQuote && <fieldset className="min-w-0">
+          <legend className="text-xl font-extrabold text-[var(--canela-brown)]">Envío a domicilio</legend>
+          <div className="mt-4 space-y-3">
+            {currentQuote?.options.map(option => <label key={option.quoteToken} className={`flex cursor-pointer items-start gap-3 border p-4 ${selectedToken === option.quoteToken ? "border-[var(--canela-ochre)] bg-[var(--canela-cream-card)]" : "border-[rgba(184,132,42,.3)] bg-white/60"}`}>
+              <input type="radio" name="shippingOption" value={option.quoteToken} checked={selectedToken === option.quoteToken} onChange={() => setSelectedToken(option.quoteToken)} disabled={isLoading || Date.parse(option.expiresAt) <= clock} className="mt-1" />
+              <span className="min-w-0 flex-1"><strong>{option.carrierName}</strong><span className="mt-1 block text-sm text-[#6E4E38]">{option.serviceName}</span></span>
+              <strong className="shrink-0">{formatPrice(option.shippingCents / 100)}</strong>
+            </label>)}
+          </div>
+        </fieldset>}
 
         <section aria-labelledby="order-heading">
           <div className="mb-3 flex items-center justify-between gap-4">
@@ -377,7 +431,7 @@ export function CheckoutConfirmation({ shipping: shippingConfig, environment }: 
               </div>
             </dl>
 
-            {!isRealQuote && quoteExpired && <button type="button" onClick={() => router.refresh()} className="mt-5 underline">Actualizar envío de prueba</button>}
+
 
             {!canStartCheckout && (
               <p className="mt-5 border-l-2 border-[#b06a52] pl-3 text-sm leading-relaxed text-[#7e4b3a]">
@@ -394,14 +448,15 @@ export function CheckoutConfirmation({ shipping: shippingConfig, environment }: 
               </p>
             )}
 
-            {(!formValid || !quoteReady) && <p id="checkout-next-step" className="mt-5 text-sm text-[#6E4E38]">
-              {!formValid ? "Completá los datos de contacto y entrega para continuar." : "Calculá el envío y elegí una opción para continuar."}
+            {quoteExpired && <p id="checkout-next-step" role="status" className="mt-5 text-sm text-[#7e4b3a]">
+              El precio del envío venció. Volvé a tus datos y continuá para ver el total actualizado.
+              <button type="button" onClick={editDetails} className="mt-2 block min-h-11 font-bold underline">Volver a mis datos</button>
             </p>}
             <button
               type="submit"
               disabled={!canStartCheckout || isLoading || !formValid || !quoteReady}
-              aria-describedby={!formValid || !quoteReady ? "checkout-next-step" : undefined}
-              className="mt-6 flex w-full items-center justify-center gap-2.5 bg-[var(--canela-ochre)] px-4 py-3.5 font-extrabold text-[var(--canela-cream-card)] shadow-[0_10px_22px_rgba(184,132,42,.24)] transition-colors hover:bg-[var(--canela-ochre-dark)] disabled:cursor-not-allowed disabled:opacity-50"
+              aria-describedby={quoteExpired ? "checkout-next-step" : undefined}
+              className={checkoutButtonClass}
             >
               {isLoading ? (
                 <>
@@ -422,6 +477,7 @@ export function CheckoutConfirmation({ shipping: shippingConfig, environment }: 
             </p>
           </div>
         </section>
+        </>}
       </form>
     </CheckoutShell>
   );
@@ -437,6 +493,8 @@ const fieldErrors: Record<string, string> = {
   floor: "Usá hasta 3 caracteres para el piso.",
   apartment: "Usá hasta 3 caracteres para el departamento.",
 };
+
+const checkoutButtonClass = "mt-6 flex min-h-12 w-full items-center justify-center gap-2.5 bg-[var(--canela-ochre)] px-4 py-3.5 font-extrabold text-[var(--canela-cream-card)] shadow-[0_10px_22px_rgba(184,132,42,.24)] transition-colors hover:bg-[var(--canela-ochre-dark)] disabled:cursor-not-allowed disabled:opacity-50";
 
 const checkoutFieldClass = "mt-2 block w-full min-w-0 border border-[rgba(184,132,42,.42)] bg-white/70 px-3.5 py-3 text-base text-[var(--canela-brown)] transition-shadow aria-invalid:border-[#9b4132] placeholder:text-[#79613e] focus:ring-2 focus:ring-[rgba(184,132,42,.25)]";
 
