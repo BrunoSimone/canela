@@ -114,19 +114,18 @@ describe("PER-143: home visual carousel", () => {
     fireEvent.touchEnd(carousel, { changedTouches: [{ clientX: 100, clientY: 200 }] });
     expect(activeVisual()).toBe("store");
   });
-  it("renders only the store when customization is disabled, including after a rerender", () => {
-    const scheduled = vi.spyOn(globalThis, "setTimeout");
-    const cancelled = vi.spyOn(globalThis, "clearTimeout");
-    const { rerender } = render(<HomeCarousel {...props} />);
-    const rotation = scheduled.mock.results[scheduled.mock.calls.findIndex(([, delay]) => delay === 6000)].value;
-    rerender(<HomeCarousel {...props} creatorEnabled={false} />);
+  it("leads with the store and announces the unavailable creator without linking to it", () => {
+    render(<HomeCarousel {...props} creatorEnabled={false} />);
     expect(activeVisual()).toBe("store");
-    expect(screen.queryByRole("img", { name: "Fondo del catálogo" })).toBeNull();
-    expect(screen.queryByRole("img", { name: "Cuadro de ejemplo" })).toBeNull();
-    expect(screen.getAllByRole("link")).toHaveLength(1);
-    expect(screen.getByRole("link").getAttribute("href")).toBe("/tienda");
-    expect(screen.queryByRole("button")).toBeNull();
     expect(screen.getByRole("img", { name: "Pieza de ajedrez" })).toBeTruthy();
-    expect(cancelled).toHaveBeenCalledWith(rotation);
+    expect(screen.getByRole("heading", { level: 1, name: "Explorá nuestro catálogo." })).toBeTruthy();
+    const routes = within(screen.getByRole("navigation", { name: "Elegí tu recorrido" }));
+    expect(routes.getByText("Próximamente")).toBeTruthy();
+    expect(screen.getAllByRole("link").map(link => link.getAttribute("href"))).toEqual(["/tienda"]);
+    expect(screen.queryByRole("button")).toBeNull();
+    act(() => vi.advanceTimersByTime(6000));
+    expect(activeVisual()).toBe("frames");
+    expect(screen.getByRole("img", { name: "Cuadro de ejemplo" })).toBeTruthy();
+    expect(screen.getAllByRole("link")).toHaveLength(1);
   });
 });

@@ -12,6 +12,9 @@
 .journeys { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
 .action { display: inline-flex; min-height: 50px; min-width: 214px; justify-content: space-between; align-items: center; gap: 18px; padding: 12px 24px; border: 1px solid transparent; border-radius: 999px; background: var(--action-fill); color: var(--action-ink); font-size: 15px; font-weight: 700; transition: background-color .7s, color .7s, border-color .7s; }
 .secondaryAction { background: transparent; border-color: var(--outline); color: var(--hero-ink); }
+.comingSoon { display: inline-flex; min-height: 50px; min-width: 214px; justify-content: space-between; align-items: center; gap: 14px; margin: 0; padding: 12px 14px 12px 24px; border: 1px dashed var(--outline); border-radius: 999px; color: var(--hero-ink); font-size: 15px; font-weight: 700; white-space: nowrap; cursor: default; }
+.soonTag { padding: 4px 10px; border-radius: 999px; background: var(--action-fill); color: var(--action-ink); font-size: 12px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; }
+.emptyArtTag { padding: 4px 12px; border-radius: 999px; background: #4a3527; color: #fbf7ee; font-size: 12px; letter-spacing: .04em; text-transform: uppercase; }
 .action:focus-visible { outline: 3px solid var(--hero-ink); outline-offset: 5px; }
 .action svg { transition: transform .25s; }
 .action:hover svg { transform: translate(2px, -2px); }
@@ -44,6 +47,7 @@
 @media (max-width: 480px) {
   .journeys { flex-direction: column; align-items: center; }
   .journeys .action { width: min(100%, 240px); }
+  .journeys .comingSoon { min-width: min(100%, 240px); max-width: 100%; }
 }
 @media (max-width: 480px) and (max-height: 680px) {
   .intro { padding: 20px 20px 12px; }

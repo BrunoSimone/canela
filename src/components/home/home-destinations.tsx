@@ -15,7 +15,8 @@ export function HomeDestinations({ products, templates }: {
   templates: DesignTemplate[] | null;
 }) {
   const featured = templates?.find(t => t.id === "atardecer") ?? templates?.[0];
-  return <HomeCarousel creatorEnabled={templates !== null}
+  // Remount on availability changes so the opening visual follows the gate.
+  return <HomeCarousel key={templates === null ? "soon" : "creator"} creatorEnabled={templates !== null}
     storePiece={<Image src={chessPieceImage} alt="Pieza de ajedrez de cerámica de Canela"
       width={1200} height={1600} loading="eager" quality={90} className={styles.productArt}
       sizes="(max-width: 767px) 51vw, 355px" />}
@@ -30,7 +31,8 @@ export function HomeDestinations({ products, templates }: {
       })}
     </div> : null}
     frame={featured ? <MosaicSvg design={featured.design} label={`Cuadro en mosaico: ${featured.title}`} className={styles.art} />
-      : <div className={styles.emptyArt}><ImagePlus size={48} aria-hidden="true" /><span>Tu foto, en venecitas</span></div>}
+      : <div className={styles.emptyArt}><ImagePlus size={48} aria-hidden="true" /><span>Tu foto, en venecitas</span>
+        {templates === null && <strong className={styles.emptyArtTag}>Próximamente</strong>}</div>}
     frameBackdrop={featured ? <MosaicSvg design={featured.design} label="" /> : null}
   />;
 }

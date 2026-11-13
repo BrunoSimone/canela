@@ -8,6 +8,7 @@ import styles from "./home-destinations.module.css";
 
 type Visual = "frames" | "store";
 
+/** When the creator is unavailable, its journey stays visible as a non-interactive "coming soon" sign. */
 export function HomeCarousel({ creatorEnabled, catalogBackdrop, storePiece, frame, frameBackdrop }: {
   creatorEnabled: boolean;
   catalogBackdrop: ReactNode;
@@ -15,14 +16,15 @@ export function HomeCarousel({ creatorEnabled, catalogBackdrop, storePiece, fram
   frame: ReactNode;
   frameBackdrop: ReactNode;
 }) {
-  const [selected, setSelected] = useState<Visual>("frames");
+  // The sellable catalog leads while the creator is only announced.
+  const [selected, setSelected] = useState<Visual>(creatorEnabled ? "frames" : "store");
   const [touching, setTouching] = useState(false);
   const touch = useRef<{ x: number; y: number } | null>(null);
   const reduced = useReducedMotion();
-  const active = creatorEnabled ? selected : "store";
+  const active = selected;
 
   useEffect(() => {
-    if (!creatorEnabled || reduced || touching) return;
+    if (reduced || touching) return;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const schedule = () => {
       clearTimeout(timer);
@@ -33,10 +35,10 @@ export function HomeCarousel({ creatorEnabled, catalogBackdrop, storePiece, fram
     schedule();
     document.addEventListener("visibilitychange", schedule);
     return () => { clearTimeout(timer); document.removeEventListener("visibilitychange", schedule); };
-  }, [creatorEnabled, reduced, touching, active]);
+  }, [reduced, touching, active]);
 
   const startTouch = (event: TouchEvent<HTMLElement>) => {
-    if (!creatorEnabled || (event.target as Element).closest("a, button")) return;
+    if ((event.target as Element).closest("a, button")) return;
     setTouching(true);
     const first = event.touches[0];
     touch.current = event.touches.length === 1 ? { x: first.clientX, y: first.clientY } : null;
@@ -55,10 +57,10 @@ export function HomeCarousel({ creatorEnabled, catalogBackdrop, storePiece, fram
   };
 
   return <section className={styles.home} data-visual={active} aria-labelledby="home-title"
-    aria-roledescription={creatorEnabled ? "carrusel" : undefined}
+    aria-roledescription="carrusel"
     onTouchStart={startTouch} onTouchEnd={endTouch}
     onTouchCancel={() => { touch.current = null; setTouching(false); }}>
-    {creatorEnabled && <div className={styles.frameBackdrop} aria-hidden="true">{frameBackdrop}</div>}
+    <div className={styles.frameBackdrop} aria-hidden="true">{frameBackdrop}</div>
     <div className={styles.catalogBackdrop} aria-hidden="true">{catalogBackdrop}</div>
     <div className={styles.intro}>
       <h1 id="home-title">{creatorEnabled ? <>Creá tu cuadro personalizado <span>o explorá nuestro catálogo.</span></> : "Explorá nuestro catálogo."}</h1>
@@ -69,15 +71,18 @@ export function HomeCarousel({ creatorEnabled, catalogBackdrop, storePiece, fram
         <Link href="/tienda" className={`${styles.action} ${creatorEnabled ? styles.secondaryAction : ""}`}>
           Explorar el catálogo <ArrowUpRight size={20} aria-hidden="true" />
         </Link>
+        {!creatorEnabled && <p className={styles.comingSoon}>
+          Crear mi cuadro <span className={styles.soonTag}>Próximamente</span>
+        </p>}
       </nav>
     </div>
     <div className={styles.stage}>
       <div className={styles.productPresentation} aria-hidden={active !== "store"}>
         <div className={styles.floatingVisual}>{storePiece}</div>
       </div>
-      {creatorEnabled && <div className={styles.framePresentation} aria-hidden={active !== "frames"}>
+      <div className={styles.framePresentation} aria-hidden={active !== "frames"}>
         <div className={styles.floatingVisual}>{frame}</div>
-      </div>}
+      </div>
     </div>
   </section>;
 }

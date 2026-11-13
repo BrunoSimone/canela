@@ -36,6 +36,20 @@ describe("PER-141: two storefront journeys", () => {
     expect(screen.queryByRole("link", { name: "Crear mi cuadro" })).toBeNull();
     expect(screen.getByRole("heading", { name: "Explorá nuestro catálogo." })).toBeTruthy();
   });
+  it("shows the unavailable creator as a coming-soon sign that never links to it", () => {
+    const { container } = render(<HomeDestinations products={[]} templates={null} />);
+    const opening = within(screen.getByRole("navigation", { name: "Elegí tu recorrido" }));
+    expect(opening.getByText("Próximamente")).toBeTruthy();
+    expect(opening.getByText(/Crear mi cuadro/).closest("a")).toBeNull();
+    expect(opening.getAllByRole("link").map(link => link.getAttribute("href"))).toEqual(["/tienda"]);
+    expect(container.querySelector('a[href^="/crear-cuadro"], a[href^="/cuadros"]')).toBeNull();
+    expect(screen.queryByRole("button")).toBeNull();
+    expect(screen.getAllByText("Próximamente")).toHaveLength(2);
+  });
+  it("hides the coming-soon sign once the creator is available", async () => {
+    render(<HomeDestinations products={[]} templates={await demoDesignCatalog.templates()} />);
+    expect(screen.queryByText("Próximamente")).toBeNull();
+  });
   it("uses real photos only as a decorative background, keeping exactly two destinations", async () => {
     const { container, rerender } = render(<HomeDestinations products={[{ id: "cuenco", src: "/cuenco.jpg" }, { id: "vaso", src: "/vaso.jpg" }]}
       templates={await demoDesignCatalog.templates()} />);
