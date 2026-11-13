@@ -1,5 +1,5 @@
 import { getDatabase } from "@/db/client";
-import { SanityProductCatalog } from "@/modules/catalog/infrastructure/sanity/sanity-product-catalog";
+import { productCatalog } from "@/modules/catalog/infrastructure/catalog-source";
 import { beginCheckout } from "@/modules/checkout/application/begin-checkout";
 import { PostgresCheckoutRepository } from "@/modules/checkout/infrastructure/postgres/checkout-repository";
 import { readCheckoutConfig } from "@/modules/checkout/infrastructure/server/checkout-config";
@@ -36,7 +36,7 @@ export async function POST(request: Request): Promise<Response> {
   const payments = new MercadoPagoClient({
     accessToken: config.mercadoPagoAccessToken,
   });
-  const catalog = new SanityProductCatalog();
+  const catalog = productCatalog();
   let quotes;
   try {
     quotes = config.shippingProvider === "zipnova"

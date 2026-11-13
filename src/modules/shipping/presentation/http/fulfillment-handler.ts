@@ -1,3 +1,4 @@
+import { readBoundedText } from "@/lib/http/read-bounded-body";
 import { InvalidShippingQuoteError, ExpiredShippingQuoteError } from "../../domain/shipping-quote";
 import { isSameOriginAdminRequest } from "../../../admin/infrastructure/admin-origin";
 import { FulfillmentError, shipmentSummary } from "../../domain/fulfillment";
@@ -16,9 +17,7 @@ export function createFulfillmentHandlers(deps:Dependencies){
       if(new URL(request.url).searchParams.get("demo")==="1")return json({code:"SHIPMENT_DEMO_READONLY"},403);
       if(!request.headers.get("Content-Type")?.startsWith("application/json"))return json({code:"INVALID_SHIPMENT_REQUEST"},422);
       try{
-        const reader=request.body?.getReader();if(!reader)throw new SyntaxError();let size=0;const chunks:Uint8Array[]=[];
-        for(;;){const {done,value}=await reader.read();if(done)break;size+=value.length;if(size>40000){await reader.cancel();throw new SyntaxError();}chunks.push(value);}
-        const input:unknown=JSON.parse(Buffer.concat(chunks).toString("utf8"));
+        const input:unknown=JSON.parse(await readBoundedText(request,40000));
         if(!input||typeof input!=="object"||Array.isArray(input))throw new SyntaxError();
         if(Object.keys(input).some(key=>!["action","expectedPreparationVersion","approvedQuoteToken"].includes(key)))throw new SyntaxError();
         const {action,expectedPreparationVersion,approvedQuoteToken}=input as Record<string,unknown>;

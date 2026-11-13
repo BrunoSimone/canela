@@ -1,3 +1,4 @@
+import { transactionalInventory } from "./store";
 import type { Sql } from "postgres";
 import type { InventoryStore } from "../domain/inventory-store";
 
@@ -12,7 +13,7 @@ export async function recoverReservationIntents(sql: Sql, inventory: InventorySt
           AND p.provider_order_id IS NULL AND p.status IN ('preference_pending','payment_pending')
         ORDER BY orders.created_at LIMIT 1 FOR UPDATE OF orders, p SKIP LOCKED`;
       if (!order) return false;
-      if (!await inventory.settle(order.id, "released")) throw Error("INVENTORY_RECOVERY_CONFLICT");
+      if (!await transactionalInventory(inventory,tx).settle(order.id, "released")) throw Error("INVENTORY_RECOVERY_CONFLICT");
       await tx`UPDATE stock_reservation SET status='released',released_at=now() WHERE order_id=${order.id} AND status='active'`;
       await tx`UPDATE orders SET inventory_state='cancelled',status='expired',updated_at=now() WHERE id=${order.id}`;
       await tx`UPDATE payment_attempt SET status='expired',updated_at=now() WHERE order_id=${order.id}`;

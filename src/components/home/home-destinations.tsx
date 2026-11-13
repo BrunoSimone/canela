@@ -6,8 +6,8 @@ import { HomeCarousel } from "./home-carousel";
 import type { CatalogPreview } from "./catalog-preview";
 import styles from "./home-destinations.module.css";
 
-// Existing transparent product photograph in Sanity, used as the store's visual identity.
-const chessPieceImage = "https://cdn.sanity.io/images/2puxew6b/production/aca61f0c0b27615757104c53f3b53fcde12cc083-3456x4608.png";
+// Verified transparent product photograph, kept locally as the store's visual identity.
+const chessPieceImage = "/images/chess-piece.webp";
 
 export function HomeDestinations({ products, templates }: {
   products: CatalogPreview[];

@@ -1,3 +1,5 @@
+import { databaseCatalog } from '@/modules/catalog/infrastructure/source';
+import { cachedProducts,cachedSlides } from '@/modules/catalog/infrastructure/public-cache';
 import { client } from "@/sanity/client";
 import type { Category, HeroSlide, Product } from "@/lib/types";
 
@@ -23,6 +25,7 @@ const HERO_QUERY = `*[_type == "heroSlide"] | order(orderRank asc) {
 
 export async function getProducts(): Promise<Product[]> {
   try {
+    if(databaseCatalog())return await cachedProducts();
     return await client.fetch<Product[]>(
       PRODUCTS_QUERY,
       {},
@@ -35,6 +38,7 @@ export async function getProducts(): Promise<Product[]> {
 
 export async function getHeroSlides(): Promise<HeroSlide[]> {
   try {
+    if(databaseCatalog())return await cachedSlides();
     return await client.fetch<HeroSlide[]>(HERO_QUERY, {}, {
       next: { revalidate: 60 },
     });

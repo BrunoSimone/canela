@@ -1,3 +1,4 @@
+import { CONTENT_CLASSIFICATIONS } from '../modules/shipping/domain/content-classifications';
 import { frameDesignSchema } from "./frame-schema";
 import { ALL_FIELDS_GROUP, type SchemaTypeDefinition } from "sanity";
 import { orderRankField } from "@sanity/orderable-document-list";
@@ -174,12 +175,7 @@ const producto: SchemaTypeDefinition = {
           title: "Contenido del envío (necesario para cotizar)",
           type: "string",
           description: "Es lo que declaramos al transporte. Elegí según la pieza; sin esta selección no se puede calcular el envío.",
-          options: { list: [
-            { title: "Vidrio, espejos o cuadros con vidrio", value: "6" },
-            { title: "Cerámica decorativa o cuadros sin vidrio", value: "1" },
-            { title: "Pisos y revestimientos cerámicos", value: "4" },
-            { title: "Bachas de cocina o vanitory", value: "3" },
-          ] },
+          options: { list: CONTENT_CLASSIFICATIONS.map(c=>({...c})) },
           validation: (rule) => rule.regex(/^[A-Za-z0-9_-]{1,50}$/),
         },
         { name: "canRotate", title: "Se puede girar sobre la base", type: "boolean", fieldset: "packing", initialValue: false, description: "Conserva la pieza vertical; permite intercambiar ancho y largo." },

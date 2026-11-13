@@ -1,5 +1,7 @@
 import type { SanityImageSource } from "@sanity/image-url";
 
+export type StoreImageSource = SanityImageSource | {assetId:string;url:string;width:number;height:number;alt?:string;hotspot?:{x:number;y:number;width:number;height:number}};
+
 export type Category = "vidrio" | "ceramica" | "espejos";
 
 export interface Product {
@@ -11,7 +13,7 @@ export interface Product {
   sub: string;
   medidas?: string | null;
   material?: string | null;
-  images: SanityImageSource[];
+  images: StoreImageSource[];
   imgLabel?: string;
 }
 
@@ -22,7 +24,7 @@ export interface HeroSlide {
   name: string;
   caption: string;
   category: Category;
-  image: SanityImageSource | null;
+  image: StoreImageSource | null;
   imgLabel?: string;
   tint?: string;
 }

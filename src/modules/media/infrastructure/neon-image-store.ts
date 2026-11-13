@@ -1,4 +1,4 @@
-import { S3Client, HeadObjectCommand, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, HeadObjectCommand, GetObjectCommand, PutObjectCommand, DeleteObjectCommand, PutBucketCorsCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { sha256, type AssetFile, type ImageObjectStore, type MediaArea, type ObjectInfo } from "../domain/image-asset";
 import { readMediaConfig, validateMediaKey, type MediaConfig } from "./media-config";
@@ -64,6 +64,28 @@ export class NeonImageStore implements ImageObjectStore {
   async originalDownloadUrl(key:string) {
     this.validateArea("original",key);
     return getSignedUrl(this.client,new GetObjectCommand({Bucket:this.config.originalBucket,Key:key}),{expiresIn:60});
+  }
+  private stagingKey(id:string) {
+    if(!/^[a-f0-9-]{36}$/.test(id))throw Error('Invalid upload');
+    return `uploads/${id}`;
+  }
+  async uploadUrl(id:string,bytes:number,contentType:string) {
+    if(!Number.isSafeInteger(bytes)||bytes<1||bytes>IMAGE_LIMITS.maxBytes||!['image/jpeg','image/png','image/webp'].includes(contentType))throw Error('Invalid upload');
+    return getSignedUrl(this.client,new PutObjectCommand({Bucket:this.config.originalBucket,Key:this.stagingKey(id),ContentLength:bytes,ContentType:contentType,CacheControl:ORIGINAL_CACHE_CONTROL}),{expiresIn:120,signableHeaders:new Set(['content-type','content-length'])});
+  }
+  async readUpload(id:string,maxBytes:number) {
+    const r=await this.client.send(new GetObjectCommand({Bucket:this.config.originalBucket,Key:this.stagingKey(id)}),{abortSignal:AbortSignal.timeout(30000)});
+    if(!r.Body||r.ContentLength!==maxBytes||maxBytes>IMAGE_LIMITS.maxBytes)throw Error('Invalid upload size');
+    const chunks:Buffer[]=[];let size=0;
+    for await(const chunk of r.Body as AsyncIterable<Uint8Array>){size+=chunk.length;if(size>maxBytes)throw Error('Invalid upload size');chunks.push(Buffer.from(chunk));}
+    return Buffer.concat(chunks);
+  }
+  async removeUpload(id:string) {
+    await this.client.send(new DeleteObjectCommand({Bucket:this.config.originalBucket,Key:this.stagingKey(id)}),{abortSignal:AbortSignal.timeout(5000)});
+  }
+  async configureUploads(origins:string[]) {
+    if(!origins.length||origins.some(o=>new URL(o).origin!==o||!/^https?:/.test(o)))throw Error('Invalid media origins');
+    await this.client.send(new PutBucketCorsCommand({Bucket:this.config.originalBucket,CORSConfiguration:{CORSRules:[{AllowedOrigins:origins,AllowedMethods:['PUT'],AllowedHeaders:['content-type','cache-control'],ExposeHeaders:['ETag'],MaxAgeSeconds:300}]}}),{abortSignal:AbortSignal.timeout(15000)});
   }
   close() { this.client.destroy(); }
 }

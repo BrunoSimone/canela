@@ -48,7 +48,7 @@ describe("PER-141: two storefront journeys", () => {
     rerender(<HomeDestinations products={[]} templates={null} />);
     expect(container.querySelector('[data-src][aria-label=""]')).toBeNull();
     const piece = screen.getByRole("img", { name: "Pieza de ajedrez de cerámica de Canela" });
-    expect(piece.getAttribute("data-src")).toContain("aca61f0c0b27615757104c53f3b53fcde12cc083-3456x4608.png");
+    expect(piece.getAttribute("data-src")).toContain("/images/chess-piece.webp");
     expect(piece.closest("a")).toBeNull();
     expect(screen.getByRole("link", { name: "Explorar el catálogo" })).toBeTruthy();
   });

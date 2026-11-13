@@ -1,3 +1,4 @@
+import { readBoundedText } from "@/lib/http/read-bounded-body";
 import { NextResponse } from "next/server";
 
 import { getDatabase } from "@/db/client";
@@ -12,14 +13,18 @@ export async function POST(request: Request): Promise<Response> {
   if (!isSameOriginAdminRequest(request)) {
     return new Response(null, { status: 403 });
   }
-  const form = await request.formData();
-  const token = form.get("token");
   const fallback = new URL("/admin/ingresar?error=link", origin);
-  if (!process.env.DATABASE_URL || typeof token !== "string") {
+  if (!process.env.DATABASE_URL || request.headers.get("content-type")?.split(";")[0].trim() !== "application/x-www-form-urlencoded") {
     return NextResponse.redirect(fallback, { status: 303 });
   }
 
   try {
+    const form = new URLSearchParams(await readBoundedText(request, 2048));
+    const tokens = form.getAll("token");
+    if (tokens.length !== 1 || !/^[A-Za-z0-9_-]{43}$/.test(tokens[0])) {
+      return NextResponse.redirect(fallback, { status: 303 });
+    }
+    const token = tokens[0];
     const result = await new AdminAuthRepository(getDatabase()).consumeLink(token);
     if (!result) return NextResponse.redirect(fallback, { status: 303 });
     const response = NextResponse.redirect(new URL("/admin", origin), { status: 303 });

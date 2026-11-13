@@ -1,6 +1,6 @@
 import type { Sql } from "postgres";
 import type { InventoryStore } from "@/modules/inventory/domain/inventory-store";
-import { inventoryStore } from "@/modules/inventory/infrastructure/sanity-documents";
+import { inventoryStore, transactionalInventory } from "@/modules/inventory/infrastructure/store";
 
 import {
   ClosedCheckoutAttemptError,
@@ -52,7 +52,7 @@ type CheckoutItemRow = {
 };
 
 export class PostgresCheckoutRepository implements CheckoutRepository {
-  constructor(private readonly sql: Sql, private readonly inventory: InventoryStore = inventoryStore()) {}
+  constructor(private readonly sql: Sql, private readonly inventory: InventoryStore = inventoryStore(undefined,sql)) {}
 
   async reserve(input: ReserveCheckoutInput): Promise<ReservedCheckout> {
     let reserved;
@@ -147,7 +147,7 @@ export class PostgresCheckoutRepository implements CheckoutRepository {
         throw new Error("A checkout with a provider order cannot be released");
       }
 
-      if (!await this.inventory.settle(orderId, "released")) throw Error("INVENTORY_RELEASE_CONFLICT");
+      if (!await transactionalInventory(this.inventory, transaction).settle(orderId, "released")) throw Error("INVENTORY_RELEASE_CONFLICT");
 
       await transaction`
         UPDATE stock_reservation

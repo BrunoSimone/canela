@@ -1,3 +1,4 @@
+import { readBoundedJson } from "@/lib/http/read-bounded-body";
 import { getDatabase } from "@/db/client";
 import { InvalidPreparationError, parseSavePreparationInput } from "@/modules/admin/domain/preparation";
 import { currentAdminSession, privateJson } from "@/modules/admin/infrastructure/admin-request";
@@ -24,9 +25,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     return privateJson({ code: "INVALID_PREPARATION" }, 422);
   }
   try {
-    const raw = await request.text();
-    if (raw.length > 16_384) throw new InvalidPreparationError();
-    const input = parseSavePreparationInput(JSON.parse(raw));
+    const input = parseSavePreparationInput(await readBoundedJson(request, 16_384));
     const saved = await new PostgresOrderPreparationRepository(getDatabase()).save(id, session.email, input);
     return saved ? privateJson(saved) : privateJson({ code: "ORDER_NOT_FOUND" }, 404);
   } catch (error) {

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { CartAvailabilitySync } from "@/modules/cart/presentation/cart-availability-sync";
-import { inventoryStore } from "@/modules/inventory/infrastructure/sanity-documents";
+import { inventoryStore } from "@/modules/inventory/infrastructure/store";
 import { readInventoryCatalog } from "@/modules/inventory/infrastructure/inventory-catalog";
 import { ArrowLeft, MessageCircle } from "lucide-react";
 

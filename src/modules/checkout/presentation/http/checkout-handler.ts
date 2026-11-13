@@ -1,3 +1,4 @@
+import { readBoundedJson } from "@/lib/http/read-bounded-body";
 import { InvalidDeliveryError } from "../../domain/delivery";
 import { shippingErrorResponse } from "../../../shipping/presentation/http/shipping-errors";
 import { CheckoutStartUncertainError } from "../../application/begin-checkout";
@@ -102,18 +103,8 @@ export async function handleCheckoutRequest(
 }
 
 async function readJsonBody(request: Request): Promise<unknown> {
-  const contentLength = Number(request.headers.get("Content-Length") ?? 0);
-  if (Number.isFinite(contentLength) && contentLength > MAX_BODY_BYTES) {
-    throw new CheckoutRequestValidationError();
-  }
-
-  const text = await request.text();
-  if (new TextEncoder().encode(text).byteLength > MAX_BODY_BYTES) {
-    throw new CheckoutRequestValidationError();
-  }
-
   try {
-    return JSON.parse(text) as unknown;
+    return await readBoundedJson(request, MAX_BODY_BYTES);
   } catch {
     throw new CheckoutRequestValidationError();
   }

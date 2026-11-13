@@ -11,6 +11,7 @@ export interface HeroSlideView {
   caption: string;
   href: string;
   imageUrl: string | null;
+  imagePosition?: string;
   artwork?: ReactNode;
   label?: string;
   tint?: string;
@@ -173,6 +174,7 @@ export function Hero({
                       <div className="absolute inset-0 flex items-center justify-center p-[16%] [&>svg]:h-auto [&>svg]:w-full [&>svg]:shadow-[5px_10px_18px_#4a352740]">{s.artwork}</div>
                     ) : s.imageUrl ? (
                       <Image
+                        style={{objectPosition:s.imagePosition}}
                         src={s.imageUrl}
                         alt={s.name}
                         fill

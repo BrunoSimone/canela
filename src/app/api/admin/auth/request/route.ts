@@ -1,3 +1,4 @@
+import { readBoundedJson } from "@/lib/http/read-bounded-body";
 import { after } from "next/server";
 
 import { getDatabase } from "@/db/client";
@@ -5,15 +6,20 @@ import { AdminAuthRepository } from "@/modules/admin/infrastructure/admin-auth";
 import { adminMailConfig } from "@/modules/admin/infrastructure/admin-config";
 import { privateJson } from "@/modules/admin/infrastructure/admin-request";
 import { sendAdminLoginEmail } from "@/modules/admin/infrastructure/resend-admin-mailer";
+import { isSameOriginAdminRequest } from "@/modules/admin/infrastructure/admin-origin";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request): Promise<Response> {
+  if (!isSameOriginAdminRequest(request)) return privateJson({ code: "INVALID_ORIGIN" }, 403);
+  if (request.headers.get("content-type")?.split(";")[0].trim() !== "application/json") {
+    return privateJson({ code: "INVALID_EMAIL" }, 400);
+  }
   const config = adminMailConfig();
   if (!config || !process.env.DATABASE_URL) return privateJson({ code: "ADMIN_ACCESS_UNAVAILABLE" }, 503);
   let email: string;
   try {
-    const body: unknown = await request.json();
+    const body: unknown = await readBoundedJson(request, 2048);
     if (!body || typeof body !== "object" || !("email" in body) || typeof body.email !== "string") {
       return privateJson({ code: "INVALID_EMAIL" }, 400);
     }

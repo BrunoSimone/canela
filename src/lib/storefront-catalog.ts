@@ -1,6 +1,6 @@
 import { getProducts } from "@/lib/api";
 import { buildStorefrontCatalog } from "@/modules/inventory/domain/catalog-visibility";
-import { inventoryStore } from "@/modules/inventory/infrastructure/sanity-documents";
+import { inventoryStore } from "@/modules/inventory/infrastructure/store";
 
 /** Home previews and the store use the same stock visibility rules. Server only. */
 export async function loadStorefrontProducts() {

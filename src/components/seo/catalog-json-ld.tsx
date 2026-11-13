@@ -1,6 +1,7 @@
-import { hasAsset, urlFor } from "@/sanity/client";
+import { hasAsset, urlFor } from "@/lib/images";
 import { siteConfig } from "@/lib/config";
 import type { StorefrontProduct } from "@/lib/types";
+import { JsonLdScript } from "./json-ld";
 
 export function CatalogJsonLd({ products }: { products: StorefrontProduct[] }) {
   const items = products
@@ -42,10 +43,5 @@ export function CatalogJsonLd({ products }: { products: StorefrontProduct[] }) {
     itemListElement: items,
   };
 
-  return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
-    />
-  );
+  return <JsonLdScript data={data} />;
 }

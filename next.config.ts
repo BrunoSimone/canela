@@ -22,9 +22,9 @@ const nextConfig: NextConfig = {
   },
   images: {
     // Next 16 requires declaring the allowed image qualities up front.
-    qualities: [75, 90],
+    qualities: [60, 75, 90],
     // Sanity CDN serves the product photos uploaded in the Studio.
-    remotePatterns: [{ protocol: "https", hostname: "cdn.sanity.io" }],
+    remotePatterns: [{ protocol: "https", hostname: "cdn.sanity.io" },{protocol:"https",hostname:"br-small-dew-b7f190rq.storage.c-13.us-east-1.aws.neon.tech",pathname:"/web/images/**",search:""}],
   },
 };
 

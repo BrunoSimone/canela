@@ -1,5 +1,5 @@
 import type { StorefrontProduct } from "@/lib/types";
-import { hasAsset, urlFor } from "@/sanity/client";
+import { hasAsset, urlFor } from "@/lib/images";
 
 export type CatalogPreview = { id: string; src: string };
 

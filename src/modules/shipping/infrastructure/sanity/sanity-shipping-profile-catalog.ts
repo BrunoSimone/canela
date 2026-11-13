@@ -1,4 +1,4 @@
-import { createClient } from "next-sanity";
+import { createClient } from "@sanity/client";
 
 import { apiVersion, dataset, projectId } from "../../../../sanity/env";
 import type { ShippingProfile } from "../../domain/parcel-plan";
@@ -67,11 +67,11 @@ function parseProduct(value: unknown): ShippingCatalogProduct {
   return {
     id: value.id,
     sellable: true,
-    profile: parseProfile(value.id, value.shippingProfile, typeof value._rev === "string" ? value._rev : undefined),
+    profile: parseShippingProfile(value.id, value.shippingProfile, typeof value._rev === "string" ? value._rev : undefined),
   };
 }
 
-function parseProfile(productId: string, value: unknown, revision?: string): ShippingProfile | null {
+export function parseShippingProfile(productId: string, value: unknown, revision?: string): ShippingProfile | null {
   if (value === null || value === undefined) return null;
   if (
     !isRecord(value) ||

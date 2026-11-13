@@ -6,10 +6,20 @@ const formats = { jpeg: { mime: "image/jpeg", extension: "jpg" }, png: { mime: "
 
 /** Admin-side ingestion. The buyer's creator still processes its photos locally. */
 export async function prepareImage(bytes: Buffer, declaredType?: string): Promise<PreparedImage> {
+  return prepare(bytes, declaredType, IMAGE_LIMITS.maxPixels);
+}
+
+/** Offline migration only: historical originals include a 131 MP photograph.
+ * The public/admin upload path retains its 50 MP limit. */
+export async function prepareImportedImage(bytes: Buffer, declaredType?: string): Promise<PreparedImage> {
+  return prepare(bytes, declaredType, 150_000_000);
+}
+
+async function prepare(bytes: Buffer, declaredType: string | undefined, maxPixels: number): Promise<PreparedImage> {
   if (!bytes.length) throw new Error("El archivo está vacío.");
   if (bytes.length > IMAGE_LIMITS.maxBytes) throw new Error("La imagen puede pesar hasta 32 MB.");
   try {
-    const input = sharp(bytes, { limitInputPixels: IMAGE_LIMITS.maxPixels, failOn: "warning" });
+    const input = sharp(bytes, { limitInputPixels: maxPixels, failOn: "warning" });
     const metadata = await input.metadata();
     if (!metadata.format || !(metadata.format in formats) || (metadata.pages ?? 1) !== 1) {
       throw new Error("Elegí una imagen estática JPG, PNG o WebP.");
@@ -18,8 +28,8 @@ export async function prepareImage(bytes: Buffer, declaredType?: string): Promis
     if (declaredType && declaredType !== "application/octet-stream" && declaredType !== format.mime) {
       throw new Error("El formato del archivo no coincide con la imagen.");
     }
-    if (!metadata.width || !metadata.height || metadata.width * metadata.height > IMAGE_LIMITS.maxPixels) {
-      throw new Error("La imagen supera el límite de 50 megapíxeles.");
+    if (!metadata.width || !metadata.height || metadata.width * metadata.height > maxPixels) {
+      throw new Error(`La imagen supera el límite de ${maxPixels / 1_000_000} megapíxeles.`);
     }
     // Keep the original separately. Public derivatives have no camera/GPS EXIF.
     const {data, info} = await input.rotate()
@@ -36,6 +46,6 @@ export async function prepareImage(bytes: Buffer, declaredType?: string): Promis
     };
   } catch (error) {
     if (error instanceof Error && /^(Elegí|El formato|La imagen)/.test(error.message)) throw error;
-    throw new Error("No pudimos leer la imagen. Revisá que sea un JPG, PNG o WebP válido de hasta 50 megapíxeles.");
+    throw new Error(`No pudimos leer la imagen. Revisá que sea un JPG, PNG o WebP válido de hasta ${maxPixels / 1_000_000} megapíxeles.`);
   }
 }

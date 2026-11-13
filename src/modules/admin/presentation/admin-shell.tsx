@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { databaseCatalog } from "@/modules/catalog/infrastructure/source";
 import { CircleHelp, LogOut } from "lucide-react";
 
 import { CanelaBadge } from "@/components/brand/canela-badge";
@@ -23,17 +24,17 @@ export function AdminShell({
             <CanelaBadge simple size={39} />
             <span>Canela</span>
             <span className={styles.brandDivider} />
-            <span className={styles.brandSection}>Pedidos</span>
+            <span className={styles.brandSection}>Panel</span>
           </Link>
+            {email && <nav aria-label="Administración" className={styles.adminNav}><Link href="/admin">Pedidos</Link><Link href="/admin/taller">Taller de cuadros</Link>{databaseCatalog()?<Link href="/admin/catalogo">Catálogo y stock</Link>:<a href="https://canela-artesanal.sanity.studio" target="_blank" rel="noopener noreferrer">Catálogo y stock</a>}</nav>}
           <div className={styles.headerActions}>
-            {email && <nav aria-label="Administración" className={styles.adminNav}><Link href="/admin">Pedidos</Link><Link href="/admin/taller">Taller de cuadros</Link><a href="https://canela-artesanal.sanity.studio" target="_blank" rel="noopener noreferrer">Catálogo y stock</a></nav>}
             {demo && <span className={styles.demoPill}>Vista de demostración</span>}
             <details className={styles.help}>
               <summary aria-label="Ayuda"><CircleHelp size={17} aria-hidden="true" /> Ayuda</summary>
               <div className={styles.helpPanel}>
-                <strong>Cómo usar la bandeja</strong>
-                <p>Buscá por ID, nombre, email o producto. Seleccioná un pedido para ver el resumen y abrí su ficha para registrar los bultos de una venta pagada.</p>
-                <p>Los campos pendientes aparecen como “Aún no disponible”. Los pedidos de demostración no son ventas reales.</p>
+                <strong>Cómo usar el panel</strong>
+                <p>En Catálogo y stock editás productos, fotos, cantidades y cajas. En Taller de cuadros configurás los personalizados.</p>
+                <p>En Pedidos buscás ventas y preparás sus envíos. Si aparece “Necesita revisión”, abrí la ficha y atendé el aviso con prioridad.</p>
               </div>
             </details>
             {email && <span className={styles.signedInAs}>{email}</span>}

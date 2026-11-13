@@ -20,6 +20,7 @@ export interface CardProduct {
   medidas?: string | null;
   material?: string | null;
   imageUrls: string[];
+  imagePositions?: (string | undefined)[];
   imgLabel?: string;
   placeholderPattern: string;
 }
@@ -64,6 +65,7 @@ export function ProductCard({
               className="group/img absolute inset-0 cursor-zoom-in"
             >
               <Image
+                style={{objectPosition:product.imagePositions?.[0]}}
                 src={cover}
                 alt={product.name}
                 fill

@@ -1,4 +1,4 @@
-import { hasAsset, urlFor } from "@/sanity/client";
+import { hasAsset, urlFor, imagePosition } from "@/lib/images";
 import type { CategoryMeta } from "@/content/catalog";
 import type { StorefrontProduct } from "@/lib/types";
 import { CatalogGrid } from "@/components/catalog/catalog-grid";
@@ -32,6 +32,7 @@ export function CategorySection({
     imageUrls: (p.images ?? [])
       .filter(hasAsset)
       .map((img) => urlFor(img).width(1400).url()),
+    imagePositions: (p.images ?? []).filter(hasAsset).map(imagePosition),
     imgLabel: p.imgLabel,
     placeholderPattern: pattern,
   }));

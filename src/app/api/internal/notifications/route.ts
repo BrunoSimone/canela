@@ -2,7 +2,7 @@ import { createDatabaseClient } from "@/db/client";
 import { processOrderNotifications } from "@/modules/notifications/infrastructure/notification-service";
 import { handleNotificationWorker } from "@/modules/notifications/presentation/http/worker-handler";
 import { recoverReservationIntents } from "@/modules/inventory/infrastructure/recover-reservation-intents";
-import { inventoryStore } from "@/modules/inventory/infrastructure/sanity-documents";
+import { inventoryStore } from "@/modules/inventory/infrastructure/store";
 import { runWithWorkerDeadline } from "@/modules/notifications/application/worker-deadline";
 import { readManualRecoveryStatus } from "@/modules/notifications/infrastructure/manual-recovery-status";
 export const runtime = "nodejs";

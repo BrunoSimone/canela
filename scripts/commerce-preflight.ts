@@ -1,7 +1,7 @@
 /** Read-only checks. No migrations, network mutations, emails or carrier orders. */
 import {frameCommerceMode} from "../src/modules/customization/infrastructure/commerce-mode";
 import {PostgresWorkshopRepository} from "../src/modules/customization/infrastructure/postgres/workshop-repository";
-import {inventoryStore} from "../src/modules/inventory/infrastructure/sanity-documents";
+import {inventoryStore} from "../src/modules/inventory/infrastructure/store";
 import {createHash} from "node:crypto";
 import {readdir,readFile} from "node:fs/promises";
 import {createDatabaseClient} from "../src/db/client";
@@ -10,8 +10,9 @@ import {readMercadoPagoWebhookConfig} from "../src/modules/payments/infrastructu
 import {readOrderMailConfig} from "../src/modules/notifications/infrastructure/mail-config";
 import {fulfillmentEnabled} from "../src/modules/shipping/infrastructure/server/fulfillment-service";
 import {readInventoryCatalog} from "../src/modules/inventory/infrastructure/inventory-catalog";
-import {SanityShippingProfileCatalog} from "../src/modules/shipping/infrastructure/sanity/sanity-shipping-profile-catalog";
-import {SanityShippingBoxes} from "../src/modules/shipping/infrastructure/sanity/sanity-shipping-boxes";
+import {shippingProfileCatalog,shippingBoxes} from "../src/modules/catalog/infrastructure/catalog-source";
+import {databaseCatalog} from "../src/modules/catalog/infrastructure/source";
+import {readMediaConfig} from "../src/modules/media/infrastructure/media-config";
 import {buildSharedBoxPlan} from "../src/modules/shipping/domain/shared-box-plan";
 import {ZIPNOVA_INPUT_CONSTRAINTS} from "../src/modules/shipping/infrastructure/server/shipping-config";
 import {readManualRecoveryStatus} from "../src/modules/notifications/infrastructure/manual-recovery-status";
@@ -22,6 +23,7 @@ async function main(){
  check("payment_callbacks",()=>!!readMercadoPagoWebhookConfig());
  check("shipping_creation_gate",()=>fulfillmentEnabled());
  check("order_email_configuration",()=>!!readOrderMailConfig());
+ if(databaseCatalog())check("catalog_media_configuration",()=>!!readMediaConfig());
  check("worker_secret",()=>!!process.env.NOTIFICATION_WORKER_SECRET&&process.env.NOTIFICATION_WORKER_SECRET.length>=32);
  if(!process.env.DATABASE_URL)checks.push({check:"database_migrations",status:"blocked"});
  else{
@@ -40,15 +42,15 @@ async function main(){
    }
    if(process.env.CUADROS_CHECKOUT_MODE&&process.env.CUADROS_CHECKOUT_MODE!=="disabled"){
     check("frame_commerce_configuration",()=>frameCommerceMode()!==null);
-    check("frame_gallery_token",()=>!!process.env.SANITY_FRAME_WRITE_TOKEN);
+    if(!databaseCatalog())check("frame_gallery_token",()=>!!process.env.SANITY_FRAME_WRITE_TOKEN);
     try{await new PostgresWorkshopRepository(sql,process.env.PAYMENT_ENVIRONMENT==="production"?"production":"test").published();checks.push({check:"frame_workshop_confirmed",status:"ok"});}
     catch{checks.push({check:"frame_workshop_confirmed",status:"blocked"});}
    }
    const products=await readInventoryCatalog();
-   const inventory=(await inventoryStore().list(products)).map(i=>({product_id:i.id,stock_on_hand:i.stockOnHand,stock_reserved:i.reserved,enabled:i.enabled}));
-   checks.push({check:"sanity_authoritative_stock",status:"ok"});
-   const profiles=await new SanityShippingProfileCatalog().findByIds(products.map(p=>p.id));
-   const boxes=await new SanityShippingBoxes().list();
+   const inventory=(await inventoryStore(undefined,sql).list(products)).map(i=>({product_id:i.id,stock_on_hand:i.stockOnHand,stock_reserved:i.reserved,enabled:i.enabled}));
+   checks.push({check:databaseCatalog()?"postgres_authoritative_stock":"sanity_authoritative_stock",status:"ok"});
+   const profiles=await shippingProfileCatalog().findByIds(products.map(p=>p.id));
+   const boxes=await shippingBoxes().list();
    checks.push({check:"active_shipping_boxes",status:boxes.length>0?"ok":"blocked"});
    const offered=inventory.filter(i=>i.enabled&&i.stock_on_hand>i.stock_reserved);
    checks.push({check:"sellable_inventory_loaded",status:offered.length>0?"ok":"blocked"});

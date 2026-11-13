@@ -40,7 +40,7 @@ export function ComoComprar({ variant = "store", purchaseDemoEnabled = false, pr
   const frames = variant === "frames";
   const steps: Step[] = frames ? [
     { n: 1, icon: <ImagePlus size={22} />, iconBg: "#e5e7d4", iconColor: "#606839", title: "Elegí tu imagen", text: "Subí una foto que te guste o empezá con un diseño del catálogo de cuadros." },
-    { n: 2, icon: <Palette size={22} />, iconBg: "#e5e7d4", iconColor: "#606839", title: "Dale tu toque", text: "Probá tamaños, ajustá el encuadre y cambiá las venecitas que quieras." },
+    { n: 2, icon: <Palette size={22} />, iconBg: "#e5e7d4", iconColor: "#606839", title: "Elegí cómo queda", text: "Compará los dos formatos de venecitas, probá tamaños y ajustá el encuadre." },
     { n: 3, icon: <SquareCheck size={22} />, iconBg: "#e5e7d4", iconColor: "#606839", title: productionPurchaseEnabled ? "Encargá tu cuadro" : purchaseDemoEnabled ? "Probá la compra" : "Revisá tu cuadro", text: productionPurchaseEnabled ? "Confirmá tu diseño, calculá el envío y pagá con Mercado Pago. Con el pago confirmado empezamos a fabricarlo." : purchaseDemoEnabled ? "Revisá el diseño y el precio. Después podés probar el envío y el pago con datos de prueba." : "Mirá el diseño, el tamaño y el precio orientativo en el resumen. Podés volver a editarlo antes de decidir." },
   ] : STORE_STEPS;
 

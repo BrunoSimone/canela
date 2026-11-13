@@ -122,7 +122,7 @@ export class PostgresAdminOrderReader {
     if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) return null;
     const [row] = await this.sql<OrderRow[]>`
       SELECT
-        CASE WHEN f.order_id IS NULL THEN NULL ELSE json_build_object('state',f.production_state,'version',f.version,'design',f.snapshot->'design','productionDays',f.snapshot->'productionDays','galleryConsent',f.snapshot->'acceptance'->'gallery','galleryDraftCreated',f.gallery_draft_created) END AS frame,
+        CASE WHEN f.order_id IS NULL THEN NULL ELSE json_build_object('state',f.production_state,'version',f.version,'design',f.snapshot->'design','productionDesign',CASE WHEN f.production_cells IS NULL THEN NULL ELSE (f.snapshot->'design') || jsonb_build_object('cells',f.production_cells) END,'productionDays',f.snapshot->'productionDays','galleryConsent',f.snapshot->'acceptance'->'gallery','galleryDraftCreated',f.gallery_draft_created) END AS frame,
         o.id, o.environment, o.status, o.currency, o.subtotal_cents, o.shipping_cents, o.shipping_quote_snapshot,
         o.total_cents, o.buyer_email, o.created_at, o.updated_at,
         d.buyer_name, d.recipient_name, d.recipient_phone, d.street_name,

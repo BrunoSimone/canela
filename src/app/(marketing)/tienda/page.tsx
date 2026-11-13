@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { hasAsset, urlFor } from "@/sanity/client";
+import { hasAsset, urlFor, imagePosition } from "@/lib/images";
 import { Hero, type HeroSlideView } from "@/components/home/hero";
 import { CatalogJsonLd } from "@/components/seo/catalog-json-ld";
 import { CategorySection } from "@/components/catalog/category-section";
@@ -32,6 +32,7 @@ export default async function StorePage() {
     imageUrl: hasAsset(s.image)
       ? urlFor(s.image).width(760).height(760).fit("crop").url()
       : null,
+    imagePosition: imagePosition(s.image),
     label: s.imgLabel,
     tint: s.tint,
   }));

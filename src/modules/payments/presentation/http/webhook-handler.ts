@@ -1,3 +1,4 @@
+import { readBoundedJson } from "@/lib/http/read-bounded-body";
 import type {
   ConfirmPaymentNotificationResult,
   PaymentNotification,
@@ -62,15 +63,7 @@ export async function handleMercadoPagoWebhook(
 }
 
 async function readBody(request: Request): Promise<unknown> {
-  const contentLength = Number(request.headers.get("content-length") ?? 0);
-  if (Number.isFinite(contentLength) && contentLength > MAX_BODY_BYTES) {
-    throw new Error("Webhook body exceeds the limit");
-  }
-  const text = await request.text();
-  if (new TextEncoder().encode(text).byteLength > MAX_BODY_BYTES) {
-    throw new Error("Webhook body exceeds the limit");
-  }
-  return JSON.parse(text) as unknown;
+  return readBoundedJson(request, MAX_BODY_BYTES);
 }
 
 function isOrderNotification(

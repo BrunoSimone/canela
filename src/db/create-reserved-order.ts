@@ -3,7 +3,7 @@ import { createHash, randomUUID } from "node:crypto";
 import type { Sql } from "postgres";
 import type { InventoryStore } from "@/modules/inventory/domain/inventory-store";
 import { InventoryShortage, ReservationClosed } from "@/modules/inventory/domain/inventory-store";
-import { inventoryStore } from "@/modules/inventory/infrastructure/sanity-documents";
+import { inventoryStore } from "@/modules/inventory/infrastructure/store";
 
 import { checkoutExpiresAt } from "../modules/checkout/domain/checkout-expiration";
 import { InvalidDeliveryError, parseDeliverySnapshot, type DeliverySnapshot } from "../modules/checkout/domain/delivery";
@@ -180,7 +180,7 @@ export function validateReservedOrderInput(
 export async function createReservedOrder(
   sql: Sql,
   input: CreateReservedOrderInput,
-  inventory: InventoryStore = inventoryStore(),
+  inventory: InventoryStore = inventoryStore(undefined, sql),
 ): Promise<ReservedOrder> {
   const validated = validateReservedOrderInput(input);
 
@@ -305,11 +305,12 @@ export async function createReservedOrder(
       `;
     }
 
-    return {
-      orderId: input.orderId,
-      expiresAt: validated.expiresAt,
-      reused: false,
-    };
+    if (inventory.withTransaction) {
+      try { await inventory.withTransaction(transaction).reserve(input.orderId, validated.payloadHash, validated.sortedItems); }
+      catch (error) { if (error instanceof InventoryShortage) throw new InventoryUnavailableError(error.productIds); throw error; }
+      await transaction`UPDATE orders SET inventory_state='ready' WHERE id=${input.orderId}`;
+    }
+    return { orderId: input.orderId, expiresAt: validated.expiresAt, reused: false };
   });
   // The durable intent survives remote timeouts and SQL rollback after reservation.
   try {

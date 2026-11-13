@@ -1,6 +1,6 @@
 import type { Sql, TransactionSql } from "postgres";
 import type { InventoryStore } from "@/modules/inventory/domain/inventory-store";
-import { inventoryStore } from "@/modules/inventory/infrastructure/sanity-documents";
+import { inventoryStore, transactionalInventory } from "@/modules/inventory/infrastructure/store";
 import { enqueueOrderNotice } from "@/modules/notifications/infrastructure/enqueue";
 
 import type {
@@ -127,7 +127,7 @@ export class PostgresPaymentConfirmationRepository
         }
         const [frame] = await transaction`SELECT reservation_state FROM custom_frame_order WHERE order_id=${input.orderId} FOR UPDATE`;
         if (frame) return applyFramePayment(transaction, input, frame.reservation_state);
-        return applyApproved(transaction, input, this.inventory ?? inventoryStore());
+        return applyApproved(transaction, input, transactionalInventory(this.inventory ?? inventoryStore(undefined,this.sql), transaction));
       }
 
       if (
@@ -140,7 +140,7 @@ export class PostgresPaymentConfirmationRepository
         }
         const [frame] = await transaction`SELECT reservation_state FROM custom_frame_order WHERE order_id=${input.orderId} FOR UPDATE`;
         if (frame) return applyFramePayment(transaction, input, frame.reservation_state);
-        return applyFailure(transaction, input, this.inventory ?? inventoryStore());
+        return applyFailure(transaction, input, transactionalInventory(this.inventory ?? inventoryStore(undefined,this.sql), transaction));
       }
 
       if (input.state === "review_required") {

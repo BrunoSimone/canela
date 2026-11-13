@@ -1,7 +1,8 @@
 import type { InventoryProduct, Stock, StockEdit } from "./stock-edit";
 
-export type ReservationItem = { productId: string; quantity: number };
+export type ReservationItem = { productId: string; quantity: number; unitPriceCents?: number };
 export interface InventoryStore {
+  withTransaction?(tx: import('postgres').TransactionSql): InventoryStore;
   reserve(orderId: string, fingerprint: string, items: ReservationItem[]): Promise<void>;
   settle(orderId: string, state: "consumed" | "released"): Promise<boolean>;
   list(products: InventoryProduct[]): Promise<(InventoryProduct & Stock)[]>;

@@ -1,10 +1,10 @@
 import { siteConfig } from "@/lib/config";
 
-function JsonLdScript({ data }: { data: object }) {
+export function JsonLdScript({ data }: { data: object }) {
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(data).replace(/</g, "\\u003c") }}
     />
   );
 }

@@ -95,7 +95,7 @@
 .orderRowWrap { position: relative; padding-bottom: 35px; border-bottom: 1px solid var(--admin-line); }
 .orderRowWrap .orderRow { border-bottom: 0; }
 .rowDetailLink { position: absolute; bottom: 0; right: 12px; display: inline-flex; align-items: center; justify-content: center; min-height: 44px; gap: 4px; padding: 0 8px; font-size: 13px; font-weight: 750; text-decoration: underline; text-underline-offset: 3px; }
-.adminNav { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.adminNav { margin-left: auto; display: flex; flex-wrap: wrap; gap: 4px 16px; }
 .adminNav a { display: inline-flex; align-items: center; min-height: 44px; font-size: 13px; font-weight: 750; }
 .searchWrap:focus-within, .sortWrap:focus-within { outline: 3px solid #4d7151; outline-offset: 2px; }
 .selectedRow, .selectedRow:hover { background: #f5ead3; box-shadow: inset 4px 0 0 var(--admin-ochre); }
@@ -227,7 +227,9 @@
 }
 
 @media (max-width: 760px) {
-  .headerInner { flex-wrap: wrap; gap: 4px 12px; }
+  .headerInner { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; }
+  .adminNav { grid-column: 1 / -1; grid-row: 2; margin-left: 0; justify-content: space-between; gap: 4px 10px; }
+  .headerActions { grid-column: 2; grid-row: 1; justify-self: end; }
   .headerActions { flex-wrap: wrap; }
   .signedInAs, .logout span, .readOnly, .brandDivider, .brandSection { display: none; }
   .headerInner { min-height: 63px; }
@@ -239,7 +241,7 @@
 }
 
 @media (max-width: 480px) {
-  .headerActions { width: 100%; justify-content: space-between; }
+  .headerActions { width: auto; justify-content: flex-end; }
   .pagination { flex-wrap: wrap; gap: 8px; }
   .help { position: static; }
   .helpPanel { left: 14px; right: 14px; top: 100%; width: auto; max-width: calc(100vw - 28px); }

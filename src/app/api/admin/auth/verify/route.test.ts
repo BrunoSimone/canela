@@ -56,4 +56,15 @@ describe("admin access confirmation", () => {
     expect(response.headers.get("Location")).toBe("http://localhost:3000/admin/ingresar?error=link");
     expect(response.headers.get("Set-Cookie")).toBeNull();
   });
+
+  it.each([
+    new URLSearchParams({ token: "a".repeat(43), padding: "x".repeat(2048) }),
+    new URLSearchParams([["token", "a".repeat(43)], ["token", "b".repeat(43)]]),
+  ])("rejects oversized or ambiguous form data before consuming a link", async body => {
+    const req = new Request("http://localhost:3000/api/admin/auth/verify", {
+      method: "POST", headers: { Origin: "null", "Sec-Fetch-Site": "same-origin" }, body,
+    });
+    expect((await POST(req)).headers.get("Location")).toBe("http://localhost:3000/admin/ingresar?error=link");
+    expect(consumeLink).not.toHaveBeenCalled();
+  });
 });

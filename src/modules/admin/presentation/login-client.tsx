@@ -34,7 +34,7 @@ export function LoginClient() {
   return (
     <form className={styles.loginCard} onSubmit={submit} aria-busy={pending}>
       <span className={styles.loginIcon}><Mail size={27} /></span>
-      <h1>Ingresar a pedidos</h1>
+      <h1>Ingresar al panel</h1>
       <p>Te enviaremos un enlace de acceso a tu correo autorizado.</p>
       <label htmlFor="admin-email">Email</label>
       <input id="admin-email" type="email" required autoComplete="email" autoCapitalize="none" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="tu@email.com" />

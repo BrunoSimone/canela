@@ -1,3 +1,4 @@
+import { readBoundedText } from "@/lib/http/read-bounded-body";
 import { isSameOriginAdminRequest } from "@/modules/admin/infrastructure/admin-origin";
 import { FulfillmentError } from "@/modules/shipping/domain/fulfillment";
 import type { DispatchSummary } from "@/modules/shipping/domain/fulfillment";
@@ -12,9 +13,7 @@ export function operationsHandlers(deps:Deps){
   if(!isSameOriginAdminRequest(request)||new URL(request.url).searchParams.get("demo")==="1")return json({code:"INVALID_ORIGIN"},403);
   if(!request.headers.get("Content-Type")?.startsWith("application/json"))return json({code:"INVALID_OPERATION"},422);
   try{
-    const chunks:Uint8Array[]=[];let size=0;const reader=request.body?.getReader();if(!reader)throw new SyntaxError();
-    for(;;){const {done,value}=await reader.read();if(done)break;size+=value.length;if(size>2048){await reader.cancel();throw new SyntaxError();}chunks.push(value);}
-    const body=JSON.parse(Buffer.concat(chunks).toString("utf8"));
+    const body=JSON.parse(await readBoundedText(request,2048));
     if(!body||typeof body!=="object"||Array.isArray(body))throw new SyntaxError();
     if(action==="dispatch"){
       if(body.confirmHandedOver!==true||!Number.isSafeInteger(body.expectedRemoteId)||body.expectedRemoteId<1)throw new SyntaxError();

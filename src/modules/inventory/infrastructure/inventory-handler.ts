@@ -1,3 +1,4 @@
+import { readBoundedText } from "@/lib/http/read-bounded-body";
 import { parseStockEdit, StockEditError, type InventoryProduct } from "../domain/stock-edit";
 import { isSameOriginAdminRequest } from "@/modules/admin/infrastructure/admin-origin";
 import type { InventoryStore } from "../domain/inventory-store";
@@ -20,10 +21,7 @@ export function inventoryHandlers(deps: Dependencies) {
       if (new URL(request.url).searchParams.get("demo") === "1") return json({ code: "DEMO_READONLY" }, 403);
       try {
         if (!request.headers.get("Content-Type")?.startsWith("application/json")) throw new StockEditError("INVALID_STOCK_EDIT", 422);
-        const reader = request.body?.getReader(); if (!reader) throw new SyntaxError();
-        const chunks: Uint8Array[] = []; let size = 0;
-        for (;;) { const { done, value } = await reader.read(); if (done) break; size += value.length; if (size > 4096) { await reader.cancel(); throw new SyntaxError(); } chunks.push(value); }
-        const body = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+        const body = JSON.parse(await readBoundedText(request,4096));
         const input = parseStockEdit(body);
         const product = (await deps.catalog()).find(p => p.id === body.productId);
         if (!product) return json({ code: "PRODUCT_NOT_FOUND" }, 404);
