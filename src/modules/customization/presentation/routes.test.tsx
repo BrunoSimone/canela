@@ -30,8 +30,8 @@ describe("PER-130: route gates and server data", () => {
     await expect(GalleryPage()).rejects.toThrow("NOT_FOUND");
     await expect(CreatorPage({ searchParams: Promise.resolve({}) })).rejects.toThrow("NOT_FOUND");
   });
-  it.each(["/cuadros", "/crear-cuadro?diseno=palmera"])("respects maintenance for %s", path => {
+  it.each(["/cuadros", "/crear-cuadro?diseno=palmera"])("respects maintenance for %s", async path => {
     vi.stubEnv("SITE_MAINTENANCE_MODE", "1");
-    expect(proxy(new NextRequest(`https://www.canela-store.com${path}`)).status).toBe(503);
+    expect((await proxy(new NextRequest(`https://www.canela-store.com${path}`))).status).toBe(503);
   });
 });

@@ -54,6 +54,8 @@ export function checkoutErrorMessage(code: string | null): string {
       return "Hay muchas consultas de envío. Esperá un minuto y volvé a intentarlo.";
     case "INVALID_SHIPPING_REQUEST":
       return "Revisá la localidad, provincia y código postal para calcular el envío.";
+    case "SITE_MAINTENANCE":
+      return "La tienda está en mantenimiento: por ahora no se pueden realizar pagos.";
     case "SHIPPING_DISABLED":
       return "La cotización de envíos todavía no está disponible.";
     case "CHECKOUT_ATTEMPT_CLOSED":
