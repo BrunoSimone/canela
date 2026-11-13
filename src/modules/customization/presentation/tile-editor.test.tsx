@@ -53,7 +53,7 @@ describe("PER-133: editor interaction", () => {
     await userEvent.click(screen.getByRole("button", { name: "Deshacer retoque" })); expect(cells()).toEqual(originalCells);
     await userEvent.click(screen.getByRole("button", { name: "Rehacer retoque" })); expect(cells()[0]).toBe(target.hex);
     await userEvent.click(screen.getByRole("button", { name: "Restaurar color de esta venecita" })); expect(cells()).toEqual(originalCells);
-  });
+  }, 20_000); // 8.100 SVG pieces in jsdom; CI runners are slower than local machines.
   it("PER-134: all 36 Classic materials are accessible and the last color can be painted and undone", async () => {
     const config = await demoDesignCatalog.configuration();
     const initial = renderMosaic(raster(), config, 15);
