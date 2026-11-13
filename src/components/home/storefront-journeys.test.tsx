@@ -29,6 +29,8 @@ beforeEach(() => {
   vi.stubEnv("NODE_ENV", "development");
   vi.stubEnv("VERCEL_ENV", "");
   vi.stubEnv("CUADROS_PREVIEW_ENABLED", "1");
+  // These journeys describe the open store; maintenance previews are covered by the proxy and notice tests.
+  vi.stubEnv("SITE_MAINTENANCE_MODE", "0");
   vi.mocked(getProducts).mockResolvedValue(products);
   stockList.mockResolvedValue([
     { id: "cuenco", enabled: true, stockOnHand: 3, reserved: 1 },
