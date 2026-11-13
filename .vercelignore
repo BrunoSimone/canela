@@ -1,0 +1,15 @@
+# Never upload local secrets, backups, research outputs or client deliverables.
+.env
+.env.*
+!.env.example
+/output
+/tmp
+/dist
+/.sanity
+/.claude
+/apiPaqAr-v2.pdf
+/GUIA_APRENDIZAJE_DURANTE_SPEC_DRIVEN_DEVELOPMENT.md
+/GUIA_SPEC_DRIVEN_DEVELOPMENT_PARA_IA.md
+/docs/learning-*.md
+/docs/learning/
+*.tsbuildinfo
