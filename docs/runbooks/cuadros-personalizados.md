@@ -1,8 +1,20 @@
 # Cuadros personalizados: desarrollo y operación
 
-Estado 2026-10-28, rama `codex/creador-cuadros-personalizados`, PER-148.
+Estado 2026-10-30, rama `codex/creador-cuadros-personalizados`, PER-148/PER-155.
 Soporte productivo con configuración privada, validada y confirmada. La tienda
 permanece en mantenimiento. No usar la cuenta Zipnova operativa para ensayos.
+
+Las [definiciones recibidas de Mariela el 28/10](../discovery/002-cuadros-personalizados-preguntas-cliente.md#definiciones-con-mariela--2026-10-28)
+confirmaron marco negro incluido y disponibilidad de colores. La actualización
+[PER-155](../specs/155-venecitas-clasicas-11mm.md) usa venecitas de 11 mm, junta
+de 1 mm, marco negro de 10 mm por lado, cuadrículas enteras de 15 a 90 y 36
+colores de la línea Clásica, excluidos M.24 y C.50. Los pedidos anteriores
+conservan sus propios snapshots. Todavía se deben confirmar medidas finales,
+costos y embalajes del nuevo formato antes de publicar la configuración del taller.
+El plazo anterior de una semana y el cupo de cinco quedan como datos históricos; el borrador productivo tiene ambos campos vacíos y sin confirmar: se está definiendo
+una comunicación desde 15 días y cómo gestionar la espera. El código actual de
+cupos/plazo no implementa todavía esa posible cola de pedidos; no publicar una
+configuración suponiendo que aumentar el cupo resuelve la planificación.
 
 ## Qué recibe cada persona
 
@@ -10,7 +22,7 @@ permanece en mantenimiento. No usar la cuenta Zipnova operativa para ensayos.
   domicilio, opciones de envío, pago en el ambiente configurado y resultado con el mismo mosaico.
 - Taller: pedido pagado en `/admin`, diseño aceptado, plazo, fabricación,
   guía privada y embalaje/envío. Los pedidos de prueba están identificados.
-- Galería: copia autorizada del mosaico en un **borrador** de Sanity. Nunca incluye
+- Galería: copia autorizada del mosaico en un **borrador** del catálogo del panel. Nunca incluye
   la foto original, datos del comprador, ID del pedido ni referencias de materiales.
 
 La foto y el borrador se pierden al cerrar/recargar el editor. Al iniciar la compra
@@ -76,7 +88,7 @@ pruebas explícito. No habilitar producción para ensayar.
 
 El plan gratuito de Sanity no admite datasets privados. Por decisión de Bruno,
 la configuración de cuadros vive en PostgreSQL y se edita en `/admin/taller`.
-Catálogo, cantidades y galería continúan en Sanity. No borrar datasets de otros
+Desde CAT-154, catálogo, cantidades y galería también viven en PostgreSQL y se administran desde `/admin/catalogo`. Sanity se conserva como respaldo de consulta. No borrar datasets de otros
 proyectos: sus cuotas son independientes. No se contrató otro plan.
 
 1. Ingresar al panel y elegir **Taller de cuadros**.
@@ -177,3 +189,12 @@ cobros ni envíos reales.
 - El saldo para envíos sigue siendo una tarea operativa de Zipnova. La integración
   no carga saldo automáticamente ni transfiere el pago del comprador al proveedor.
 - Evidencia y alcance de aceptación: `docs/evidence/PER-148.md`.
+# Actualización PER-157 (02/11/2026)
+
+El creador ofrece dos formatos: 1×1 con 29 colores y 2×2 con 36 clásicos. Los
+retoques de venecitas son exclusivos del panel, en la ficha de un cuadro pago.
+La guía privada usa la matriz de fabricación; el diseño aceptado se conserva.
+Los perfiles se editan en `/admin/taller`; galería solo tras terminar y con
+consentimiento. Ver `docs/specs/157-formatos-y-retoque-privado.md` y la guía
+`docs/runbooks/qa-panel-y-creador.md` para el comportamiento vigente y rutas.
+

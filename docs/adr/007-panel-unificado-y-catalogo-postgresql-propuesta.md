@@ -1,11 +1,24 @@
-# ADR-007 — Propuesta: catálogo y operación en el panel de Canela
+# ADR-007 — Decisión: catálogo y operación en el panel de Canela
 
 **Estado:** Dirección aprobada por Bruno el 2026-10-28: panel y PostgreSQL,
 con Neon Object Storage como proveedor de archivos. Implementación por etapas;
 el cambio de autoridad y retiro de Sanity requieren los criterios de aceptación.
 **Fecha:** 2026-10-28.
-**Alcance de esta revisión:** código de la rama del creador, consultas de solo
-lectura y documentación oficial vigente. No se modificaron datos ni producción.
+**Alcance original:** evaluación de la rama del creador y documentación oficial.
+La implementación posterior se registra en CAT-154.
+
+## Resultado de implementación — 29/10/2026
+
+CAT-154 implementa el panel unificado, importación validada y stock transaccional.
+PostgreSQL es la fuente seleccionada con `CATALOG_SOURCE=database`; archivos en
+Neon Object Storage. Sanity conserva una copia de consulta con el Studio de solo
+lectura. Se mantienen originales privados, variantes públicas optimizadas,
+IDs/borradores/recortes y auditoría. La tienda continúa en mantenimiento.
+
+Se importaron 35 fichas y 100 archivos; 27 productos y 3 slides publicados.
+El respaldo de producción fue restaurado localmente. La aplicación y la guía
+se verifican en [CAT-154](../evidence/CAT-154.md). La evaluación que sigue conserva
+el contexto previo a la implementación; no describe una segunda fuente activa.
 
 ## Contexto y recomendación
 
@@ -123,7 +136,8 @@ flowchart TD
 
 - PostgreSQL: productos publicados/borradores, stock y movimientos, cajas, slides,
   diseños de galería, relaciones de imágenes y configuración privada existente.
-- Mantener IDs estables. Precios en centavos; pesos y medidas con unidades
+- Mantener IDs estables. Precios validados a dos decimales y convertidos a centavos en el checkout;
+  pesos y medidas con unidades
   explícitas. Borradores y publicación no sobrescriben el stock operativo.
 - Checkout: reserva de todas las piezas y pedido en la misma transacción.
   Confirmar pago, consumir stock y encolar avisos usa otra transacción coherente.
@@ -205,9 +219,9 @@ está disponible y el bucket `originals` está creado como privado. La consola
 incluyó una base PostgreSQL vacía; la aplicación no se conectó a ella.
 
 El backend de preparación y almacenamiento pasó 35 pruebas aisladas, TypeScript
-y ESLint. Faltan el bucket público `web`, guardar la credencial S3 existente en
-el entorno local y ejecutar el contrato remoto. La confirmación para esos dos
-primeros pasos está solicitada por las reglas del navegador. No se migraron
+y ESLint. Bruno autorizó el bucket público `web` y la credencial S3 local;
+ambos quedaron configurados. El contrato remoto pasó carga/descarga por hash,
+privacidad del original, caché/MIME públicos y reintento idempotente. No se migraron
 archivos de Sanity ni cambió la autoridad de catálogo/stock. Detalle en
 [spec 151](../specs/151-almacenamiento-imagenes.md) y
 [evidencia MED-151](../evidence/MED-151.md).

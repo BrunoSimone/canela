@@ -2,7 +2,73 @@
 
 ## Estado
 
-Descubrimiento actualizado el 2026-10-26. Bruno reactivó el trabajo del creador de cuadros en la rama `codex/creador-cuadros-personalizados`, separada de `main`. Se recibieron datos iniciales de Mariela; la geometría presenta una contradicción pendiente de aclaración. El precio se definirá en una etapa posterior, antes de habilitar ventas.
+Descubrimiento actualizado el 2026-10-28, rama `codex/creador-cuadros-personalizados`. La actualización siguiente prevalece sobre las preguntas y referencias históricas del resto del documento. Marco, rango de cuadrículas y disponibilidad de la paleta quedan confirmados. Las medidas físicas todavía son aproximadas; precios y embalajes siguen pendientes. La configuración privada se administra en PostgreSQL y el panel de Canela según PER-148, no en un dataset privado de Sanity.
+
+## Definiciones con Mariela — 2026-10-28
+
+Fuente: Bruno transmitió las respuestas de Mariela en el chat. Este registro no publica una configuración comercial ni cambia el mantenimiento.
+
+### Confirmado
+
+- Todos los cuadros incluyen marco negro. Se informó 1 cm de «espesor»; por la diferencia de 32 a 34 cm, se interpreta provisionalmente como **ancho visible del borde por lado**, no como profundidad del cuadro/paquete.
+- Cuadrados de **15 × 15 a 45 × 45 venecitas**, con todos los intermedios enteros: 16 × 16, 17 × 17, etc. No se infieren tamaños rectangulares.
+- Venecitas enteras, ahora informadas como **aproximadamente 2,1 × 2,1 cm**, y juntas de 1 mm. Este dato sustituye la referencia inicial de 2,2 cm.
+- Mariela confirma disponibilidad de todos los colores del catálogo Murvi usado por el creador y compatibilidad entre ellos. Azules y verdes son los más fáciles de reponer; no equivale a disponibilidad futura ilimitada.
+- Se conservan las referencias digitales del fabricante. Mariela acepta su apariencia aproximada y advierte variaciones leves entre tandas. No se exige una nueva sesión de fotos como condición para usar la paleta actual.
+- Para una etapa futura, Mariela puede fabricar venecitas de aproximadamente **1,2 × 1,2 cm**, con colores propios. Quedan fuera del lanzamiento actual y requerirán perfil de material, paleta, precio y embalaje propios.
+- Precios de venecitas y mano de obra se resolverán de forma asincrónica. Se tomará el tiempo de fabricación de un cuadro 15 × 15 como primera referencia; la regla para tamaños mayores debe validarse.
+- Mariela ya recibió las indicaciones para completar stock y datos de embalaje. Las fotos de cuadros terminados se incorporarán cuando estén disponibles.
+- Despacho en sucursal cercana del transporte contratado. No se necesita elegir ahora una sucursal fija; al despachar se debe comprobar que admita ese servicio.
+- Defectos, errores de fabricación y cambios se atenderán individualmente. Esta decisión no define por sí sola el texto completo de condiciones de compra.
+
+### Comprobación de medidas
+
+Con 21 mm exactos por pieza, 1 mm entre piezas y 10 mm de marco por lado:
+
+```text
+lado del mosaico = N × 21 + (N − 1) × 1 mm
+lado exterior = lado del mosaico + 20 mm
+```
+
+| Cuadrícula | Sin marco calculado | Con marco calculado |
+| --- | --- | --- |
+| 15 × 15 | 32,9 cm | 34,9 cm |
+| 45 × 45 | 98,9 cm | 100,9 cm |
+
+El chico informado de 32/34 cm difiere en 9 mm por eje. Si 32 cm y las juntas de 1 mm fueran exactos, la pieza mediría 20,4 mm. No se adopta esa medida por inferencia. Basta medir una fila completa de 15 piezas con sus 14 juntas y el exterior del marco para fijar la geometría. El grosor/profundidad para envío sigue siendo un dato independiente. Los pesos históricos de 1,2/4,8/10,8 kg son del cuadro terminado, no del paquete protegido.
+
+### Plazo y capacidad: decisión todavía abierta
+
+Bruno plantea aceptar pedidos y gestionar la capacidad según la demanda. Propone comunicar un mínimo de 15 días o avisar al despachar sin fecha límite. La referencia anterior de una semana ya no debe usarse como promesa vigente.
+
+Recomendación pendiente de acuerdo: mostrar antes de pagar un plazo/rango estimado de fabricación, configurable según la carga, y separar el tiempo de transporte. Falta definir días hábiles o corridos y el rango que el taller puede asumir. El aviso de despacho complementa esa estimación.
+
+El código actual usa un plazo único y cupos de producción. Aceptar una cola de espera con fechas posteriores requiere adaptar esa lógica y sus pruebas; no se resuelve aumentando arbitrariamente el cupo ni interpretando «mínimo 15» como «entrega garantizada en 15». No se modifican los pedidos ya aceptados al ajustar plazos para nuevas compras.
+
+### Texto de color propuesto
+
+Mostrar cerca de la previsualización y en la aceptación antes del pago:
+
+> Los tonos pueden variar levemente entre partidas y según la pantalla. La distribución de las venecitas será la del diseño que confirmes.
+
+El aviso contempla diferencias leves; no autoriza sustituir colores/materiales ni cambiar el diseño sin acuerdo. Las referencias internas del fabricante continúan privadas.
+
+### Investigación de materiales — consulta 2026-10-28
+
+- La [tienda oficial de Murvi](https://www.tiendamurvi.com.ar/productos/) ofrece el formato **F.10 (1 × 1 cm)**, además del F.20 nominal de 2 × 2 cm. La disponibilidad de un formato no confirma todos los colores ni stock local.
+- El [directorio de Murvi](https://murvi.com.ar/pt/categoriadistribucion/distribucion/nacional/artistica) lista Cerámica Hiller, Artemanos y Jani Marcos Mosaicos en Mar del Plata. Es un directorio antiguo; se conserva como pista comercial, no como confirmación de disponibilidad actual.
+- [Artemanos confirma sus locales](https://www.artemanos.com.ar/sucursales/) en Belgrano 3402, Constitución 5333, San Juan 2064 y Edison 291. No se encontró una lista pública verificable de precios/stock Murvi por color en esos locales. El sitio de Hiller no pudo consultarse por timeout. No se contactó a comercios.
+- Los siete colores propuestos en PER-135 son hipótesis digitales contrastadas con referencias de **venecitas importadas**, no códigos confirmados de Murvi. No afirmar que se consiguen en esos distribuidores ni que su HEX corresponde a una medición física. Ver [PER-135](../evidence/PER-135.md).
+- Para colores propios futuros: fotografiar muestras terminadas sobre el soporte real, con luz difusa controlada, referencia de color, balance de blancos/perfil consistentes y salida sRGB. Obtener un tono representativo de varias piezas, evitando reflejos, y versionar la paleta; conservar en cada pedido la versión aceptada. El flujo de calibración está descrito por [Calibrite](https://calibrite.com/eu/your-colorchecker-passport-is-not-a-prop/). Una muestra calibrada mejora la aproximación, pero no elimina diferencias entre lotes, iluminación y pantallas.
+
+### Pendientes de la conversación
+
+1. Medición de una fila real para reconciliar centímetros y cuadrícula; distinguir borde de profundidad.
+2. Costos actuales por presentación/color y tiempo de fabricación para aprobar precios.
+3. Peso y tres medidas del paquete protegido, más regla validada para tamaños intermedios.
+4. Plazo comunicable y gestión de pedidos cuando se acumule trabajo; días hábiles/corridos.
+
+La búsqueda de proveedores, adaptación del panel, textos y pruebas son trabajo técnico; no se vuelve a solicitar a Mariela lo ya confirmado arriba.
 
 ## Objetivo del producto
 

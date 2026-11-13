@@ -1,34 +1,35 @@
 # Producción de Canela
 
-## Estado vigente — actualizado el 26 de octubre de 2026
+## Estado vigente — 29 de octubre de 2026
 
-La tienda permanece en mantenimiento y con checkout deshabilitado. Sanity es la
-única fuente de catálogo y cantidades; el panel administra pedidos, embalaje,
-etiquetas y despacho. La implementación incluye Resend y los templates React
-Email de acceso, compra pagada y despacho. El envío de avisos comerciales depende
-de sus gates de producción.
+CAT-154 lleva catálogo, stock, reservas, cajas, carrusel y diseños publicados a
+PostgreSQL. La configuración privada del taller ya reside allí. Neon Object
+Storage conserva originales privados y versiones web públicas optimizadas.
+Sanity queda como respaldo de solo lectura; la administración se hace en
+`/admin/catalogo`, con el acceso habitual por email. Ver [guía de carga](carga-cliente.md).
 
-Migraciones `0001` a `0013` aplicadas. El dueño y el desarrollador tienen el acceso
-configurado; no se publican sus datos ni credenciales en este runbook.
-El Studio publicado permite cargar cantidades, unidades protegidas y cajas.
-**Nunca usar cantidades o medidas de los fixtures como valores reales.**
+Se importaron 32 productos (27 publicados y 5 solo borrador), 3 slides y 100
+archivos originales. Se conservaron las versiones de borrador/publicación,
+IDs, orden, recortes y puntos focales. Las 74 referencias públicas de fotos
+coinciden con el origen. No había cantidades ni reservas vigentes en el dataset
+productivo: las cantidades importadas son cero, sin copiar fixtures locales.
 
-La aceptación sandbox de pago, descuento de stock, etiqueta y despacho está en
-[la evidencia del 23/10](../evidence/ACEPTACION-sandbox-2026-10-23.md). El webhook
-automático reintentado ya tiene entrega 200. La revisión completa de tienda/panel,
-regresión y publicación cerrada se registra en [UX-110](../evidence/UX-110.md).
+Migraciones `0001–0018` aplicadas. El respaldo anterior se restauró en una base
+local aislada antes del corte. La evidencia y reversión están en
+[CAT-154](../evidence/CAT-154.md).
 
-La recuperación se ejecuta a pedido: botón de avisos en la ficha y herramienta
-técnica manual en GitHub Actions. Los eventos de pago/despacho intentan enviar
-sus avisos inmediatamente. El operador debe revisar pedidos y avisos; no hay
-ejecución periódica ni una segunda alerta independiente si falla el email.
-El preflight comprueba pendientes reales, sin exigir una corrida reciente.
-Ver [recuperación manual comprobada](../evidence/MAN-121.md) y el procedimiento de
-[despacho, avisos y apertura](despacho-avisos-apertura.md#supervisión-y-recuperación-manual).
+La flag `SITE_MAINTENANCE_MODE=1` continúa activa. Los modos configurados de
+Mercado Pago y Zipnova no se alteraron en esta migración. No se hicieron cobros,
+envíos ni pruebas comerciales reales. La apertura depende de completar datos
+reales y de la aprobación del responsable.
 
-Guía del cliente: [carga en Sanity](carga-cliente.md). Configuración de cobros
-productivos: [MP producción](../evidence/MP-produccion-2026-10-22.md). La compra
-con dinero real sigue pendiente y necesita su propia autorización.
+La recuperación continúa siendo manual, a partir de eventos y pedidos con
+**Necesita revisión**. No hay cron ni una segunda alerta independiente si falla
+el correo. Se conservan Resend y los templates React Email existentes.
+
+Los cuadros tienen marco negro incluido y paleta confirmada. El borrador del
+taller deja geometría final, precios, embalajes, plazo y capacidad pendientes;
+no existe configuración productiva publicada de cuadros todavía.
 
 ## Registro histórico de recuperación — 10/10/2026
 
