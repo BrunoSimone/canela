@@ -1,6 +1,14 @@
 # Producción de Canela
 
-## Estado vigente — 29 de octubre de 2026
+## Estado vigente — 13 de noviembre de 2026
+
+Desplegada la rama con PER-155/157 y HOME-158; migraciones `0001–0019`. El creador
+público está oculto (`CUADROS_PREVIEW_ENABLED=0`) y la home lo anuncia como
+«Próximamente». Con mantenimiento activo, las sesiones del panel pueden ver la
+tienda y cotizar envíos; pagos, pedidos y cuadros siguen bloqueados. Stock
+productivo: 0 unidades. Ver [OPS-158](../evidence/OPS-158.md).
+
+## Estado al 29 de octubre de 2026
 
 CAT-154 lleva catálogo, stock, reservas, cajas, carrusel y diseños publicados a
 PostgreSQL. La configuración privada del taller ya reside allí. Neon Object
