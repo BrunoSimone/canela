@@ -74,10 +74,18 @@ export function storefrontColorId(materialId: string): string {
   return identity[0];
 }
 
-export const storefrontPalette: TileColor[] = materials.colors.map(material => ({
+// Keep the full source manifest and stable IDs for historical order snapshots.
+// Only this selection is offered for new designs.
+const excludedMaterials = new Set(["murvi-m-24", "murvi-c-50"]);
+export const activeMaterials = materials.colors.filter(material =>
+  material.line === "Clasico" && !excludedMaterials.has(material.id));
+export const storefrontPalette: TileColor[] = activeMaterials.map(material => ({
   id: storefrontColorId(material.id),
   name: identities[material.id][1],
   hex: material.hex,
 }));
 
-export const workshopMaterials = Object.fromEntries(materials.colors.map(m => [storefrontColorId(m.id), m.id.replace("murvi-", "Murvi ")]));
+export const workshopMaterials = Object.fromEntries(activeMaterials.map(m => [storefrontColorId(m.id), m.id.replace("murvi-", "Murvi ")]));
+
+export function paletteForMaterials(selected:typeof activeMaterials):TileColor[]{return selected.map(m=>({id:storefrontColorId(m.id),name:identities[m.id][1],hex:m.hex}));}
+export function materialsForPalette(selected:typeof activeMaterials){return Object.fromEntries(selected.map(m=>[storefrontColorId(m.id),m.id.replace('murvi-','Murvi ')]));}

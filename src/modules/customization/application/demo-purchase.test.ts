@@ -23,8 +23,8 @@ describe("PER-132: isolated purchase simulation", () => {
     expect(quote.frame.totalCents).toBe(9_600_000);
     expect(quote.shipping.cents).toBe(1_200_000);
     expect(quote.totalCents).toBe(10_800_000);
-    expect(quote.design.config.tileMm).toBe(20);
-    expect(quote.shipping.package).toEqual({ widthCm: 59, heightCm: 59, depthCm: 8, weightGrams: 6000 });
+    expect(quote.design.config.tileMm).toBe(11);
+    expect(quote.shipping.package).toEqual({ widthCm: 36, heightCm: 36, depthCm: 8, weightGrams: 6000 });
     expect(quote.mode).toBe("demo");
     expect(JSON.stringify(quote)).not.toMatch(/murvi|Vitro|DI99|sourceImageUrl/i);
     input.design.cells.fill("negro"); quote.design.cells.fill("negro");

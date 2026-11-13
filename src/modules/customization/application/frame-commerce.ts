@@ -1,3 +1,4 @@
+import { frameFormat, formatOf, type FrameFormat } from '../domain/formats';
 import { createHash, randomUUID } from 'node:crypto';
 import type { Sql } from 'postgres';
 import { parseDeliverySnapshot } from '@/modules/checkout/domain/delivery';
@@ -23,13 +24,14 @@ export function shippingForFrame(w:FrameWorkshop,design:MosaicDesign,deps:FrameS
 }
 export class FrameCommerce {
   private repository:PostgresFrameRepository;
-  constructor(private deps:{sql:Sql;environment:'test'|'production';workshop:()=>Promise<FrameWorkshop>;shipping:FrameShippingDependencies;payments:PaymentOrderGateway;siteUrl:string;signingSecret:string}) {
+  constructor(private deps:{sql:Sql;environment:'test'|'production';workshop:(format?:FrameFormat)=>Promise<FrameWorkshop>;shipping:FrameShippingDependencies;payments:PaymentOrderGateway;siteUrl:string;signingSecret:string}) {
     if(deps.shipping.accountMode!==(deps.environment==='test'?'sandbox':'operational')) throw new FrameCommerceError('FRAME_SALES_LOCKED','Los ambientes de pago y envío no coinciden.',503);
     this.repository=new PostgresFrameRepository(deps.sql,deps.environment);
   }
   get mode() { return this.deps.environment==='test'?'sandbox' as const:'production' as const; }
   async quote(raw:Record<string,unknown>):Promise<FrameQuote[]> {
-    const w=await this.deps.workshop(); validateFrameWorkshop(w); if(this.deps.environment==='production') requireProductionWorkshop(w);
+    let format:FrameFormat;try{format=frameFormat(raw.format);}catch{throw new FrameCommerceError('INVALID_INPUT','Elegí un formato válido.',422);}
+    const w=await this.deps.workshop(format); validateFrameWorkshop(w); if(this.deps.environment==='production') requireProductionWorkshop(w);
     if(raw.accepted!==true || typeof raw.galleryConsent!=='boolean' || raw.termsVersion!==w.terms.version)
       throw new FrameCommerceError('ACCEPTANCE_REQUIRED','Revisá y aceptá el diseño y las condiciones antes de continuar.',422);
     let design:MosaicDesign,recipient;
@@ -64,7 +66,7 @@ export class FrameCommerce {
     if(!q) throw new FrameCommerceError('QUOTE_EXPIRED','La cotización ya no está disponible.');
     if(q.environment!==this.deps.environment || q.shipping.accountMode!==this.deps.shipping.accountMode) throw new FrameCommerceError('FRAME_ENVIRONMENT','La cotización pertenece a otro ambiente.',409);
     if(!existing) {
-      const w=await this.deps.workshop();validateFrameWorkshop(w); if(this.deps.environment==='production') requireProductionWorkshop(w);
+      const w=await this.deps.workshop(formatOf(q.snapshot.design.config));validateFrameWorkshop(w); if(this.deps.environment==='production') requireProductionWorkshop(w);
       if(fingerprint(w)!==q.snapshot.workshopFingerprint) throw new FrameCommerceError('DESIGN_CHANGED','Las condiciones del taller cambiaron. Volvé a revisar el cuadro.');
       if(Date.parse(q.expiresAt)<=Date.now()) throw new FrameCommerceError('QUOTE_EXPIRED','La cotización venció. Volvé a calcular el envío.');
       await new ZipnovaCheckoutQuotes(shippingForFrame(w,q.snapshot.design,this.deps.shipping)).verifyForCheckout({source:'zipnova',snapshot:q.shipping,amountCents:q.shipping.amountCents,expiresAt:new Date(q.expiresAt)},

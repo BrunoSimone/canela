@@ -1,7 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { GET, POST } from "@/app/api/cuadros/prueba/route";
-import { demoDesignCatalog } from "../infrastructure/demo-catalog";
+import { previewCatalog } from "../infrastructure/format-catalog";
+const demoDesignCatalog=previewCatalog('1x1');
 import { demoRecipient } from "../infrastructure/demo-purchase-config";
+import { renderMosaic } from "../domain/design";
+import { raster } from "../testing/workshop";
 import { selectDesign } from "../domain/purchase";
 import { createDemoPurchaseHandler } from "./demo-purchase-http";
 import { demoPurchaseEnabled } from "../infrastructure/demo-purchase-availability";
@@ -44,6 +47,23 @@ describe("PER-132: demo HTTP boundary", () => {
     const service = vi.fn();
     const handler = createDemoPurchaseHandler({ enabled: () => false, recipient: demoRecipient, service });
     expect((await handler(request({}))).status).toBe(404); expect(service).not.toHaveBeenCalled();
+  });
+  it("PER-155: accepts an 8100-piece design within the unchanged body bound without external effects", async () => {
+    enable(); const outbound = vi.fn(() => { throw Error("No external calls"); }); vi.stubGlobal("fetch", outbound);
+    const config = await demoDesignCatalog.configuration();
+    const design = selectDesign(renderMosaic(raster(), config, 90));
+    const body = { action:"quote", accepted:true, design, recipient:demoRecipient };
+    expect(new TextEncoder().encode(JSON.stringify(body)).length).toBeLessThan(100_000);
+    const response = await POST(request(body)); expect(response.status).toBe(200);
+    const quote = await response.json();
+    expect(quote.design.cells).toHaveLength(8100); expect(quote.design.config.tileMm).toBe(11);
+    expect(quote.shipping.package).toMatchObject({widthCm:114,heightCm:114});
+    const paid = await POST(request({action:"pay",quoteId:quote.id,attemptId:"dense-90",outcome:"approved"}));
+    expect((await paid.json()).production).toBe("simulated"); expect(outbound).not.toHaveBeenCalled();
+    const invalid = structuredClone(body); invalid.design.size=91;
+    expect((await POST(request(invalid))).status).toBe(400);
+    const excluded = structuredClone(body); excluded.design.cells[0]="tono-17";
+    expect((await POST(request(excluded))).status).toBe(400);
   });
   it("runs quote → pending → approved without any network request", async () => {
     enable(); const outbound = vi.fn(() => { throw new Error("No external calls permitted"); }); vi.stubGlobal("fetch", outbound);

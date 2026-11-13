@@ -1,13 +1,14 @@
 import type { DesignCatalog, DesignTemplate } from "../application/catalog";
 import type { MosaicDesign, WorkshopConfig } from "../domain/design";
 import type { PricingPolicy } from "../domain/estimate";
+import { CURRENT_TILE_FORMAT, CURRENT_FORMAT_VERSION } from "../domain/tile-format";
 import { storefrontColorId, storefrontPalette } from "./storefront-palette";
 
-// Server repository fixture. UI receives the same DTO contract a future Sanity
-// adapter will supply. Designs are synthetic; material codes come from Murvi.
+// Server preview fixture. Production configuration is edited in the private panel.
+// Designs are synthetic; supplier references never enter the public DTO.
 const config: WorkshopConfig = {
-  id: "canela-demo", version: "2026-10-27.palette-2", provisional: true,
-  tileMm: 20, groutMm: 1, frameMm: 10, minCells: 15, maxCells: 45, step: 1,
+  id: "canela-demo", version: CURRENT_FORMAT_VERSION, provisional: true,
+  ...CURRENT_TILE_FORMAT,
   backgroundColorId: storefrontColorId("murvi-b-34"),
   // Digital estimates from manufacturer textures, not physically calibrated HEX.
   // Keep provenance on the server; the browser only needs the palette DTO.
@@ -15,14 +16,17 @@ const config: WorkshopConfig = {
 };
 
 // PER-131: indexed Mercado Libre reference (225 tiles / ARS 13,917.50),
-// consulted 2026-10-26. Labor/supplies are UI assumptions, not workshop rates.
+// consulted 2026-10-26. This older reference is only a UI assumption, not a current 11 mm material quote.
+// Labor, supplies and the 60/90 anchors are fixtures, never confirmed workshop rates.
 const pricing: PricingPolicy = {
-  version: "demo-prices-2026-10-26.1", currency: "ARS", provisional: true,
+  version: "demo-prices-11mm-unconfirmed-1", currency: "ARS", provisional: true,
   tilePackCents: 1_391_750, tilePackQuantity: 225, roundToCents: 100_000,
   sizes: [
     { cells: 15, laborCents: 2_000_000, suppliesCents: 800_000 },
     { cells: 30, laborCents: 6_000_000, suppliesCents: 1_600_000 },
     { cells: 45, laborCents: 12_000_000, suppliesCents: 2_600_000 },
+    { cells: 60, laborCents: 24_000_000, suppliesCents: 4_800_000 },
+    { cells: 90, laborCents: 48_000_000, suppliesCents: 10_400_000 },
   ],
 };
 
@@ -48,7 +52,7 @@ function templates() {
     }),
     example("atardecer", "Atardecer sobre el mar", "Sol terracota sobre franjas de agua azul.", (x, y) => {
       if (y < 15 && (x - 12) ** 2 + (y - 11) ** 2 <= 36) return "murvi-n-07";
-      if (y >= 15) return y % 4 === 0 ? "murvi-c-41" : "murvi-v-20";
+      if (y >= 15) return y % 4 === 0 ? "murvi-c-41" : "murvi-o-44";
       return y < 6 ? "murvi-b-34" : "murvi-r-26";
     }),
     example("jardin", "Flores del jardín", "Pétalos de color sobre un fondo claro.", (x, y) => {

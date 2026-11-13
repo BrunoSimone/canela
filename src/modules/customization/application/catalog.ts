@@ -1,3 +1,4 @@
+import { formatOf } from "../domain/formats";
 import { resizeDesign, validateWorkshop, type MosaicDesign, type WorkshopConfig } from "../domain/design";
 import { publishPricing } from "../domain/public-pricing";
 import { validatePricing, type PricingPolicy } from "../domain/estimate";
@@ -13,7 +14,7 @@ export interface DesignCatalog {
 export async function loadGallery(repository: DesignCatalog) {
   const [config, entries] = await Promise.all([repository.configuration(), repository.templates()]);
   validateWorkshop(config);
-  const templates = entries.filter(t => t.published).flatMap(t => {
+  const templates = entries.filter(t => t.published && formatOf(t.design.config)===formatOf(config)).flatMap(t => {
     try { return [{ ...t, design: resizeDesign(t.design, config, t.design.size) }]; } catch { return []; }
   });
   return { config, templates };

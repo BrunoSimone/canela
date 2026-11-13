@@ -1,21 +1,21 @@
 import { describe, expect, it } from "vitest";
 import { demoDesignCatalog } from "./demo-catalog";
 import murvi from "./murvi-palette.json";
-import { storefrontColorId } from "./storefront-palette";
+import { activeMaterials, storefrontColorId } from "./storefront-palette";
 import { loadCreator, loadGallery } from "../application/catalog";
 import { renderMosaic, resizeDesign, validateDesign, validateWorkshop } from "../domain/design";
 import { applyRetouches, emptyRetouches, paintTile, undoRetouch } from "../domain/retouches";
 import { estimateFrame } from "../domain/estimate";
 import { raster } from "../testing/workshop";
 
-describe("PER-134: manufacturer palette", () => {
-  it("uses only the 62 linked references, with traceable estimates and no invented colors", async () => {
+describe("PER-155: Classic palette", () => {
+  it("uses only 36 allowed Classic references, with traceable estimates and no invented colors", async () => {
     const config = await demoDesignCatalog.configuration();
     validateWorkshop(config);
     expect(config.provisional).toBe(true);
-    expect(config.palette).toHaveLength(62);
-    expect(new Set(config.palette.map(c => c.id)).size).toBe(62);
-    expect(config.palette.map(c => [c.id, c.hex])).toEqual(murvi.colors.map(c => [storefrontColorId(c.id), c.hex]));
+    expect(config.palette).toHaveLength(36);
+    expect(new Set(config.palette.map(c => c.id)).size).toBe(36);
+    expect(config.palette.map(c => [c.id, c.hex])).toEqual(activeMaterials.map(c => [storefrontColorId(c.id), c.hex]));
     expect(murvi.colors.filter(c => c.line === "Clasico")).toHaveLength(38);
     expect(murvi.colors.filter(c => c.line === "Vitro")).toHaveLength(17);
     expect(murvi.colors.filter(c => c.line === "Nuevo")).toHaveLength(7);
@@ -25,11 +25,12 @@ describe("PER-134: manufacturer palette", () => {
       expect(color.imageSha256).toMatch(/^[a-f0-9]{64}$/);
       expect(new URL(color.sourceImageUrl).hostname).toBe("www.murvi.com.ar");
       expect(new URL(color.sourceImageUrl).pathname).toBe(`/venecitas/${color.code}.bmp`);
-      expect(config.palette.find(c => c.id === storefrontColorId(color.id))?.hex).toBe(color.hex);
+
     }
-    expect(config.palette.filter(c => c.name.includes("transparente"))).toHaveLength(17);
+    expect(config.palette.filter(c => c.name.includes("transparente"))).toHaveLength(0);
+    expect(config.palette.some(c => ["tono-17", "tono-26"].includes(c.id))).toBe(false);
   });
-  it.each(murvi.colors)("converts flat $code to its exact material ID", async color => {
+  it.each(activeMaterials)("converts flat $code to its exact material ID", async color => {
     const config = await demoDesignCatalog.configuration();
     expect(new Set(renderMosaic(raster(4, 4, [...color.rgb, 255]), config, 15).cells)).toEqual(new Set([storefrontColorId(color.id)]));
   });
@@ -48,8 +49,8 @@ describe("PER-134: manufacturer palette", () => {
       validateDesign(template.design);
       const resized = resizeDesign(template.design, config, 45);
       expect(resized.config.palette).toEqual(config.palette);
-      const history = paintTile(emptyRetouches(), resized, 0, storefrontColorId("murvi-di99"));
-      expect(applyRetouches(resized, history.present).cells[0]).toBe(storefrontColorId("murvi-di99"));
+      const history = paintTile(emptyRetouches(), resized, 0, storefrontColorId("murvi-e-100"));
+      expect(applyRetouches(resized, history.present).cells[0]).toBe(storefrontColorId("murvi-e-100"));
       expect(applyRetouches(resized, undoRetouch(history).present)).toEqual(resized);
     }
   });
@@ -86,7 +87,7 @@ describe("PER-138: public palette boundary", () => {
     expect(payload).not.toMatch(/murvi|clasico|vitro|sourceImageUrl|imageSha256/i);
     for (const material of murvi.colors) expect(payload).not.toContain(material.code);
     const config = await demoDesignCatalog.configuration();
-    expect(new Set(config.palette.map(c => c.name)).size).toBe(62);
+    expect(new Set(config.palette.map(c => c.name)).size).toBe(36);
     expect(config.palette.every(c => /^tono-\d{2}$/.test(c.id))).toBe(true);
     expect(config.palette.map(c => c.name).join(" ")).not.toMatch(/tono-\d|#[a-f\d]{6}/i);
   });

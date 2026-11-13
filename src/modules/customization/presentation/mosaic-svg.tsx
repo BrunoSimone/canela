@@ -1,3 +1,4 @@
+import { FRAME_COLOR } from "../domain/appearance";
 import { memo, useId } from "react";
 import { dimensions, type MosaicDesign } from "../domain/design";
 import { MosaicMaterial } from "./mosaic-material";
@@ -9,7 +10,7 @@ export const MosaicSvg = memo(function MosaicSvg({ design, label, className }: {
   const colors = new Map(design.config.palette.map(p => [p.id, p.hex]));
   return <svg className={className} viewBox={`0 0 ${framedMm} ${framedMm}`} role="img" aria-labelledby={id} xmlns="http://www.w3.org/2000/svg">
     <title id={id}>{label}</title>
-    <rect width={framedMm} height={framedMm} fill="#72523c" />
+    <rect width={framedMm} height={framedMm} fill={FRAME_COLOR} data-frame="black" />
     <rect x={frameMm} y={frameMm} width={mosaicMm} height={mosaicMm} fill="#e8dfcc" />
     <g aria-hidden="true">{design.cells.map((color, i) => <rect key={i} data-cell={i} data-color={color}
       x={frameMm + i % design.size * (tileMm + groutMm)} y={frameMm + Math.floor(i / design.size) * (tileMm + groutMm)}

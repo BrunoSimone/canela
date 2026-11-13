@@ -6,14 +6,15 @@ const viewport = { width: 375, height: 450 };
 const center = { x: viewport.width / 2, y: viewport.height / 2 };
 describe("PER-133: mosaic navigation", () => {
   it("selects the exact cell at every zoom and after pan, including a dense grid", () => {
-    for (const size of [3, 15, 45]) for (const scale of [1, 2, 8]) for (const index of [0, Math.floor(size * size / 2), size * size - 1]) {
-      const view = centerTile(index, { scale, x: 0, y: 0 }, viewport, testWorkshop, size);
-      const mm = dimensions(testWorkshop, size).framedMm;
-      const pitch = testWorkshop.tileMm + testWorkshop.groutMm;
-      const x = (testWorkshop.frameMm + index % size * pitch + testWorkshop.tileMm / 2) / mm;
-      const y = (testWorkshop.frameMm + Math.floor(index / size) * pitch + testWorkshop.tileMm / 2) / mm;
+    for (const size of [3, 15, 45, 90]) for (const scale of [1, 2, 8, 16]) for (const index of [0, Math.floor(size * size / 2), size * size - 1]) {
+      const config = {...testWorkshop, tileMm:11, maxCells:90};
+      const view = centerTile(index, { scale, x: 0, y: 0 }, viewport, config, size);
+      const mm = dimensions(config, size).framedMm;
+      const pitch = config.tileMm + config.groutMm;
+      const x = (config.frameMm + index % size * pitch + config.tileMm / 2) / mm;
+      const y = (config.frameMm + Math.floor(index / size) * pitch + config.tileMm / 2) / mm;
       const point = { x: center.x + view.x + (x - .5) * artSide(viewport) * scale, y: center.y + view.y + (y - .5) * artSide(viewport) * scale };
-      expect(tileAt(point, view, viewport, testWorkshop, size)).toBe(index);
+      expect(tileAt(point, view, viewport, config, size)).toBe(index);
     }
   });
   it("does not select frame, outside area or grout", () => {
@@ -27,7 +28,7 @@ describe("PER-133: mosaic navigation", () => {
     const anchor = { x: 200, y: 240 };
     const view = zoomAt(fittedView(), 4, anchor, viewport);
     expect((anchor.x - center.x - view.x) / view.scale).toBeCloseTo(anchor.x - center.x);
-    expect(constrain({ scale: 50, x: 1e9, y: -1e9 }, viewport).scale).toBe(8);
+    expect(constrain({ scale: 50, x: 1e9, y: -1e9 }, viewport).scale).toBe(16);
     expect(constrain({ scale: .1, x: 80, y: 90 }, viewport)).toEqual(fittedView());
   });
   it("tap selects but dragging out and back does not", () => {

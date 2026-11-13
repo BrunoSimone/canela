@@ -1,20 +1,27 @@
+import type { FrameFormat } from '../../domain/formats';
 import type { Sql } from 'postgres';
 import { FrameCommerceError,requireProductionWorkshop } from '../../domain/workshop';
-import { parseWorkshopDocument,workshopDocument,type WorkshopDocument } from '../../domain/workshop-document';
-import { demoWorkshop } from '../demo-workshop';
+import { parseWorkshopDocument,type WorkshopDocument } from '../../domain/workshop-document';
+import { initialWorkshopDocument } from '../initial-workshop';
 export type WorkshopSettings={version:number;publishedVersion:number|null;document:WorkshopDocument;publishedAt:string|null;environment:'test'|'production'};
 export class PostgresWorkshopRepository {
  constructor(private sql:Sql,private environment:'test'|'production'){}
  async settings():Promise<WorkshopSettings>{
   const [row]=await this.sql`SELECT * FROM frame_workshop WHERE environment=${this.environment}`;
-  const document:WorkshopDocument=row?.draft??workshopDocument(await demoWorkshop());
-  if(!row)document.termsText='';
+  let document:WorkshopDocument=row?.draft??await initialWorkshopDocument();
+  if(!document.formatsVersion){
+    const seed=await initialWorkshopDocument(),allowed=new Set(seed.colors.map(c=>c.publicId));
+    const colors=document.colors.map(c=>({...c,enabled:allowed.has(c.publicId)}));
+    for(const color of seed.colors)if(!colors.some(c=>c.publicId===color.publicId))colors.push(color);
+    document={...structuredClone(document),formatsVersion:1,colors,largeFormat:seed.largeFormat,termsText:document.termsText.replace('La distribución de las venecitas será la del diseño que confirmes.','Podemos ajustar algunas venecitas durante el armado para cuidar el resultado.'),confirmations:{...document.confirmations,palette:true,terms:false}};
+  }
   return {environment:this.environment,version:row?.version??0,publishedVersion:row?.published_version??null,publishedAt:row?.published_at?.toISOString()??null,document};
  }
- async published(){
+ async published(format:FrameFormat='1x1'){
   const [row]=await this.sql`SELECT published,published_version FROM frame_workshop WHERE environment=${this.environment}`;
   if(!row?.published)throw new FrameCommerceError('WORKSHOP_PENDING','Estamos preparando las opciones del taller.',503);
-  const workshop=parseWorkshopDocument({...row.published,_rev:`workshop-${this.environment}-${row.published_version}`});
+  if(format==='2x2'&&!row.published.largeFormat)throw new FrameCommerceError('WORKSHOP_PENDING','El formato 2×2 todavía está en preparación.',503);
+  const workshop=parseWorkshopDocument({...row.published,_rev:`workshop-${this.environment}-${row.published_version}`},format);
   if(this.environment==='production')requireProductionWorkshop(workshop);
   return workshop;
  }
@@ -22,7 +29,7 @@ export class PostgresWorkshopRepository {
   if(!Number.isSafeInteger(expectedVersion)||expectedVersion<0||!isWorkshopDraft(document)||JSON.stringify(document).length>100_000)throw new FrameCommerceError('INVALID_INPUT','Revisá los datos del taller.',422);
   // Drafts may be incomplete. Publishing always validates the entire document.
   if(action==='publish'){
-   try{requireProductionWorkshop(parseWorkshopDocument({...document,_rev:'publication-validation'}));}
+   try{requireProductionWorkshop(parseWorkshopDocument({...document,_rev:'publication-validation'}));if(document.largeFormat)requireProductionWorkshop(parseWorkshopDocument({...document,_rev:'publication-validation'},'2x2'));}
    catch{throw new FrameCommerceError('WORKSHOP_INVALID','Revisá las medidas, los colores, los precios, los paquetes y todas las confirmaciones antes de publicar.',422);}
   }
   await this.sql.begin(async tx=>{
@@ -43,6 +50,8 @@ export class PostgresWorkshopRepository {
 function isWorkshopDraft(d:WorkshopDocument):boolean{
  const number=(v:unknown)=>v===null||(typeof v==='number'&&Number.isFinite(v));
  const text=(v:unknown,max=100)=>typeof v==='string'&&v.length<=max;
+ if(d?.largeFormat){const {largeFormat,...base}=d;if(!isWorkshopDraft({...base,...largeFormat,confirmations:{...base.confirmations,...largeFormat.confirmations}}))return false;}
+ if(d?.formatsVersion!==undefined&&d.formatsVersion!==1)return false;
  try{return !!d&&typeof d==='object'&&!!d.geometry&&!!d.pricing&&!!d.confirmations&&
   ['tileMm','groutMm','frameMm','minCells','maxCells','step'].every(k=>number(d.geometry[k as keyof typeof d.geometry]))&&text(d.geometry.backgroundColorId)&&
   Array.isArray(d.colors)&&d.colors.length<=128&&d.colors.every(c=>text(c.publicId,64)&&text(c.name,80)&&text(c.hex,7)&&text(c.material)&&typeof c.enabled==='boolean')&&

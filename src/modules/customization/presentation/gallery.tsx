@@ -33,7 +33,7 @@ export function Gallery({ templates }: { templates: DesignTemplate[] }) {
   }));
   return <>
     <Hero slides={slides} title="Catálogo de cuadros"
-      description="Elegí el diseño que más te guste y probá distintos tamaños y colores."
+      description="Elegí el diseño que más te guste y probá distintos formatos y tamaños."
       action={{ href: "#disenos", label: "Ver diseños" }}
       secondaryAction={{ href: "/crear-cuadro", label: "Crear mi diseño" }} slideNoun="cuadro" />
     <div className={styles.page}>

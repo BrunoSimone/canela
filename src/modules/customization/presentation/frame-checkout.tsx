@@ -1,4 +1,7 @@
 'use client';
+import { formatOf } from '../domain/formats';
+
+import { COLOR_VARIATION_NOTICE } from "../domain/appearance";
 import type { PublicFrameEstimate } from "../domain/public-pricing";
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { ARGENTINE_PROVINCES, parseDeliverySnapshot } from '@/modules/checkout/domain/delivery';
@@ -35,7 +38,7 @@ export function FrameCheckout({design,estimate,settings,onEdit,navigate=(url)=>w
  }
  function calculate(e:FormEvent) {e.preventDefault();if(!accepted)return;
   let delivery;try{delivery=parseDeliverySnapshot({type:'home',buyerName:address.name,recipientName:address.name,phone:address.phone,recipientDocument:address.document,streetName:address.street,streetNumber:address.number,floor:address.floor??'',apartment:address.apartment??'',city:address.city,provinceCode:address.province,postalCode:address.postalCode});}catch{setError('Revisá los datos del domicilio.');return;}
-  void perform(async signal=>{const data=await request({action:'quote',design:selectDesign(design),accepted:true,galleryConsent:consent,termsVersion:settings.terms.version,recipient:{email:address.email,delivery}},signal,settings.mode);if(signal.aborted)return;
+  void perform(async signal=>{const data=await request({action:'quote',format:formatOf(design.config),design:selectDesign(design),accepted:true,galleryConsent:consent,termsVersion:settings.terms.version,recipient:{email:address.email,delivery}},signal,settings.mode);if(signal.aborted)return;
     setOptions(data.options);setSelected(data.options[0]?.id??'');attempt.current=null;setAttempted(false);setStep('payment');
   });
  }
@@ -61,7 +64,7 @@ export function FrameCheckout({design,estimate,settings,onEdit,navigate=(url)=>w
      {fields.map(([key,label,autoComplete])=><label className={styles.formField} key={key}>{label}<input name={key} value={address[key]??''} onChange={e=>setAddress({...address,[key]:e.target.value})} required={!['floor','apartment'].includes(key)} autoComplete={autoComplete} type={key==='email'?'email':key==='phone'?'tel':'text'} maxLength={key==='email'?254:key==='postalCode'?4:key==='floor'||key==='apartment'?3:100} pattern={key==='postalCode'?'[1-9][0-9]{3}':undefined} inputMode={key==='postalCode'?'numeric':undefined}/></label>)}
      <label className={styles.formField}>Provincia<select name="province" required value={address.province} onChange={e=>setAddress({...address,province:e.target.value})}><option value="">Elegí una provincia</option>{ARGENTINE_PROVINCES.map(p=><option key={p.code} value={p.code}>{p.name}</option>)}</select></label>
     </fieldset>
-    <div className={styles.purchaseConsent}><p>{settings.terms.text}</p><label><input type="checkbox" required checked={accepted} onChange={e=>setAccepted(e.target.checked)}/>Acepto estas condiciones y el diseño que revisé.</label><label><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/>Autorizo a Canela a mostrar este mosaico en el catálogo de cuadros y ofrecerlo a otras personas. Es opcional.</label></div>
+    <div className={styles.purchaseConsent}><p>{COLOR_VARIATION_NOTICE}</p><p>{settings.terms.text}</p><label><input type="checkbox" required checked={accepted} onChange={e=>setAccepted(e.target.checked)}/>Acepto estas condiciones y el diseño que revisé.</label><label><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/>Autorizo a Canela a mostrar este mosaico en el catálogo de cuadros y ofrecerlo a otras personas. Es opcional.</label></div>
     <button className={styles.primaryButton} disabled={busy||!accepted}>{busy?'Preparando tu resumen…':'Continuar'}</button>
    </form>:<>
     <fieldset disabled={busy||attempted} className={styles.simulationOptions}><legend>Elegí el envío</legend>{options.map(o=><label key={o.id}><input type="radio" name="shipping" checked={selected===o.id} onChange={()=>setSelected(o.id)}/><span><strong>{o.carrier} · {formatArs(o.shippingCents)}</strong><small>{o.service} · Entrega a domicilio</small></span></label>)}</fieldset>

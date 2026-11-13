@@ -9,23 +9,23 @@ import { raster } from "../testing/workshop";
 
 afterEach(cleanup);
 describe("PER-136: material preview", () => {
-  it("keeps the Murvi matrix and geometry intact with bounded decoration at 45×45", async () => {
+  it("keeps the Murvi matrix and geometry intact with bounded decoration at 90×90", async () => {
     const config = await demoDesignCatalog.configuration();
-    const design = renderMosaic(raster(), config, 45);
+    const design = renderMosaic(raster(), config, 90);
     const saved = structuredClone(design);
     render(<MosaicSvg design={design} label="Cuadro" />);
     const svg = screen.getByRole("img", { name: "Cuadro" });
     const cells = [...svg.querySelectorAll("[data-cell]")];
     const colors = new Map(config.palette.map(c => [c.id, c.hex]));
-    expect(config.palette).toHaveLength(62);
-    expect(cells).toHaveLength(2025);
+    expect(config.palette).toHaveLength(36);
+    expect(cells).toHaveLength(8100);
     cells.forEach((cell, i) => {
       expect(cell.getAttribute("fill")).toBe(colors.get(design.cells[i]));
-      expect(Number(cell.getAttribute("x"))).toBe(config.frameMm + i % 45 * (config.tileMm + config.groutMm));
-      expect(Number(cell.getAttribute("y"))).toBe(config.frameMm + Math.floor(i / 45) * (config.tileMm + config.groutMm));
+      expect(Number(cell.getAttribute("x"))).toBe(config.frameMm + i % 90 * (config.tileMm + config.groutMm));
+      expect(Number(cell.getAttribute("y"))).toBe(config.frameMm + Math.floor(i / 90) * (config.tileMm + config.groutMm));
       expect(Number(cell.getAttribute("width"))).toBe(config.tileMm);
     });
-    expect(svg.getAttribute("viewBox")).toBe(`0 0 ${dimensions(config, 45).framedMm} ${dimensions(config, 45).framedMm}`);
+    expect(svg.getAttribute("viewBox")).toBe(`0 0 ${dimensions(config, 90).framedMm} ${dimensions(config, 90).framedMm}`);
     expect(svg.querySelector("[data-material-surface]")?.getAttribute("pointer-events")).toBe("none");
     expect(svg.querySelectorAll("*").length - cells.length).toBeLessThan(100);
     expect(svg.querySelectorAll("filter, image, foreignObject, animate")).toHaveLength(0);

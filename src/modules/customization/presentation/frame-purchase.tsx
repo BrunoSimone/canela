@@ -1,4 +1,6 @@
 "use client";
+import { formatOf, type FrameFormat } from '../domain/formats';
+import { COLOR_VARIATION_NOTICE } from "../domain/appearance";
 import type { PublicFrameEstimate } from "../domain/public-pricing";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
@@ -15,8 +17,8 @@ type Step = "review" | "shipping" | "payment" | "result";
 type Fields = Record<"name" | "email" | "phone" | "document" | "street" | "number" | "floor" | "apartment" | "city" | "province" | "postalCode", string>;
 const emptyFields: Fields = { name: "", email: "", phone: "", document: "", street: "", number: "", floor: "", apartment: "", city: "", province: "", postalCode: "" };
 class RequestError extends Error { constructor(message: string, public code: string) { super(message); } }
-async function demoRequest<T>(signal: AbortSignal, body?: DemoPurchaseRequest): Promise<T> {
-  const response = await fetch("/api/cuadros/prueba", { method: body ? "POST" : "GET", headers: body ? { "Content-Type": "application/json" } : undefined, body: body ? JSON.stringify(body) : undefined, cache: "no-store", signal });
+async function demoRequest<T>(signal: AbortSignal, body?: DemoPurchaseRequest,format:FrameFormat='1x1'): Promise<T> {
+  const response = await fetch("/api/cuadros/prueba", { method: body ? "POST" : "GET", headers: body ? { "Content-Type": "application/json" } : undefined, body: body ? JSON.stringify({...body,format}) : undefined, cache: "no-store", signal });
   const data = await response.json();
   if (!response.ok) throw new RequestError(data.error ?? "No pudimos completar la prueba.", data.code ?? "UNAVAILABLE");
   if (data.mode !== "demo") throw new Error("Respuesta de prueba inválida");
@@ -62,7 +64,7 @@ export function FramePurchase({ design, estimate, onEdit }: { design: MosaicDesi
       recipient = { email: fields.email.trim(), delivery };
     } catch { setError("Revisá el email, teléfono, documento y domicilio antes de continuar."); return; }
     void perform(async signal => {
-      const next = await demoRequest<DemoQuote>(signal, { action: "quote", design: selectDesign(design), recipient, accepted: true });
+      const next = await demoRequest<DemoQuote>(signal, { action: "quote", design: selectDesign(design), recipient, accepted: true },formatOf(design.config));
       if (signal.aborted) return;
       setQuote(next); attemptId.current = null; setStep("payment");
     });
@@ -71,7 +73,7 @@ export function FramePurchase({ design, estimate, onEdit }: { design: MosaicDesi
     if (!quote) return;
     void perform(async signal => {
       attemptId.current ??= crypto.randomUUID();
-      const next = await demoRequest<DemoOrder>(signal, { action: "pay", quoteId: quote.id, attemptId: attemptId.current, outcome });
+      const next = await demoRequest<DemoOrder>(signal, { action: "pay", quoteId: quote.id, attemptId: attemptId.current, outcome },formatOf(design.config));
       if (signal.aborted) return;
       setOrder(next); setStep("result");
     });
@@ -79,7 +81,7 @@ export function FramePurchase({ design, estimate, onEdit }: { design: MosaicDesi
   function resolve(result: "approved" | "rejected") {
     if (!quote || !order) return;
     void perform(async signal => {
-      const next = await demoRequest<DemoOrder>(signal, { action: "resolve", quoteId: quote.id, orderId: order.id, outcome: result });
+      const next = await demoRequest<DemoOrder>(signal, { action: "resolve", quoteId: quote.id, orderId: order.id, outcome: result },formatOf(design.config));
       if (!signal.aborted) setOrder(next);
     });
   }
@@ -131,7 +133,7 @@ export function FramePurchase({ design, estimate, onEdit }: { design: MosaicDesi
       </div>
       <aside className={styles.purchaseSummary} aria-label="Resumen de esta compra">
         <MosaicSvg design={quote?.design ?? design} label="Diseño para esta compra" className={styles.purchaseArt} />
-        <p className={styles.hint}>Los colores y el acabado pueden variar en el cuadro real.</p>
+        <p className={styles.hint}>{COLOR_VARIATION_NOTICE}</p>
         <h2>Tu cuadro personalizado</h2>
         <dl className={styles.priceBreakdown}><div><dt>Cuadro con marco</dt><dd>{formatArs(quote?.frame.totalCents ?? estimate.totalCents)}</dd></div><div><dt>Envío de prueba</dt><dd>{quote ? formatArs(quote.shipping.cents) : "Por cotizar"}</dd></div></dl>
         {quote && <><p className={styles.estimateLabel}>Total de prueba · ARS</p><p className={styles.estimateAmount} aria-label="Total de prueba">{formatArs(quote.totalCents)}</p><p className={styles.hint}>En esta prueba: {quote.productionDays} días para hacer el cuadro y {quote.shipping.transitDays} días para el envío.</p><div className={styles.deliverySummary}><h3>Entrega a domicilio</h3><p>{quote.recipient.delivery.recipientName}<br />{quote.recipient.delivery.streetName} {quote.recipient.delivery.streetNumber}{quote.recipient.delivery.floor && ` · Piso ${quote.recipient.delivery.floor}`}{quote.recipient.delivery.apartment && ` · Depto. ${quote.recipient.delivery.apartment}`}<br />{quote.recipient.delivery.city}, {provinceName(quote.recipient.delivery.provinceCode)} · {quote.recipient.delivery.postalCode}</p></div></>}

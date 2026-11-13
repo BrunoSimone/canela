@@ -2,17 +2,18 @@ import { dimensions, type WorkshopConfig } from "../domain/design";
 export type Point = { x: number; y: number };
 export type Viewport = { width: number; height: number };
 export type MosaicView = Point & { scale: number };
+export const MOSAIC_MAX_ZOOM = 16;
 export const fittedView = (): MosaicView => ({ scale: 1, x: 0, y: 0 });
 export const artSide = (viewport: Viewport) => Math.max(1, Math.min(viewport.width, viewport.height) - 40);
 export function constrain(view: MosaicView, viewport: Viewport): MosaicView {
-  const scale = Math.max(1, Math.min(8, view.scale));
+  const scale = Math.max(1, Math.min(MOSAIC_MAX_ZOOM, view.scale));
   const side = artSide(viewport) * scale;
   const maxX = Math.max(0, (side - viewport.width) / 2 + 20);
   const maxY = Math.max(0, (side - viewport.height) / 2 + 20);
   return { scale, x: Math.max(-maxX, Math.min(maxX, view.x)), y: Math.max(-maxY, Math.min(maxY, view.y)) };
 }
 export function zoomAt(view: MosaicView, scale: number, point: Point, viewport: Viewport): MosaicView {
-  const next = Math.max(1, Math.min(8, scale)); const ratio = next / view.scale;
+  const next = Math.max(1, Math.min(MOSAIC_MAX_ZOOM, scale)); const ratio = next / view.scale;
   const x = point.x - viewport.width / 2, y = point.y - viewport.height / 2;
   return constrain({ scale: next, x: x - (x - view.x) * ratio, y: y - (y - view.y) * ratio }, viewport);
 }

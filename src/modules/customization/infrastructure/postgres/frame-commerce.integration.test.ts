@@ -16,12 +16,14 @@ import { FrameCommerce } from '../../application/frame-commerce';
 import { demoWorkshop } from '../demo-workshop';
 import { demoDesignCatalog } from '../demo-catalog';
 import { demoRecipient } from '../demo-purchase-config';
+import { renderMosaic,resizeDesign } from '../../domain/design';
 import { selectDesign } from '../../domain/purchase';
 import { SignedCourierQuoteService } from '@/modules/shipping/infrastructure/signed-courier-quote';
 import { ZIPNOVA_INPUT_CONSTRAINTS } from '@/modules/shipping/infrastructure/server/shipping-config';
 import { DEFAULT_QUOTE_MARGIN } from '@/modules/shipping/domain/quote-margin';
 import { PostgresPaymentConfirmationRepository } from '@/modules/payments/infrastructure/postgres/payment-confirmation-repository';
 import { PostgresPublicOrderStatusRepository } from '@/modules/checkout/infrastructure/postgres/public-order-status-repository';
+import { raster } from '../../testing/workshop';
 import { FrameProduction } from './production';
 import { PostgresOrderPreparationRepository } from '@/modules/admin/infrastructure/postgres-preparation';
 import { PostgresFrameRepository } from './frame-repository';
@@ -66,6 +68,19 @@ describe.skipIf(!connection).each(['test','production'] as const)('PER-148 persi
   expect(inventory.settle).not.toHaveBeenCalled();
   expect((await sql`SELECT * FROM order_notification`)).toHaveLength(1);
   await expect(sql`UPDATE custom_frame_order SET snapshot='{}'::jsonb WHERE order_id=${o.id}`).rejects.toThrow();
+ });
+ it('PER-155 persists the 90x90 accepted design through payment, production and public receipt',async()=>{
+  const w=await workshop(),design=resizeDesign((await demoDesignCatalog.templates())[0].design,w.config,90);
+  design.cells[0]='tono-38';design.cells[8099]='tono-01';
+  const q=(await service().quote({accepted:true,galleryConsent:false,termsVersion:w.terms.version,design:selectDesign(design),recipient:demoRecipient}))[0];
+  expect(q.snapshot.design.cells).toHaveLength(8100);expect(q.snapshot.design.config.tileMm).toBe(11);
+  expect(q.snapshot.design.config.palette).toHaveLength(36);
+  expect(q.snapshot.design.cells).not.toContain('tono-17');expect(q.snapshot.design.cells).not.toContain('tono-26');
+  const paid=await service().pay({quoteId:q.id,attemptId:randomUUID()}),[o]=await sql`SELECT id FROM orders`;
+  await confirm(o.id);
+  expect((await new FrameProduction(sql).get(o.id))!.snapshot.design).toEqual(design);
+  expect((await new PublicFrameReader(sql).get(paid.orderToken))!.design).toEqual(design);
+  expect(payment).toHaveBeenCalledTimes(1);expect(inventory.settle).not.toHaveBeenCalled();
  });
  it('serializes concurrent reservations and never oversells the five workshop positions',async()=>{
   const qs=await Promise.all(Array.from({length:6},()=>quoted()));
@@ -118,9 +133,11 @@ describe.skipIf(!connection).each(['test','production'] as const)('PER-148 persi
   const q=await quoted(true),paid=await service().pay({quoteId:q.id,attemptId:randomUUID()}),[o]=await sql`SELECT id FROM orders`;
   await expect(publisher.prepare(o.id,'owner')).rejects.toThrow();await confirm(o.id);
   await expect(new GalleryPublisher(sql,writer,environment==='test'?'production':'test').prepare(o.id,'owner')).rejects.toThrow();expect(writer.createIfNotExists).not.toHaveBeenCalled();
+  await expect(publisher.prepare(o.id,'owner')).rejects.toMatchObject({code:'GALLERY_NOT_READY'});
+  const production=new FrameProduction(sql),frame=(await production.get(o.id))!;const cells=[...frame.snapshot.design.cells];cells[0]=frame.snapshot.design.config.palette.find(c=>c.id!==cells[0])!.id;await production.retouch(o.id,frame.version,cells,'owner');await production.advance(o.id,frame.version+1,'making','owner');await production.advance(o.id,frame.version+2,'ready','owner');
   writer.createIfNotExists.mockRejectedValueOnce(Error('network'));await expect(publisher.prepare(o.id,'owner')).rejects.toThrow();
   const result=await publisher.prepare(o.id,'owner');await publisher.prepare(o.id,'owner');expect(writer.createIfNotExists).toHaveBeenCalledTimes(2);
-  const doc=writer.createIfNotExists.mock.calls[1][0];expect(doc._id).toBe(`drafts.${result.documentId}`);const serialized=JSON.stringify(doc);
+  const doc=writer.createIfNotExists.mock.calls[1][0];expect(doc._id).toBe(`drafts.${result.documentId}`);expect(JSON.parse(doc.designJson).cells).toEqual(cells);const serialized=JSON.stringify(doc);
   for(const privateValue of [o.id,paid.orderToken,q.recipient.email,q.recipient.delivery.recipientName,'workshopFingerprint','materials','priceCents'])expect(serialized).not.toContain(privateValue);
   const noConsent=await quoted(false);await service().pay({quoteId:noConsent.id,attemptId:randomUUID()});const [other]=await sql`SELECT order_id FROM custom_frame_order WHERE quote_id=${noConsent.id}`;await confirm(other.order_id);await expect(publisher.prepare(other.order_id,'owner')).rejects.toThrow();
  });
@@ -199,6 +216,51 @@ describe.skipIf(!connection).each(['test','production'] as const)('PER-148 persi
   const other=new PostgresWorkshopRepository(sql,environment==='test'?'production':'test');await expect(other.published()).rejects.toMatchObject({code:'WORKSHOP_PENDING'});
   await repository.save(saved.version,edited,'pause','owner');await expect(repository.published()).rejects.toMatchObject({code:'WORKSHOP_PENDING'});
   expect((await repository.settings()).document.termsText).toBe('Unpublished terms');expect(await sql`SELECT id FROM frame_workshop_event`).toHaveLength(4);
+ });
+
+ it('PER-157 keeps fabrication retouches separate, versioned and private under concurrent saves',async()=>{
+  const q=await quoted(),paid=await service().pay({quoteId:q.id,attemptId:randomUUID()}),[o]=await sql`SELECT id FROM orders`;
+  const production=new FrameProduction(sql);
+  await expect(production.retouch(o.id,1,q.snapshot.design.cells,'owner')).rejects.toMatchObject({code:'PRODUCTION_NOT_ALLOWED'});
+  await confirm(o.id);const initial=(await production.get(o.id))!,original=structuredClone(initial.snapshot);
+  const cells=[...original.design.cells];cells[0]=original.design.config.palette.find(c=>c.id!==cells[0])!.id;
+  const broken=[...cells];broken[0]='not-in-palette';
+  await expect(production.retouch(o.id,initial.version,broken,'owner')).rejects.toMatchObject({code:'INVALID_DESIGN'});
+  await expect(production.retouch(o.id,initial.version,cells.slice(1),'owner')).rejects.toMatchObject({code:'INVALID_DESIGN'});
+  const other=[...cells];other[1]=cells[0];
+  const results=await Promise.allSettled([production.retouch(o.id,initial.version,cells,'owner'),production.retouch(o.id,initial.version,other,'another-owner')]);
+  expect(results.filter(r=>r.status==='fulfilled')).toHaveLength(1);expect(results.filter(r=>r.status==='rejected')).toHaveLength(1);
+  const updated=(await production.get(o.id))!;expect(updated.version).toBe(initial.version+1);expect(updated.snapshot).toEqual(original);
+  expect(updated.productionDesign?.cells[0]).toBe(cells[0]);expect((await new PublicFrameReader(sql).get(paid.orderToken))?.design).toEqual(original.design);
+  expect((await new PostgresAdminOrderReader(sql).get(o.id))?.frame?.productionDesign).toEqual(updated.productionDesign);
+  expect(await sql`SELECT id FROM custom_frame_event WHERE event='retouched'`).toHaveLength(1);
+  await production.advance(o.id,updated.version,'making','owner');await production.advance(o.id,updated.version+1,'ready','owner');
+  await expect(production.retouch(o.id,updated.version+2,cells,'owner')).rejects.toMatchObject({code:'PRODUCTION_NOT_ALLOWED'});
+ });
+ it('PER-157 publishes both independent profiles atomically and blocks invalid large-format values',async()=>{
+  const repository=new PostgresWorkshopRepository(sql,environment),initial=await repository.settings(),doc=initial.document;
+  doc.productionDays=15;doc.capacity=5;for(const key of Object.keys(doc.confirmations) as Array<keyof typeof doc.confirmations>)doc.confirmations[key]=true;
+  for(const key of Object.keys(doc.largeFormat!.confirmations) as Array<keyof NonNullable<typeof doc.largeFormat>['confirmations']>)doc.largeFormat!.confirmations[key]=true;
+  const bad=structuredClone(doc);bad.largeFormat!.confirmations.pricing=false;
+  await expect(repository.save(0,bad,'publish','owner')).rejects.toMatchObject({code:'WORKSHOP_INVALID'});
+  expect((await repository.settings()).publishedVersion).toBeNull();
+  await repository.save(0,doc,'publish','owner');
+  expect((await repository.published()).config.palette).toHaveLength(29);expect((await repository.published('2x2')).config.palette).toHaveLength(36);
+  expect((await repository.published()).config.id).not.toBe((await repository.published('2x2')).config.id);
+ });
+
+ it.each(['1x1','2x2'] as const)('PER-157 persists the selected %s configuration through quote/payment and rejects cross-format selection',async format=>{
+  const repository=new PostgresWorkshopRepository(sql,environment),doc=(await repository.settings()).document;
+  doc.productionDays=15;doc.capacity=5;for(const k of Object.keys(doc.confirmations) as Array<keyof typeof doc.confirmations>)doc.confirmations[k]=true;
+  const large=doc.largeFormat!;for(const k of Object.keys(large.confirmations) as Array<keyof typeof large.confirmations>)large.confirmations[k]=true;
+  await repository.save(0,doc,'publish','owner');
+  const w=await repository.published(format),design=renderMosaic(raster(),w.config,w.config.maxCells);
+  const commerce=new FrameCommerce({sql,environment,workshop:id=>repository.published(id),shipping:{rates:{quoteShipment:quote},issuer:new SignedCourierQuoteService(secret),accountMode:environment==='test'?'sandbox':'operational',contextFingerprint:'f'.repeat(64),constraints:ZIPNOVA_INPUT_CONSTRAINTS,maxParcels:1,marginPolicy:DEFAULT_QUOTE_MARGIN},payments:{createOrder:payment,getOrder:vi.fn()},siteUrl:'http://localhost:3000',signingSecret:secret});
+  const request={format,accepted:true,galleryConsent:false,termsVersion:w.terms.version,design:selectDesign(design),recipient:demoRecipient};
+  await expect(commerce.quote({...request,format:format==='1x1'?'2x2':'1x1'})).rejects.toMatchObject({code:'DESIGN_CHANGED'});
+  const q=(await commerce.quote(request))[0];expect(q.snapshot.design.config).toEqual(w.config);
+  const paid=await commerce.pay({quoteId:q.id,attemptId:randomUUID()}),[o]=await sql`SELECT id FROM orders`;await confirm(o.id);
+  expect((await new PublicFrameReader(sql).get(paid.orderToken))?.design).toEqual(design);expect(payment).toHaveBeenCalledTimes(1);
  });
 
 });

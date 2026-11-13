@@ -1,4 +1,4 @@
-import { demoDesignCatalog } from "../../src/modules/customization/infrastructure/demo-catalog";
+import { historicalMurviConfig } from "./historical-murvi-config";
 import { loadLocalImage } from "../../src/modules/customization/presentation/local-image";
 import { additions, candidateSource, compare, renderStudySvg, type Surface } from "./palette-study";
 
@@ -48,7 +48,7 @@ function render() {
 }
 
 async function main() {
-  const base = await demoDesignCatalog.configuration();
+  const base = historicalMurviConfig();
   for (const input of inputs) {
     const blob = await (await fetch(input.image)).blob();
     const local = await loadLocalImage(new File([blob], `${input.theme}.png`, { type: "image/png" }));

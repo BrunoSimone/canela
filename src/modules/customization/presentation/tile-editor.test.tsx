@@ -21,9 +21,9 @@ beforeEach(installEditorDom);
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 async function open() { render(<Harness />); await userEvent.click(screen.getByRole("button", { name: "Retocar" })); return screen.findByRole("group", { name: "Mosaico editable" }); }
 describe("PER-133: editor interaction", () => {
-  it("PER-136: dense Murvi material stays unchanged during pinch/pan/zoom, then edits only the selected piece", async () => {
+  it("PER-155: 8100-piece material stays unchanged during pinch/pan/zoom, then edits only the selected piece", async () => {
     const config = await demoDesignCatalog.configuration();
-    const initial = renderMosaic(raster(), config, 45);
+    const initial = renderMosaic(raster(), config, 90);
     render(<Harness initial={initial} />);
     await userEvent.click(screen.getByRole("button", { name: "Retocar" }));
     const stage = screen.getByRole("group", { name: "Mosaico editable" });
@@ -44,30 +44,30 @@ describe("PER-133: editor interaction", () => {
     expect(mutations).toHaveLength(0); observer.disconnect();
     await userEvent.click(screen.getByRole("button", { name: "Ver cuadro completo" }));
     await userEvent.click(screen.getByRole("button", { name: "Acercar mosaico" }));
-    fireEvent.pointerDown(stage, pointer(4, 200)); fireEvent.pointerUp(stage, pointer(4, 200));
-    expect(screen.getByRole("status", { name: "Venecita seleccionada" }).textContent).toContain("Fila 23 · Columna 23");
-    const target = config.palette.find(c => c.id !== initial.cells[1012])!;
+    fireEvent.keyDown(stage, { key: "ArrowRight" });
+    expect(screen.getByRole("status", { name: "Venecita seleccionada" }).textContent).toContain("Fila 1 · Columna 1");
+    const target = config.palette.find(c => c.id !== initial.cells[0])!;
     await userEvent.click(screen.getByRole("button", { name: `Usar color ${target.name}` }));
-    expect(cells()).toEqual(originalCells.map((c, i) => i === 1012 ? target.hex : c));
+    expect(cells()).toEqual(originalCells.map((c, i) => i === 0 ? target.hex : c));
     expect(svg.querySelectorAll("[data-material-surface]")).toHaveLength(1);
     await userEvent.click(screen.getByRole("button", { name: "Deshacer retoque" })); expect(cells()).toEqual(originalCells);
-    await userEvent.click(screen.getByRole("button", { name: "Rehacer retoque" })); expect(cells()[1012]).toBe(target.hex);
+    await userEvent.click(screen.getByRole("button", { name: "Rehacer retoque" })); expect(cells()[0]).toBe(target.hex);
     await userEvent.click(screen.getByRole("button", { name: "Restaurar color de esta venecita" })); expect(cells()).toEqual(originalCells);
   });
-  it("PER-134: all 62 Murvi materials are accessible and the last color can be painted and undone", async () => {
+  it("PER-134: all 36 Classic materials are accessible and the last color can be painted and undone", async () => {
     const config = await demoDesignCatalog.configuration();
     const initial = renderMosaic(raster(), config, 15);
     render(<Harness initial={initial} />);
     await userEvent.click(screen.getByRole("button", { name: "Retocar" }));
     const stage = screen.getByRole("group", { name: "Mosaico editable" });
-    expect(screen.getAllByRole("button", { name: /^Usar color / })).toHaveLength(62);
-    expect(screen.getByText(/los transparentes también cambian/)).toBeTruthy();
+    expect(screen.getAllByRole("button", { name: /^Usar color / })).toHaveLength(36);
+    expect(screen.queryByText(/transparentes/)).toBeNull();
     fireEvent.keyDown(stage, { key: "ArrowRight" });
-    const target = screen.getByRole("button", { name: "Usar color Blanco niebla" });
+    const target = screen.getByRole("button", { name: "Usar color Rojo vivo" });
     target.focus(); await userEvent.keyboard("{Enter}");
-    expect(cells()[0]).toBe("#d8dfd7");
+    expect(cells()[0]).toBe("#e00704");
     expect(screen.getByRole("dialog").outerHTML).not.toMatch(/murvi|DI99|Vitro|Clasico/i);
-    expect(screen.getByRole("status", { name: "Venecita seleccionada" }).textContent).toContain("Blanco niebla");
+    expect(screen.getByRole("status", { name: "Venecita seleccionada" }).textContent).toContain("Rojo vivo");
     await userEvent.click(screen.getByRole("button", { name: "Deshacer retoque" }));
     expect(cells()[0]).toBe(config.palette.find(c => c.id === initial.cells[0])!.hex);
   });

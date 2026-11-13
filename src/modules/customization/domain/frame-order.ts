@@ -9,4 +9,4 @@ export type FrameSnapshot = {
 };
 export type FrameQuote = {environment:'test'|'production';id:string;expiresAt:string;snapshot:FrameSnapshot;recipient:DemoRecipient;shipping:CourierQuoteSnapshot};
 export type ProductionState = 'awaiting_payment'|'queued'|'making'|'ready';
-export type AdminFrame = {state:ProductionState;version:number;design?:MosaicDesign;productionDays:number;galleryConsent:boolean;galleryDraftCreated:boolean};
+export type AdminFrame = {state:ProductionState;version:number;design?:MosaicDesign;productionDesign?:MosaicDesign|null;productionDays:number;galleryConsent:boolean;galleryDraftCreated:boolean};

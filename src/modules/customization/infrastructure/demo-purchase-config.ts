@@ -8,6 +8,8 @@ export const demoPurchasePolicy = {
     { maxCells: 15, weightGrams: 2_000, shippingCents: 850_000 },
     { maxCells: 30, weightGrams: 6_000, shippingCents: 1_200_000 },
     { maxCells: 45, weightGrams: 13_000, shippingCents: 1_800_000 },
+    { maxCells: 60, weightGrams: 16_000, shippingCents: 2_100_000 },
+    { maxCells: 90, weightGrams: 20_000, shippingCents: 2_700_000 },
   ],
   otherProvinceCents: 150_000, packagingExtraCm: 4, depthCm: 8,
 };

@@ -5,18 +5,18 @@ import { Dialog } from "@base-ui/react/dialog";
 import { Check, Maximize, Minus, Plus, Redo2, RotateCcw, Undo2 } from "lucide-react";
 import { dimensions, type MosaicDesign } from "../domain/design";
 import type { RetouchHistory } from "../domain/retouches";
-import { artSide, centerTile, fittedView, MosaicGestures, tileAt, zoomAt, type Viewport } from "./mosaic-navigation";
+import { MOSAIC_MAX_ZOOM, artSide, centerTile, fittedView, MosaicGestures, tileAt, zoomAt, type Viewport } from "./mosaic-navigation";
 import { MosaicSvg } from "./mosaic-svg";
 import styles from "./tile-editor.module.css";
 
 type Props = {
-  design: MosaicDesign; history: RetouchHistory;
+  design: MosaicDesign; history: RetouchHistory;onSave?:()=>void;saving?:boolean;error?:string;
   onPaint: (index: number, color: string) => void; onRestore: (index: number) => void;
   onUndo: () => void; onRedo: () => void; onClose: () => void;
   returnFocus: RefObject<HTMLButtonElement | null>;
 };
 
-export function TileEditor({ design, history, onPaint, onRestore, onUndo, onRedo, onClose, returnFocus }: Props) {
+export function TileEditor({ design, history, onPaint, onRestore, onUndo, onRedo, onClose, returnFocus,onSave,saving=false,error }: Props) {
   const [stage, setStage] = useState<HTMLDivElement | null>(null);
   const title = useRef<HTMLHeadingElement>(null);
   const palette = useRef<HTMLDivElement>(null);
@@ -87,13 +87,13 @@ export function TileEditor({ design, history, onPaint, onRestore, onUndo, onRedo
   const changed = Object.keys(history.present).length;
   return <Dialog.Root open onOpenChange={open => { if (!open) onClose(); }}>
     <Dialog.Portal><Dialog.Backdrop className={styles.backdrop} />
-      <Dialog.Popup className={styles.editor} initialFocus={title} finalFocus={returnFocus} onKeyDown={event => {
+      <Dialog.Popup aria-busy={saving} className={styles.editor} initialFocus={title} finalFocus={returnFocus} onKeyDown={event => {
         if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") { event.preventDefault(); if (event.shiftKey) onRedo(); else onUndo(); }
       }}>
-        <header className={styles.header}><div><Dialog.Title ref={title} tabIndex={-1}>Retocar venecitas</Dialog.Title><Dialog.Description>Acercá el cuadro, elegí una venecita y probá otro color.</Dialog.Description></div><button className={styles.done} onClick={onClose}><Check size={18} aria-hidden="true" /> Listo</button></header>
-        <div className={styles.toolbar}>
+        <header className={styles.header}><div><Dialog.Title ref={title} tabIndex={-1}>Retocar venecitas</Dialog.Title><Dialog.Description>Acercá el cuadro, elegí una venecita y probá otro color.</Dialog.Description></div><div>{onSave&&<button disabled={saving} onClick={onClose}>Cancelar</button>}<button disabled={saving} className={styles.done} onClick={onSave??onClose}><Check size={18} aria-hidden="true" /> {saving?"Guardando…":onSave?"Guardar retoques":"Listo"}</button></div></header>
+        {error&&<p role="alert">{error}</p>}<div className={styles.toolbar}>
           <div className={styles.buttonGroup}><button aria-label="Deshacer retoque" title="Deshacer (Ctrl/⌘ Z)" disabled={!history.past.length} onClick={onUndo}><Undo2 size={19} aria-hidden="true" /></button><button aria-label="Rehacer retoque" title="Rehacer (Ctrl/⌘ Shift Z)" disabled={!history.future.length} onClick={onRedo}><Redo2 size={19} aria-hidden="true" /></button><span className={styles.count}>{changed ? `${changed} ${changed === 1 ? "retoque" : "retoques"}` : "Sin retoques"}</span></div>
-          <div className={styles.buttonGroup}><button aria-label="Alejar mosaico" disabled={view.scale <= 1} onClick={() => zoom(1 / 1.5)}><Minus size={19} aria-hidden="true" /></button><output aria-label="Zoom del mosaico">{Math.round(view.scale * 100)}%</output><button aria-label="Acercar mosaico" disabled={view.scale >= 8} onClick={() => zoom(1.5)}><Plus size={19} aria-hidden="true" /></button><button aria-label="Ver cuadro completo" title="Ver cuadro completo" onClick={() => { gestures.current.setView(fittedView()); setView(fittedView()); }}><Maximize size={18} aria-hidden="true" /></button></div>
+          <div className={styles.buttonGroup}><button aria-label="Alejar mosaico" disabled={view.scale <= 1} onClick={() => zoom(1 / 1.5)}><Minus size={19} aria-hidden="true" /></button><output aria-label="Zoom del mosaico">{Math.round(view.scale * 100)}%</output><button aria-label="Acercar mosaico" disabled={view.scale >= MOSAIC_MAX_ZOOM} onClick={() => zoom(1.5)}><Plus size={19} aria-hidden="true" /></button><button aria-label="Ver cuadro completo" title="Ver cuadro completo" onClick={() => { gestures.current.setView(fittedView()); setView(fittedView()); }}><Maximize size={18} aria-hidden="true" /></button></div>
         </div>
         <div className={styles.workbench}>
           <div className={styles.canvasColumn}>
@@ -111,18 +111,10 @@ export function TileEditor({ design, history, onPaint, onRestore, onUndo, onRedo
           <aside className={styles.palettePanel} aria-label="Colores para la venecita">
             <div className={styles.selectionInfo}><div role="status" aria-label="Venecita seleccionada" aria-live="polite"><h3>{selected === null ? "Elegí una venecita" : `Fila ${Math.floor(selected / design.size) + 1} · Columna ${selected % design.size + 1}`}</h3><p>{color ? color.name : "Después, tocá un color para cambiarla."}</p></div><button className={styles.restore} aria-label="Restaurar color de esta venecita" title="Restaurar color generado" disabled={selected === null || history.present[selected] === undefined} onClick={() => { if (selected !== null) onRestore(selected); }}><RotateCcw size={17} aria-hidden="true" /><span>Restaurar</span></button></div>
             <div className={styles.palette} ref={palette} role="group" aria-label="Paleta de venecitas">{design.config.palette.map(c => <button key={c.id} aria-label={`Usar color ${c.name}`} title={c.name} aria-pressed={color?.id === c.id} disabled={selected === null} onClick={() => { if (selected !== null) onPaint(selected, c.id); }}><span style={{ backgroundColor: c.hex }} /></button>)}</div>
-            <p className={styles.paletteHint}>Si el cambio no te convence, tocá Deshacer. Los colores pueden variar; los transparentes también cambian según la base del cuadro.</p>
+            <p className={styles.paletteHint}>Si el cambio no te convence, tocá Deshacer. El color puede variar un poco entre partidas y según tu pantalla.</p>
           </aside>
         </div>
       </Dialog.Popup>
     </Dialog.Portal>
   </Dialog.Root>;
-}
-
-export function ConfirmRegeneration({ message, onCancel, onConfirm }: { message: string; onCancel: () => void; onConfirm: () => void }) {
-  const cancel = useRef<HTMLButtonElement>(null);
-  return <Dialog.Root open onOpenChange={open => { if (!open) onCancel(); }}><Dialog.Portal><Dialog.Backdrop className={styles.backdrop} /><Dialog.Popup className={styles.confirm} initialFocus={cancel}>
-    <Dialog.Title>¿Volver a generar el mosaico?</Dialog.Title><Dialog.Description>{message} Vas a perder los colores que retocaste pieza por pieza.</Dialog.Description>
-    <div className={styles.confirmActions}><button ref={cancel} onClick={onCancel}>Conservar retoques</button><button className={styles.done} onClick={onConfirm}>Continuar sin los retoques</button></div>
-  </Dialog.Popup></Dialog.Portal></Dialog.Root>;
 }

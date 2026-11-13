@@ -11,7 +11,6 @@ import { DemoPurchaseService } from "../application/demo-purchase";
 import { createDemoPurchaseHandler } from "./demo-purchase-http";
 import { demoDesignCatalog } from "../infrastructure/demo-catalog";
 import { demoPurchasePolicy, demoRecipient } from "../infrastructure/demo-purchase-config";
-import { installEditorDom } from "../testing/editor-dom";
 
 vi.mock("react-easy-crop", () => ({ default: () => <div /> }));
 let now: number;
@@ -49,47 +48,18 @@ async function payment() {
   expect(await screen.findByRole("heading", { name: "Pago de prueba" })).toBeTruthy();
 }
 describe("PER-132: separate purchase journeys", () => {
-  it("PER-133: a retouched grid survives review, backend validation, approval and return to editing", async () => {
-    installEditorDom(); const before = structuredClone(cart.getState());
-    const original = (await demoDesignCatalog.templates())[0].design;
-    const config = await demoDesignCatalog.configuration(); const color = config.palette.find(c => c.id !== original.cells[0])!;
-    const price = screen.getByLabelText("Precio estimado del cuadro").textContent;
-    await userEvent.click(screen.getByRole("button", { name: "Retocar venecitas" }));
-    fireEvent.keyDown(screen.getByRole("group", { name: "Mosaico editable" }), { key: "Home" });
-    await userEvent.click(screen.getByRole("button", { name: `Usar color ${color.name}` }));
-    await userEvent.click(screen.getByRole("button", { name: "Listo" }));
-    expect(screen.getByLabelText("Precio estimado del cuadro").textContent).toBe(price);
-    expect(requests).not.toHaveBeenCalled();
-    await payment(); await userEvent.click(screen.getByRole("button", { name: "Simular pago" }));
-    expect(await screen.findByRole("heading", { name: "Prueba completada" })).toBeTruthy();
-    const pay = requests.mock.calls.map(([, init]) => init?.body ? JSON.parse(String(init.body)) : {}).find(body => body.action === "pay");
-    const snapshot = service.snapshot(pay.quoteId);
-    expect(snapshot.design.cells).toEqual([color.id, ...original.cells.slice(1)]);
-    expect(cart.getState()).toEqual(before);
-    await userEvent.click(screen.getByRole("button", { name: "Volver a mi diseño" }));
-    expect(screen.getByRole("img", { name: /Tu mosaico/ }).querySelector("[data-cell]")?.getAttribute("fill")).toBe(color.hex);
-    await userEvent.click(screen.getByRole("button", { name: "Retocar venecitas" }));
-    expect((screen.getByRole("button", { name: "Deshacer retoque" }) as HTMLButtonElement).disabled).toBe(false);
+  it("PER-157: accepted generated grid survives review, approval and return without public retouch tools",async()=>{
+    const before=structuredClone(cart.getState()),original=(await demoDesignCatalog.templates())[0].design;
+    expect(screen.queryByRole('button',{name:'Retocar venecitas'})).toBeNull();
+    expect(screen.queryByText('Personalizar colores')).toBeNull();
+    await payment();await userEvent.click(screen.getByRole('button',{name:'Simular pago'}));
+    expect(await screen.findByRole('heading',{name:'Prueba completada'})).toBeTruthy();
+    const pay=requests.mock.calls.map(([,init])=>init?.body?JSON.parse(String(init.body)):{}).find(b=>b.action==='pay');
+    expect(service.snapshot(pay.quoteId).design.cells).toEqual(original.cells);expect(cart.getState()).toEqual(before);
+    await userEvent.click(screen.getByRole('button',{name:'Volver a mi diseño'}));
+    expect(screen.getByRole('img',{name:/Tu mosaico/})).toBeTruthy();
   });
-  it("review → address → quote → approved; preserves the stock cart and excludes original images", async () => {
-    const before = structuredClone(cart.getState());
-    await payment();
-    expect(screen.getByLabelText("Total de prueba").textContent).toContain("108.000");
-    expect(screen.queryByLabelText(/tarjeta|CVV/i)).toBeNull();
-    await userEvent.click(screen.getByRole("button", { name: "Simular pago" }));
-    expect(await screen.findByRole("heading", { name: "Prueba completada" })).toBeTruthy();
-    expect(service.activeCount()).toBe(1); expect(cart.getState()).toEqual(before);
-    expect(screen.queryByText(/Venecitas estimadas|Mano de obra|insumos estimados|Redondeo de la estimación/)).toBeNull();
-    expect(screen.getByText("Cuadro con marco")).toBeTruthy();
-    expect(screen.getByLabelText("Total de prueba").textContent).toContain("108.000");
-    for (const [, init] of requests.mock.calls) if (init?.body) {
-      const body = JSON.parse(String(init.body));
-      expect(body).not.toHaveProperty("image"); expect(body).not.toHaveProperty("photo"); expect(body).not.toHaveProperty("totalCents");
-      if (body.design) expect(Object.keys(body.design).sort()).toEqual(["algorithm", "cells", "configurationId", "configurationVersion", "size", "version"]);
-    }
-    await userEvent.click(screen.getByRole("button", { name: "Volver a mi diseño" }));
-    expect(screen.getByRole("img", { name: /Tu mosaico de 25 por 25/ })).toBeTruthy();
-  });
+
   it.each(["Simular confirmación", "Simular rechazo"])("pending → %s", async action => {
     await payment(); await userEvent.click(screen.getByRole("radio", { name: /Pendiente/ }));
     await userEvent.click(screen.getByRole("button", { name: "Simular pago" }));

@@ -1,6 +1,6 @@
 import { memo } from "react";
 
-/** A reusable 2×2 tile surface keeps decoration bounded even at 45×45.
+/** A reusable 2×2 tile surface keeps decoration bounded even at 90×90.
  * No filters or photo detail: this is generic relief, not calibrated glass. */
 export const MosaicMaterial = memo(function MosaicMaterial({ id, tileMm: t, groutMm, frameMm, mosaicMm }: {
   id: string; tileMm: number; groutMm: number; frameMm: number; mosaicMm: number;

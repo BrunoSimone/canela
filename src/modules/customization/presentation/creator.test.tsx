@@ -53,12 +53,10 @@ describe("PER-130: creator user journeys", () => {
     expect((screen.getByRole("slider", { name: "Cantidad de venecitas por lado" }) as HTMLInputElement).disabled).toBe(false);
     expect(screen.getByLabelText("Precio estimado del cuadro")).toBeTruthy();
   });
-  it("gallery template → change size/color → preview → reset", async () => {
+  it("gallery template → change size → preview → reset", async () => {
     setup();
     fireEvent.change(screen.getByRole("slider", { name: "Cantidad de venecitas por lado" }), { target: { value: "5" } });
-    await userEvent.click(screen.getByText("Personalizar colores"));
-    await userEvent.selectOptions(screen.getByRole("combobox", { name: "Reemplazar Rojo" }), "black");
-    expect(visibleCells()).toEqual(Array(25).fill("#000000"));
+    expect(visibleCells()).toEqual(Array(25).fill("#ff0000"));
     await userEvent.click(screen.getByRole("button", { name: "Empezar de nuevo" }));
     expect(screen.queryByRole("img", { name: /Tu mosaico/ })).toBeNull();
     expect(screen.queryByRole("button", { name: "Revisar mi cuadro" })).toBeNull();
@@ -129,15 +127,13 @@ describe("PER-130: creator user journeys", () => {
     expect(screen.queryByLabelText("Piezas por color")).toBeNull();
     expect(screen.getByLabelText("Colores del cuadro").textContent).toBe("Rojo");
   });
-  it("PER-131: updates price with size, preserves it on recolor and reviews without creating an order", async () => {
+  it("PER-131: updates price with size and reviews without creating an order", async () => {
     setup();
     const initial = screen.getByLabelText("Precio estimado del cuadro").textContent;
     fireEvent.change(screen.getByRole("slider", { name: "Cantidad de venecitas por lado" }), { target: { value: "30" } });
     const updated = screen.getByLabelText("Precio estimado del cuadro").textContent;
     expect(updated).not.toBe(initial);
     expect(updated).toContain("132.000");
-    await userEvent.click(screen.getByText("Personalizar colores"));
-    await userEvent.selectOptions(screen.getByRole("combobox", { name: "Reemplazar Rojo" }), "black");
     expect(screen.getByLabelText("Precio estimado del cuadro").textContent).toBe(updated);
     await userEvent.click(screen.getByRole("button", { name: "Revisar mi cuadro" }));
     expect(screen.getByRole("heading", { name: "Revisá tu cuadro" })).toBeTruthy();
@@ -147,9 +143,9 @@ describe("PER-130: creator user journeys", () => {
     expect(screen.getByText("Precio estimado del cuadro con marco · ARS")).toBeTruthy();
     expect(screen.queryByText(/Venecitas estimadas|Mano de obra|insumos estimados|Redondeo de la estimación/)).toBeNull();
     expect(screen.queryByRole("button", { name: /pagar|comprar|agregar al carrito/i })).toBeNull();
-    expect(visibleCells()).toEqual(Array(900).fill("#000000"));
+    expect(visibleCells()).toEqual(Array(900).fill("#ff0000"));
     await userEvent.click(screen.getByRole("button", { name: "Seguir editando" }));
-    expect(visibleCells()).toEqual(Array(900).fill("#000000"));
+    expect(visibleCells()).toEqual(Array(900).fill("#ff0000"));
     expect(screen.getByLabelText("Precio estimado del cuadro").textContent).toBe(updated);
     expect(document.activeElement).toBe(screen.getByRole("button", { name: "Revisar mi cuadro" }));
   });

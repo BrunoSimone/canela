@@ -27,3 +27,20 @@ it('keeps edits after a version conflict instead of overwriting another editor',
  const initial=await settings(),network=vi.fn().mockResolvedValue(Response.json({error:'Otra persona guardó cambios. Recargá.'},{status:409}));vi.stubGlobal('fetch',network);render(<WorkshopEditor initial={initial}/>);
  fireEvent.change(screen.getByLabelText('Días de fabricación desde el pago'),{target:{value:'9'}});await userEvent.click(screen.getByRole('button',{name:'Guardar borrador'}));await screen.findByRole('alert');expect((screen.getByLabelText('Días de fabricación desde el pago') as HTMLInputElement).value).toBe('9');
 });
+
+it('PER-157 edits independent format values while sharing production settings',async()=>{
+ const {initialWorkshopDocument}=await import('../infrastructure/initial-workshop');
+ const document=await initialWorkshopDocument(),initial={document,version:0,publishedVersion:null,publishedAt:null,environment:'test' as const};
+ const fetcher=vi.fn().mockImplementation(async(_url,options)=>Response.json({...initial,version:1,document:JSON.parse(options.body).document}));vi.stubGlobal('fetch',fetcher);
+ render(<WorkshopEditor initial={initial}/>);
+ fireEvent.change(screen.getByLabelText('Lado de la venecita (mm)'),{target:{value:'12'}});
+ await userEvent.click(screen.getByRole('radio',{name:'Venecitas 2×2'}));
+ expect((screen.getByLabelText('Lado de la venecita (mm)') as HTMLInputElement).value).toBe('20');
+ fireEvent.change(screen.getByLabelText('Precio del paquete de venecitas (ARS)'),{target:{value:'20000'}});
+ fireEvent.change(screen.getByLabelText('Días de fabricación desde el pago'),{target:{value:'15'}});
+ await userEvent.click(screen.getByRole('radio',{name:'Venecitas 1×1'}));
+ expect((screen.getByLabelText('Lado de la venecita (mm)') as HTMLInputElement).value).toBe('12');
+ expect((screen.getByLabelText('Días de fabricación desde el pago') as HTMLInputElement).value).toBe('15');
+ await userEvent.click(screen.getByRole('button',{name:'Guardar borrador'}));await screen.findByRole('status');
+ expect(JSON.parse(fetcher.mock.calls[0][1].body).document).toMatchObject({geometry:{tileMm:12},productionDays:15,largeFormat:{geometry:{tileMm:20},pricing:{tilePackArs:20000}}});
+});

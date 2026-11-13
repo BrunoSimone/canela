@@ -11,6 +11,7 @@ import { frameDesignCatalog, loadFrameWorkshop } from "@/modules/customization/i
 import { demoPurchaseEnabled } from "@/modules/customization/infrastructure/demo-purchase-availability";
 import { WorkshopUnavailable } from '@/modules/customization/presentation/workshop-unavailable';
 import { FrameCommerceError, workshopPending } from '@/modules/customization/domain/workshop';
+import { FRAME_FORMATS, formatOf } from "@/modules/customization/domain/formats";
 import { Creator } from "@/modules/customization/presentation/creator";
 
 export const dynamic = "force-dynamic";
@@ -18,18 +19,28 @@ export const metadata: Metadata = { title: "Crear mi cuadro", referrer: "no-refe
 export default async function CreatorPage({ searchParams }: { searchParams: Promise<{ diseno?: string | string[]; reintentar?: string | string[] }> }) {
   if (!customizationEnabled()) notFound();
   const query = await searchParams;
-  let data;
-  try { data = await loadCreator(frameDesignCatalog(), typeof query.diseno === "string" ? query.diseno : query.diseno ? "invalid" : undefined); } catch(e) { if(e instanceof FrameCommerceError && e.code==='WORKSHOP_PENDING')return <WorkshopUnavailable/>;throw e; }
+  const candidates=await Promise.all(FRAME_FORMATS.map(async id=>{
+    try{return {id,...await loadCreator(frameDesignCatalog(id),typeof query.diseno==='string'?query.diseno:query.diseno?'invalid':undefined)};}
+    catch(e){if(e instanceof FrameCommerceError&&e.code==='WORKSHOP_PENDING')return null;throw e;}
+  }));
+  const choices=candidates.filter(c=>c!==null);
+  if(!choices.length)return <WorkshopUnavailable/>;
+  let data=choices.find(c=>c.template)??choices[0];
   if (query.reintentar) {
     if (!frameCommerceEnabled() || typeof query.reintentar !== "string" || !/^[A-Za-z0-9_-]{43}$/.test(query.reintentar)) notFound();
-    const restored = resumeFrame(await new PublicFrameReader(getDatabase()).get(query.reintentar), data.config);
+    const receipt=await new PublicFrameReader(getDatabase()).get(query.reintentar);
+    const matching=receipt?choices.find(c=>c.id===formatOf(receipt.design.config)):null;
+    if(!matching)notFound();
+    const restored = resumeFrame(receipt, matching.config);
     if (!restored) notFound();
-    data.template = restored;
-    data.templateUnavailable = false;
+    data={...matching,template:restored,templateUnavailable:false};
   }
-  const workshop = frameCommerceEnabled() ? await loadFrameWorkshop() : null;
   const mode=frameCommerceMode();
-  const ready=workshop && (mode==='sandbox'||workshopPending(workshop).length===0);
+  const formats=await Promise.all(choices.map(async choice=>{
+    const workshop=frameCommerceEnabled()?await loadFrameWorkshop(choice.id):null;
+    const ready=workshop&&(mode==='sandbox'||workshopPending(workshop).length===0);
+    return {id:choice.id,config:choice.config,pricing:choice.pricing,purchaseSettings:ready&&mode?{mode,terms:workshop.terms,productionDays:workshop.productionDays}:undefined};
+  }));
   const purchaseDemo = demoPurchaseEnabled();
-  return <><Creator key={typeof query.diseno === "string" ? query.diseno : "new"} {...data} purchaseDemoEnabled={purchaseDemo} purchaseSettings={ready && mode ? {mode,terms:workshop.terms,productionDays:workshop.productionDays} : undefined} /><ComoComprar variant="frames" purchaseDemoEnabled={purchaseDemo || mode==="sandbox"} productionPurchaseEnabled={!!ready && mode==="production"} /></>;
+  return <><Creator key={typeof query.diseno === "string" ? query.diseno : "new"} {...data} formats={formats} purchaseDemoEnabled={purchaseDemo}/><ComoComprar variant="frames" purchaseDemoEnabled={purchaseDemo || mode==="sandbox"} productionPurchaseEnabled={formats.some(f=>f.purchaseSettings?.mode==='production')} /></>;
 }

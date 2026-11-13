@@ -1,33 +1,43 @@
 'use client';
-import { useEffect,useRef,useState } from 'react';
+import { useEffect,useRef,useState,type SetStateAction } from 'react';
 import type { WorkshopSettings } from '../infrastructure/postgres/workshop-repository';
+import type { FrameFormat } from '../domain/formats';
 import type { WorkshopDocument } from '../domain/workshop-document';
 import { parseWorkshopDocument } from '../domain/workshop-document';
 import { workshopPending,type WorkshopCheck } from '../domain/workshop';
 import { dimensions,cm } from '../domain/design';
 import styles from './workshop-editor.module.css';
 const checks:Record<WorkshopCheck,string>={geometry:'Medidas y tamaños',palette:'Colores y materiales',pricing:'Precios finales',packaging:'Paquetes completos',production:'Plazo y capacidad',terms:'Condiciones de compra'};
-type NumericProps={label:string;value:number;onChange:(v:number)=>void;step?:number};
-function NumberField({label,value,onChange,step=1}:NumericProps){return <label>{label}<input type="number" min="0" step={step} value={Number.isFinite(value)?value:''} onChange={e=>onChange(e.target.value===''?Number.NaN:Number(e.target.value))}/></label>;}
+type NumericProps={label:string;value:number|null;onChange:(v:number)=>void;step?:number};
+function NumberField({label,value,onChange,step=1}:NumericProps){return <label>{label}<input type="number" min="0" step={step} value={typeof value==='number'&&Number.isFinite(value)?value:''} onChange={e=>onChange(e.target.value===''?Number.NaN:Number(e.target.value))}/></label>;}
 export function WorkshopEditor({initial}:{initial:WorkshopSettings}){
- const [saved,setSaved]=useState(initial),[doc,setDoc]=useState<WorkshopDocument>(initial.document),[dirty,setDirty]=useState(false);
+ const [saved,setSaved]=useState(initial),[document,setDocument]=useState<WorkshopDocument>(initial.document),[dirty,setDirty]=useState(false);
  const [busy,setBusy]=useState(false),[message,setMessage]=useState(''),[error,setError]=useState(''),[confirmed,setConfirmed]=useState(false);
+ const [format,setFormat]=useState<FrameFormat>('1x1');
+ const doc:WorkshopDocument=format==='2x2'&&document.largeFormat?{...document,...document.largeFormat,confirmations:{...document.confirmations,...document.largeFormat.confirmations}}:document;
+ function setDoc(update:SetStateAction<WorkshopDocument>){setDocument(current=>{
+  const editable=format==='2x2'&&current.largeFormat?{...current,...current.largeFormat,confirmations:{...current.confirmations,...current.largeFormat.confirmations}}:current;
+  const next=typeof update==='function'?update(editable):update;
+  if(format==='1x1')return next;
+  return {...current,productionDays:next.productionDays,capacity:next.capacity,termsText:next.termsText,confirmations:{...current.confirmations,production:next.confirmations.production,terms:next.confirmations.terms},largeFormat:{geometry:next.geometry,colors:next.colors,pricing:next.pricing,packages:next.packages,confirmations:{geometry:next.confirmations.geometry,palette:next.confirmations.palette,pricing:next.confirmations.pricing,packaging:next.confirmations.packaging}}};
+ });}
  const pending=useRef(false);
  useEffect(()=>{if(!dirty)return;const warn=(e:BeforeUnloadEvent)=>e.preventDefault();window.addEventListener('beforeunload',warn);return()=>window.removeEventListener('beforeunload',warn);},[dirty]);
  function change(group:WorkshopCheck,edit:(next:WorkshopDocument)=>void){setDoc(current=>{const next=structuredClone(current);edit(next);next.confirmations[group]=false;return next;});setDirty(true);setConfirmed(false);setMessage('');}
  let valid=false,summary='Revisá los campos de cada sección.';
- try{const w=parseWorkshopDocument({...doc,_rev:'preview'});valid=workshopPending(w).length===0;summary=`Con marco: de ${cm(dimensions(w.config,w.config.minCells).framedMm)} a ${cm(dimensions(w.config,w.config.maxCells).framedMm)} cm por lado.`;}catch{/* Incomplete drafts remain editable. */}
+ try{const w=parseWorkshopDocument({...doc,_rev:'preview'});valid=workshopPending(parseWorkshopDocument({...document,_rev:'preview'})).length===0&&(!document.largeFormat||workshopPending(parseWorkshopDocument({...document,_rev:'preview'},'2x2')).length===0);summary=`Con marco: de ${cm(dimensions(w.config,w.config.minCells).framedMm)} a ${cm(dimensions(w.config,w.config.maxCells).framedMm)} cm por lado.`;}catch{/* Incomplete drafts remain editable. */}
  async function save(action:'save'|'publish'|'pause'){
   if(pending.current)return;pending.current=true;setBusy(true);setError('');setMessage('');
-  try{const response=await fetch('/api/admin/taller',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({version:saved.version,document:doc,action})});const data=await response.json();if(!response.ok)throw Error(data.error??'No pudimos guardar.');setSaved(data);setDoc(data.document);setDirty(false);setConfirmed(false);setMessage(action==='publish'?'Configuración publicada. Se usará para nuevas compras cuando la tienda esté abierta.':action==='pause'?'Nuevas compras de cuadros pausadas. Los pedidos existentes siguen disponibles.':'Borrador guardado. La configuración publicada sigue igual.');}
+  try{const response=await fetch('/api/admin/taller',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({version:saved.version,document,action})});const data=await response.json();if(!response.ok)throw Error(data.error??'No pudimos guardar.');setSaved(data);setDocument(data.document);setDirty(false);setConfirmed(false);setMessage(action==='publish'?'Configuración publicada. Se usará para nuevas compras cuando la tienda esté abierta.':action==='pause'?'Nuevas compras de cuadros pausadas. Los pedidos existentes siguen disponibles.':'Borrador guardado. La configuración publicada sigue igual.');}
   catch(e){setError(e instanceof Error?e.message:'No pudimos guardar.');}finally{pending.current=false;setBusy(false);}
  }
  return <main className={styles.page}>
-  <header><p className={styles.eyebrow}>Taller · Cuadros personalizados</p><h1>Configuración del taller</h1><p>Los productos y el stock se cargan en Sanity. Acá definís cómo se hacen, se cotizan y se embalan los cuadros a pedido.</p></header>
+  <header><p className={styles.eyebrow}>Taller · Cuadros personalizados</p><h1>Configuración del taller</h1><p>Acá definís cómo se hacen, se cotizan y se embalan los cuadros a pedido.</p></header>
   <aside className={styles.status}><strong>{saved.publishedVersion?'Hay una configuración publicada':'Todavía no hay una configuración publicada'}</strong><p>Guardá por partes y publicá cuando hayas revisado todo. Publicar no quita el mantenimiento de la tienda ni cambia pedidos anteriores.</p>{!saved.publishedVersion&&<p>Revisá los valores del borrador y confirmá cada sección antes de publicarlos.</p>}{saved.environment==='test'&&<p>Ambiente de pruebas: estos cambios no afectan la tienda real.</p>}</aside>
   {error&&<p role="alert" className={styles.error}>{error}</p>}{message&&<p role="status" className={styles.success}>{message}</p>}
+  {document.largeFormat&&<fieldset disabled={busy} className={styles.formatSelector}><legend>Formato a configurar</legend>{(['1x1','2x2'] as const).map(value=><label key={value} className={styles.check}><input type="radio" name="workshop-format" checked={format===value} onChange={()=>setFormat(value)}/>{value==='1x1'?'Venecitas 1×1':'Venecitas 2×2'}</label>)}<p>Medidas, colores, precio y paquete son propios de cada formato. Plazo, capacidad y condiciones se comparten.</p></fieldset>}
   <fieldset disabled={busy} className={styles.sections}>
-   <section><h2>1. Medidas del cuadro</h2><p>Medí la venecita, la junta y el marco. Estos datos determinan el tamaño que ve el comprador.</p><div className={styles.grid}>
+   <section><h2>1. Medidas del cuadro</h2><p>Marco negro incluido. Revisá el rango de piezas de este formato. Falta medir una fila real para ajustar los centímetros. El borde del marco es distinto del espesor para envío.</p><div className={styles.grid}>
     {([['tileMm','Lado de la venecita (mm)'],['groutMm','Separación entre piezas (mm)'],['frameMm','Marco por lado (mm)'],['minCells','Mínimo de piezas por lado'],['maxCells','Máximo de piezas por lado'],['step','Incremento de piezas']] as const).map(([key,label])=><NumberField key={key} label={label} value={doc.geometry[key]} step={key.endsWith('Mm')?0.1:1} onChange={v=>change('geometry',d=>{d.geometry[key]=v;})}/>)}
    </div><p className={styles.note}>{summary}</p></section>
    <section><h2>2. Colores disponibles</h2><p>El nombre y el color digital se muestran al comprador. La referencia del material es privada y aparece en la guía de fabricación.</p>
@@ -56,7 +66,7 @@ export function WorkshopEditor({initial}:{initial:WorkshopSettings}){
       <label>Contenido del paquete {i+1}<select value={p.classificationId} onChange={e=>change('packaging',d=>{d.packages[i].classificationId=e.target.value;})}><option value="6">Vidrio / cuadro con vidrio</option><option value="1">Cuadro sin vidrio</option></select></label>
     </div><button type="button" onClick={()=>change('packaging',d=>{d.packages.splice(i,1);})}>Quitar paquete {i+1}</button></fieldset>)}<button type="button" onClick={()=>change('packaging',d=>{d.packages.push({maxCells:d.geometry.maxCells,weightGrams:0,widthCm:0,lengthCm:0,heightCm:0,classificationId:'6'});})}>Agregar paquete</button>
    </section>
-   <section><h2>5. Fabricación</h2><div className={styles.grid}><NumberField label="Días de fabricación desde el pago" value={doc.productionDays} onChange={v=>change('production',d=>{d.productionDays=v;})}/><NumberField label="Cuadros en fabricación a la vez" value={doc.capacity} onChange={v=>change('production',d=>{d.capacity=v;})}/></div><p>Al completar los lugares se pausa la compra de nuevos cuadros. Los pagos pendientes conservan su lugar hasta que se resuelvan.</p></section>
+   <section><h2>5. Fabricación</h2><p>Plazo pendiente de Mariela: todavía falta definir días hábiles o corridos y cómo gestionar los pedidos en espera. No confirmes esta sección con valores orientativos.</p><div className={styles.grid}><NumberField label="Días de fabricación desde el pago" value={doc.productionDays} onChange={v=>change('production',d=>{d.productionDays=v;})}/><NumberField label="Cuadros en fabricación a la vez" value={doc.capacity} onChange={v=>change('production',d=>{d.capacity=v;})}/></div><p>Al completar los lugares se pausa la compra de nuevos cuadros. Los pagos pendientes conservan su lugar hasta que se resuelvan.</p></section>
    <section><h2>6. Condiciones de personalización</h2><label>Texto que acepta el comprador<textarea rows={5} maxLength={6000} value={doc.termsText} onChange={e=>change('terms',d=>{d.termsText=e.target.value;})}/></label><p>Explicá las variaciones del acabado y las condiciones de cambios o cancelaciones que definiste para estos pedidos.</p></section>
    <section><h2>7. Revisión antes de publicar</h2><p>Marcá cada sección cuando sus datos sean definitivos. Si editás una sección, vuelve a quedar pendiente de revisión.</p><div className={styles.checks}>{Object.entries(checks).map(([key,label])=><label className={styles.check} key={key}><input type="checkbox" checked={doc.confirmations[key as WorkshopCheck]} onChange={e=>{setDoc({...doc,confirmations:{...doc.confirmations,[key]:e.target.checked}});setDirty(true);setConfirmed(false);}}/>{label} {key==='terms'?'confirmadas':'confirmados'}</label>)}</div></section>
   </fieldset>
@@ -65,7 +75,7 @@ export function WorkshopEditor({initial}:{initial:WorkshopSettings}){
    {saved.publishedVersion&&<button disabled={busy} onClick={()=>void save('pause')}>Pausar nuevas compras de cuadros</button>}</div>
    <label className={styles.check}><input type="checkbox" checked={confirmed} disabled={!valid||busy} onChange={e=>setConfirmed(e.target.checked)}/>Quiero usar estos datos para las nuevas compras de cuadros.</label>
    <button className={styles.primary} disabled={!valid||!confirmed||busy} onClick={()=>void save('publish')}>Publicar configuración</button>
-   {!valid&&<p>Para publicar, completá los campos y confirmá las seis secciones.</p>}
+   {!valid&&<p>Para publicar, completá y confirmá los datos de ambos formatos y las condiciones compartidas.</p>}
   </footer>
  </main>;
 }
